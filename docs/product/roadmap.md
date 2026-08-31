@@ -38,8 +38,8 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 3 | RF-004 | Recebimento de upload manual de PDF (multipart) | Must | implementada com RF-001 |
 | 4 | RF-018 | Persistência do PDF de entrada associada à análise | Must | implementada com RF-001 |
 | 5 | RF-002 | Endpoint de listagem das análises do analista | Must | implementada |
-| 6 | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort` | Must | não iniciada |
-| 7 | RF-007 | Gravação da sugestão de status por requisito (3 valores) | Must | não iniciada |
+| 6 | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort` | Must | user story em aprovação |
+| 7 | RF-007 | Gravação da sugestão de status por requisito (3 valores) | Must | com RF-005 |
 | 8 | RF-009 | Ordenação da resposta priorizando não conformes | Must | não iniciada |
 | 9 | RF-008 | Endpoint de definição do status final do requisito | Must | não iniciada |
 | 10 | RF-011 | Endpoint de marcação de "verificado" | Must | não iniciada |
@@ -187,12 +187,43 @@ Recorte backend deste ciclo: `GET /analises` — devolve as análises do analist
 ### RF-005 — Processamento do PDF pela capacidade de análise por IA
 
 **Frentes:** Backend
-**Status:** não iniciada
+**Status:** user story em aprovação
+
+> Ciclo backend agrupado: **RF-005 + RF-007** = "processar a análise e gerar a sugestão por requisito". User Story e critérios abaixo cobrem os dois.
+
+**User Story**
+
+Como analista técnico, quero que, ao criar uma análise, o sistema processe o PDF contra a base de requisitos e gere um parecer sugerido para cada requisito, para eu começar a revisão já com um ponto de partida.
+
+Recorte backend deste ciclo:
+- Worker **em processo** que pega análises `PENDENTE`, chama a `AnaliseIaPort` (hoje o `StubAdapter`), e grava uma `avaliacao_requisito` por requisito ativo, com `status_sugerido_ia` ∈ {`CONFORME`, `NAO_CONFORME`, `NAO_SE_APLICA`}, `pagina_referencia` (ou nulo), `status_final = status_sugerido_ia`, `verificado = false`.
+- Máquina de status: `PENDENTE → PROCESSANDO → PRONTA_PARA_REVISAO`; falha/timeout → `ERRO_PROCESSAMENTO` + `motivo_erro`.
+- Recuperação no boot: reprocessa o que ficou preso em `PENDENTE`/`PROCESSANDO`.
+- **Fora**: leitura/agrupamento/ordenação das avaliações para a tela (RF-009), edição do parecer (RF-008/011/017), entrega do PDF por página (RF-014), frente frontend, e o `HttpAdapter` real da IA (adiado para o fim do MVP).
+
+**Critérios de aceite**
+
+- Existe a tabela `avaliacao_requisito` (migration), única por (`analise_id`, `requisito_id`), com FK para `analise` e `requisito`.
+- Uma análise criada em `PENDENTE` é processada sem intervenção manual e termina em `PRONTA_PARA_REVISAO` com uma `avaliacao_requisito` para **cada requisito ativo** da base.
+- Cada avaliação tem `status_sugerido_ia` dentre os três valores, `status_final` inicial igual a ele, `verificado = false`.
+- Falha/timeout da `AnaliseIaPort` → `ERRO_PROCESSAMENTO` com `motivo_erro`; nenhuma avaliação parcial fica gravada (transação).
+- O claim da análise é atômico (duas execuções do worker não processam a mesma análise duas vezes).
+- Reinício do serviço com uma análise presa em `PROCESSANDO` → ela volta a ser processada.
+- Testes: unit do serviço de processamento (claim, sucesso, erro→rollback, base vazia) com `AnaliseIaPort`/prisma mockados; integração (criar via `POST /analises` → aguardar → `avaliacao_requisito` populada e `status = PRONTA_PARA_REVISAO`) contra Postgres embutido + `StubAdapter`.
+
+**Perguntas em aberto (para o usuário antes do Engenheiro)**
+
+1. **Disparo do worker:** só varredura periódica (a cada N s), ou também disparo imediato logo após `POST /analises` (feedback mais rápido) + varredura como rede de segurança? Qual intervalo da varredura (proposta: 5 s)?
+2. **Reprocessar erro:** incluir `POST /analises/:id/reprocessar` (`ERRO_PROCESSAMENTO` → `PENDENTE`) já neste ciclo, ou deixar para depois (por ora, só via banco)?
+3. **Timeout da chamada à `AnaliseIaPort`:** qual valor (proposta: 120 s, configurável por `IA_TIMEOUT_MS`)?
+4. **Base de requisitos vazia** no momento do processamento: `ERRO_PROCESSAMENTO` com motivo "base de requisitos vazia" (proposta), ou `PRONTA_PARA_REVISAO` com zero avaliações?
+
+**TSD associada:** `docs/engineering/specs/006-processamento-analise.tsd.md` (a redigir pelo Engenheiro).
 
 ### RF-007 — Sugestão de status por requisito
 
 **Frentes:** Backend · Frontend
-**Status (backend):** não iniciada
+**Status (backend):** coberto no ciclo de RF-005 (ver seção RF-005)
 **Status (frontend):** não iniciada
 
 ### RF-009 — Abertura da análise priorizando requisitos não conformes
