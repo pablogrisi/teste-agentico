@@ -16,6 +16,7 @@ export interface ValidatedEnv {
   ANALISTA_ATUAL_NOME: string;
   IA_ADAPTER: IaAdapter;
   ARMAZENAMENTO_PDF_DIR: string;
+  ANALISE_PDF_TAMANHO_MAX_MB: number;
 }
 
 export function validateEnv(config: Record<string, unknown>): ValidatedEnv {
@@ -60,6 +61,18 @@ export function validateEnv(config: Record<string, unknown>): ValidatedEnv {
   const ARMAZENAMENTO_PDF_DIR =
     asString('ARMAZENAMENTO_PDF_DIR', { required: false }) || './var/pdfs';
 
+  const tamanhoMaxRaw =
+    asString('ANALISE_PDF_TAMANHO_MAX_MB', { required: false }) || '25';
+  const ANALISE_PDF_TAMANHO_MAX_MB = Number(tamanhoMaxRaw);
+  if (
+    !Number.isFinite(ANALISE_PDF_TAMANHO_MAX_MB) ||
+    ANALISE_PDF_TAMANHO_MAX_MB <= 0
+  ) {
+    errors.push(
+      `ANALISE_PDF_TAMANHO_MAX_MB deve ser um número positivo (recebido: "${tamanhoMaxRaw}")`,
+    );
+  }
+
   if (errors.length > 0) {
     throw new Error(
       `Configuração de ambiente inválida:\n- ${errors.join('\n- ')}`,
@@ -74,5 +87,6 @@ export function validateEnv(config: Record<string, unknown>): ValidatedEnv {
     ANALISTA_ATUAL_NOME,
     IA_ADAPTER: iaAdapterRaw as IaAdapter,
     ARMAZENAMENTO_PDF_DIR,
+    ANALISE_PDF_TAMANHO_MAX_MB,
   };
 }

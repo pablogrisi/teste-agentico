@@ -1,9 +1,20 @@
 import { Module } from '@nestjs/common';
+import { AnalisesController } from './analises.controller';
+import { AnalisesService } from './analises.service';
+import { ValidacaoAnaliseService } from './validacao-analise.service';
 
 /**
- * Módulo de Análises (SDD §6) — criar, listar, abrir e concluir análises.
- * Vazio na fundação: as rotas e serviços entram nos ciclos de RF-001, RF-002,
- * RF-009, RF-012 e correlatos.
+ * Módulo de Análises (SDD §6).
+ *
+ * RF-001/004/018 (TSD-004): criar análise com PDF persistido + leitura de uma
+ * análise e do seu PDF. Listagem (RF-002), worker (RF-005), avaliação de
+ * requisitos (RF-007+) e conclusão (RF-012) entram nos próximos ciclos.
+ * As portas (`ArmazenamentoPdfPort`) e o `AnalistaAtualProvider` vêm do
+ * `CoreModule` (global).
  */
-@Module({})
+@Module({
+  controllers: [AnalisesController],
+  providers: [AnalisesService, ValidacaoAnaliseService],
+  exports: [AnalisesService],
+})
 export class AnalisesModule {}

@@ -2,7 +2,8 @@
 //
 // TSD-001 (fundação) não definiu tabela de domínio.
 // TSD-003 (RF-006) adiciona `requisito` — a base fixa de verificação.
-// `analise` e `avaliacao_requisito` (SDD §8) entram nos ciclos dos seus RFs.
+// TSD-004 (RF-001/004/018) adiciona `analise`.
+// `avaliacao_requisito` (SDD §8) entra no ciclo do RF-007.
 
 generator client {
   provider = "prisma-client-js"
@@ -45,4 +46,26 @@ model Requisito {
 
   @@index([area, ordem])
   @@map("requisito")
+}
+
+/// Uma análise de conformidade de um processo licitatório (RF-001/004/018).
+///
+/// `status` é uma string validada em código (`src/analises/status-analise.ts`),
+/// não um enum de banco — a máquina de estados é dirigida pela aplicação.
+/// Neste momento só `PENDENTE` é escrito; o worker (RF-005) avança a partir daí.
+model Analise {
+  id            String    @id @default(uuid()) @db.Uuid
+  nup           String
+  objeto        String
+  analistaId    String    @map("analista_id")
+  arquivoPdfRef String    @map("arquivo_pdf_ref")
+  status        String    @default("PENDENTE")
+  motivoErro    String?   @map("motivo_erro")
+  iniciadaEm    DateTime  @default(now()) @map("iniciada_em")
+  concluidaEm   DateTime? @map("concluida_em")
+  criadoEm      DateTime  @default(now()) @map("criado_em")
+  atualizadoEm  DateTime  @updatedAt @map("atualizado_em")
+
+  @@index([analistaId, iniciadaEm])
+  @@map("analise")
 }

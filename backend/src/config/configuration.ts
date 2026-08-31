@@ -19,6 +19,9 @@ export interface AppConfig {
   armazenamentoPdf: {
     dir: string;
   };
+  analise: {
+    pdfTamanhoMaxBytes: number;
+  };
 }
 
 export default (): AppConfig => ({
@@ -36,5 +39,9 @@ export default (): AppConfig => ({
   },
   armazenamentoPdf: {
     dir: process.env.ARMAZENAMENTO_PDF_DIR ?? './var/pdfs',
+  },
+  analise: {
+    pdfTamanhoMaxBytes:
+      Number(process.env.ANALISE_PDF_TAMANHO_MAX_MB ?? '25') * 1024 * 1024,
   },
 });
