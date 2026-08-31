@@ -37,7 +37,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 2 | RF-001 | Endpoint de criação de análise (NUP, objeto, PDF) | Must | implementada |
 | 3 | RF-004 | Recebimento de upload manual de PDF (multipart) | Must | implementada com RF-001 |
 | 4 | RF-018 | Persistência do PDF de entrada associada à análise | Must | implementada com RF-001 |
-| 5 | RF-002 | Endpoint de listagem das análises do analista | Must | em construção |
+| 5 | RF-002 | Endpoint de listagem das análises do analista | Must | implementada (branch, aguardando merge) |
 | 6 | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort` | Must | não iniciada |
 | 7 | RF-007 | Gravação da sugestão de status por requisito (3 valores) | Must | não iniciada |
 | 8 | RF-009 | Ordenação da resposta priorizando não conformes | Must | não iniciada |
@@ -159,7 +159,7 @@ Recorte backend deste ciclo:
 ### RF-002 — Listagem das análises do analista
 
 **Frentes:** Backend · Frontend
-**Status (backend):** em construção
+**Status (backend):** implementada (branch `backend/rf-002-listagem`, aguardando merge)
 **Status (frontend):** não iniciada
 
 **User Story**

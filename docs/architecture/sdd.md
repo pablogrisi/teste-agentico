@@ -156,7 +156,7 @@ Não há identidade no MVP: o `AnalistaAtualProvider` devolve sempre o analista 
 
 ### Fluxo - Abrir análise / listar
 
-1. `GET /analises` → filtrado por `analista_id` (no MVP, sempre o analista único); campos para reabertura (id, NUP, objeto, status, datas). Suporte a busca/filtros/ordenação conforme P-06 (contrato a definir).
+1. `GET /analises` → **implementado (TSD-005)**. Filtrado por `analista_id`. Query: `q` (busca em `nup`+`objeto`, contém, case-insensitive), `status` (um ou mais, vírgula ou repetição), `ordenarPor` (`iniciadaEm` default | `nup`), `ordem` (`asc`|`desc` default `desc`), `pagina` (1-based, default 1), `tamanho` (default 20, máx 100). Resposta `{ itens, total, pagina, tamanho }`; `itens` com `id`, `nup`, `objeto`, `status`, `iniciadaEm`, `concluidaEm`. Query inválida → `422` sem tocar no banco. (P-06 fechado; contagem de requisitos por linha fica para depois de RF-007.)
 2. `GET /analises/:id` → devolve status do processamento e, quando pronto, os requisitos agrupados por área (Checklist, Técnica) e ordenados priorizando `Não conforme` (RF-009). Estados de "processando", "erro" e "nenhum não conforme" explícitos. `404` se o id não existir sob o `analista_id` atual (estrutura que já suporta o `403` de RF-003 quando houver múltiplos analistas).
 3. `GET /analises/:id/pdf?pagina=N` → bytes do PDF/da página para o visor e para a referência clicável (RF-014).
 

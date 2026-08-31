@@ -3,7 +3,7 @@
 ---
 title: TSD - Listagem de análises (RF-002, backend)
 type: tsd
-status: draft
+status: implementada em branch (backend/rf-002-listagem) — Crítico aprovou (feedback aplicado), aguardando merge
 created: 31/08/2026 // Pablo Grisi (Engenheiro)
 updated: 31/08/2026 // Pablo Grisi
 related:
@@ -114,7 +114,7 @@ npm run build
 
 ## 9. Riscos e decisões abertas
 
-- **`status` por vírgula vs. repetição do parâmetro**: adotado vírgula (`?status=A,B`) por simplicidade; se o frontend preferir `?status=A&status=B`, o parser aceita os dois com um ajuste pequeno — registrar se acontecer.
+- **`status` por vírgula ou repetição**: o parser aceita **os dois** — `?status=A,B` e `?status=A&status=B` (Express entrega array na repetição; o parser normaliza). Feedback do Crítico aplicado no ciclo.
 - **`mode: 'insensitive'`** no `contains` do Prisma requer PostgreSQL (ok — é o banco do projeto e do teste embutido).
 - **Sem índice para busca textual**: `contains` faz sequential scan; aceitável no volume do MVP. Índice trigram (pg_trgm) fica para se o volume crescer.
 - Não altera decisão do SDD além de detalhar o contrato de `GET /analises` (§7) — Documentador ajusta.

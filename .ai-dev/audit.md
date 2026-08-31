@@ -20,6 +20,20 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 31/08/2026 — RF-002 / TSD-005: listagem de análises (backend)
+
+Contexto: usuário mandou "segue pro próximo passo". Antes de abrir RF-002, a branch `backend/rf-001-criar-analise` (TSD-004) foi empurrada e mergeada na `main` por fast-forward (`6c7e983..9dd6792`). Ciclo de RF-002 na branch `backend/rf-002-listagem` (a partir do `main`).
+
+Papéis:
+- **PM**: User Story + critérios no roadmap; P-06 (contrato da listagem) fechado — usuário respondeu "você decide" nas 3 perguntas; a IA decidiu: contrato completo (`q` em nup+objeto insensitive, `status` multi, `ordenarPor` iniciadaEm|nup, `ordem`, `pagina`/`tamanho` 20/máx 100), resposta `{ itens, total, pagina, tamanho }`, itens com 6 campos, sem contagens.
+- **Engenheiro**: `docs/engineering/specs/005-listagem-analises.tsd.md`.
+- **Dev**: `src/analises/listar-analises.query.ts` (parser + 422), `AnalisesService.listar` (where + orderBy dinâmico + skip/take + `$transaction([findMany, count])`), rota `GET /analises` no controller. `test:e2e` passou a rodar `--runInBand` (dois integration specs mutam a mesma tabela `analise` no Postgres compartilhado). +11 unit + 1 integração (7 casos).
+- **Testes**: `npm run ci` ✅ (49 unit) · `npm run test:e2e` ✅ 16/16.
+- **Crítico**: aprovado, com feedback aplicado no ciclo — parser passou a aceitar param repetido (`?status=A&status=B`), não só vírgula (antes: 500 em vez de 422). +1 unit. Re-teste verde.
+- **Documentador**: SDD §7 (contrato de `GET /analises`); checkpoint §1/§2/§3/§3.1/§5/§7; roadmap RF-002 → `implementada` (branch); `questoes-abertas.md` P-06 → fechada (R-05).
+
+Estado: ciclo fechado, **branch aguardando sign-off + merge**. Próximo backend: RF-005 + RF-007 (worker + gravação da sugestão) — cria `avaliacao_requisito`.
+
 ## 31/08/2026 — RF-001 + RF-004 + RF-018 / TSD-004: criar análise com PDF persistido (backend)
 
 Contexto: usuário pediu "abre o ciclo do PM e siga com o desenvolvimento das próximas partes". Ciclo completo na branch `backend/rf-001-criar-analise` (a partir do `main` `13b111e`).
