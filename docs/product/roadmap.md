@@ -41,9 +41,9 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 6 | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort` | Must | implementada |
 | 7 | RF-007 | Gravação da sugestão de status por requisito (3 valores) | Must | implementada com RF-005 |
 | 8 | RF-009 | Ordenação da resposta priorizando não conformes | Must | implementada |
-| 9 | RF-008 | Endpoint de definição do status final do requisito | Must | não iniciada |
-| 10 | RF-011 | Endpoint de marcação de "verificado" | Must | não iniciada |
-| 11 | RF-017 | Validação de comentário obrigatório nas ações de revisão | Must | não iniciada |
+| 9 | RF-008 | Endpoint de definição do status final do requisito | Must | user story em aprovação |
+| 10 | RF-011 | Endpoint de marcação de "verificado" | Must | com RF-008 |
+| 11 | RF-017 | Validação de comentário obrigatório nas ações de revisão | Must | com RF-008 |
 | 12 | RF-014 | Referência de página + entrega do PDF por página | Must | não iniciada |
 | 13 | RF-012 | Endpoint de conclusão global com trava por obrigatórios | Must | não iniciada |
 | 14 | RF-013 | Registro de responsável, datas e status final | Must | não iniciada |
@@ -264,19 +264,46 @@ Recorte backend deste ciclo: o endpoint de leitura da análise passa a devolver 
 ### RF-008 — Definição do status final de cada requisito
 
 **Frentes:** Backend · Frontend
-**Status (backend):** não iniciada
+**Status (backend):** user story em aprovação
 **Status (frontend):** não iniciada
+
+> Ciclo backend agrupado: **RF-008 + RF-011 + RF-017** = "revisar um requisito" (um endpoint de PATCH). User Story e critérios abaixo cobrem os três.
+
+**User Story**
+
+Como analista técnico, quero, ao revisar um requisito, definir o parecer final (podendo alterar a sugestão da IA), marcá-lo como verificado e registrar um comentário quando exigido, para consolidar minha avaliação daquele item.
+
+Recorte backend deste ciclo: `PATCH /analises/:id/requisitos/:requisitoId` que atualiza `statusFinal`, `verificado` e/ou `comentario` de uma avaliação; alterar `statusFinal` marca `verificado = true`; comentário obrigatório conforme a regra de P-03. Sem tela (frontend), sem conclusão da análise (RF-012).
+
+**Critérios de aceite**
+
+- `PATCH /analises/:id/requisitos/:requisitoId` aceita `statusFinal`, `verificado`, `comentario` (todos opcionais no corpo; ao menos um obrigatório).
+- `statusFinal`, quando presente, deve ser um dos três valores; outro → `422`.
+- Alterar `statusFinal` também grava `verificado = true` (RF-011).
+- Comentário obrigatório: quando a regra de P-03 exigir e ele não vier → `422` sem gravar nada.
+- Só é possível editar quando a análise está `PRONTA_PARA_REVISAO`; caso contrário → `409`. `404` se a análise ou o requisito/avaliação não existir para o analista atual.
+- A resposta traz a avaliação atualizada (mesmo formato do item de `GET /analises/:id`) e o `resumo` recalculado.
+- Testes: unit da lógica de atualização (coerção, regra "altera status → verificado", regra de comentário, 409/404) e integração (criar → processar → PATCH → conferir avaliação + resumo).
+
+**Perguntas em aberto (para o usuário antes do Engenheiro)**
+
+1. **P-03 — quando o comentário é obrigatório?** (a) só quando o `statusFinal` fica **diferente** do `statusSugeridoIa` (justificar a discordância da IA); (b) em **toda** alteração de parecer ou verificação; (c) só ao definir `statusFinal = NAO_CONFORME`; (d) **sem obrigatoriedade** neste slice (comentário é campo livre; P-03 decidida depois).
+2. **`verificado` pode ser desmarcado** (voltar a `false`) depois de marcado, ou uma vez verificado permanece até a conclusão?
+3. **Rota:** `PATCH /analises/:id/requisitos/:requisitoId` (por id do requisito, como no SDD §7) ou `/analises/:id/avaliacoes/:avaliacaoId` (por id da avaliação que o `GET /analises/:id` devolve)?
+4. **Resposta do PATCH** inclui o `resumo` recalculado além do item atualizado (proposta: sim, evita um GET extra)?
+
+**TSD associada:** `docs/engineering/specs/008-revisao-requisito.tsd.md` (a redigir pelo Engenheiro).
 
 ### RF-011 — Marcar requisito como verificado
 
 **Frentes:** Backend · Frontend
-**Status (backend):** não iniciada
+**Status (backend):** coberto no ciclo de RF-008 (ver seção RF-008)
 **Status (frontend):** não iniciada
 
 ### RF-017 — Comentário obrigatório nas ações de revisão
 
 **Frentes:** Backend · Frontend
-**Status (backend):** não iniciada
+**Status (backend):** coberto no ciclo de RF-008 (ver seção RF-008); regra exata em P-03
 **Status (frontend):** não iniciada
 
 ### RF-014 — Rastreabilidade documental por referência de página do PDF
