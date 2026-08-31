@@ -40,7 +40,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 5 | RF-002 | Endpoint de listagem das análises do analista | Must | implementada |
 | 6 | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort` | Must | implementada |
 | 7 | RF-007 | Gravação da sugestão de status por requisito (3 valores) | Must | implementada com RF-005 |
-| 8 | RF-009 | Ordenação da resposta priorizando não conformes | Must | implementada (branch, aguardando merge) |
+| 8 | RF-009 | Ordenação da resposta priorizando não conformes | Must | implementada |
 | 9 | RF-008 | Endpoint de definição do status final do requisito | Must | não iniciada |
 | 10 | RF-011 | Endpoint de marcação de "verificado" | Must | não iniciada |
 | 11 | RF-017 | Validação de comentário obrigatório nas ações de revisão | Must | não iniciada |
@@ -229,7 +229,7 @@ Recorte backend deste ciclo:
 ### RF-009 — Abertura da análise priorizando requisitos não conformes
 
 **Frentes:** Backend · Frontend
-**Status (backend):** implementada (branch `backend/rf-009-abrir-analise`, aguardando merge)
+**Status (backend):** implementada (mergeada no `main` `96ff8fb`)
 **Status (frontend):** não iniciada
 
 **User Story**
