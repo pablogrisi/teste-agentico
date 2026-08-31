@@ -1,0 +1,179 @@
+/* Linha da tabela de documentos — Figma `Sumário/Linha-peça` (258:3529).
+   Colunas: documento flex · pág. inicial 72 · pág. final 64 · ações 164.
+   A coluna de nº saiu junto com a ordenação dos documentos.
+
+   A linha empilha: as colunas em cima e, quando há sobreposição de páginas, o
+   aviso embaixo, atravessando a largura toda. */
+.row {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--stack-3xs);
+  min-height: 52px;
+  padding: var(--inset-xs) var(--inset-sm);
+  border-bottom: 1px solid var(--color-border-subtle);
+  cursor: pointer;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.main {
+  display: flex;
+  align-items: center;
+  gap: var(--inline-xs);
+}
+
+.colName {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.colPage {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  width: 72px;
+}
+
+/* a segunda coluna de página é mais estreita (64) que a primeira (72) */
+.colPage + .colPage {
+  width: 64px;
+}
+
+/* Ocupa as duas colunas de página, para o texto começar sob "PÁG. INICIAL". */
+.colMessage {
+  flex-shrink: 0;
+  width: 144px;
+  font: var(--type-caption-md);
+  color: var(--color-text-danger);
+}
+
+.colActions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--inline-md);
+  width: 164px;
+}
+
+/* ── Texto ── */
+.name {
+  flex: 1;
+  min-width: 0;
+  font: var(--type-body-sm);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Página é um atalho para o visualizador. A caixa acompanha o número, não a
+   coluna: esticada, o botão levava o sublinhado do hover e o balão do tooltip
+   para o vazio à direita, desalinhados do algarismo. */
+.page {
+  padding: 0;
+  border: none;
+  background: none;
+  font: var(--type-body-sm);
+  color: var(--color-text-brand);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.page:hover {
+  text-decoration: underline;
+}
+
+.input:disabled {
+  background: var(--color-surface-disabled);
+  border-color: var(--color-border-disabled);
+  color: var(--color-text-disabled);
+}
+
+.input {
+  width: 100%;
+  /* padding lateral menor que o de célula: as setinhas nativas do type=number
+     comem ~15px e a coluna tem só 64–72px */
+  padding: var(--inset-xs);
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--corner-md);
+  outline: none;
+  font: var(--type-body-sm);
+  color: var(--color-text-primary);
+}
+
+/* Sobreposição não trava o salvamento: o aviso fica na linha até o usuário
+   corrigir um dos dois intervalos. Aparece nas duas linhas envolvidas. */
+.warning {
+  margin: 0;
+  font: var(--type-caption-md);
+  color: var(--color-text-danger);
+}
+
+/* ── Variação: idle ── */
+.row_idle {
+  background: var(--color-surface-card);
+}
+
+.row_idle:hover {
+  background: var(--color-surface-subtle);
+}
+
+/* ── Variação: atual (em edição) ── */
+.row_atual {
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border-brand);
+  /* a borda de 1px substitui a divisória: repõe o pixel para a linha não pular */
+  padding: calc(var(--inset-xs) - 1px) calc(var(--inset-sm) - 1px);
+}
+
+/* ── Variação: ausente ── */
+.row_ausente {
+  background: var(--color-surface-danger);
+}
+
+.row_ausente .name {
+  color: var(--color-text-danger);
+}
+
+/* ── Ações ── */
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--inset-xs);
+  border: none;
+  background: none;
+  border-radius: var(--corner-md);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.iconBtn:hover:not(:disabled) {
+  background: var(--color-surface-hover);
+}
+
+.iconBtn:disabled {
+  color: var(--color-text-disabled);
+  cursor: default;
+}
+
+.iconBtn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.iconBtnDanger {
+  color: var(--color-text-danger);
+}
+
+.iconBtnSuccess {
+  color: var(--color-text-success);
+}

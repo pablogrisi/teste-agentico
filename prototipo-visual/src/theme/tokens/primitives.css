@@ -1,0 +1,209 @@
+/* =============================================================================
+   LicIA Design System — CAMADA 1: PRIMITIVAS
+   -----------------------------------------------------------------------------
+   Valores crus. Componente NÃO consome daqui — use sempre semantics.css.
+
+     --color-<familia>-<step>   familia (verde, cinza) = primitiva;
+                                categoria (text, surface) = semântica
+     --space-<px>               sufixo = pixel. rem, base 16
+     --radius-<px>              sufixo = pixel. px, não rem
+     --shadow-<escala>          sombra crua
+
+   Tipografia mora em typography.css. O porquê de cada escolha está no README.
+   ========================================================================== */
+
+/* =============================================================================
+   COR
+   -----------------------------------------------------------------------------
+   Rampas do Figma (Kanit / LicIA). Os steps marcados [interpolado] não vêm do
+   Figma: foram calculados entre as âncoras que vêm. As exceções à rampa estão
+   marcadas [fora da rampa].
+
+   ATENÇÃO: aqui o step MAIOR é o mais ESCURO e o step principal é sempre o
+   1000 — o inverso da convenção Material, onde 500 é o principal. É consistente
+   em todas as famílias.
+
+   As famílias de estado (verde, laranja, azul, vermelho) param claras demais
+   para texto: nenhuma passa 4.5:1 no branco. Ver README > Pendências > Cor.
+   ========================================================================== */
+
+:root {
+  /* VERDE — marca principal. 100–1000 do Figma; 50 [interpolado] */
+  --color-verde-50:   #f4fbf5;
+  --color-verde-100:  #e9f6eb;
+  --color-verde-200:  #d4edd6;
+  --color-verde-300:  #bde4c3;
+  --color-verde-400:  #a8dbaf;
+  --color-verde-500:  #93d39a;
+  --color-verde-600:  #7cca87;
+  --color-verde-700:  #67c172;
+  --color-verde-800:  #50b85e;
+  --color-verde-900:  #3baf4b;
+  --color-verde-1000: #26a736; /* principal — 3.15:1 no branco: ícone e contorno, NÃO texto */
+
+  /* LARANJA — 500 e 1000 do Figma; resto [interpolado] pelas âncoras 250/500/750/1000 */
+  --color-laranja-50:   #fffbf6;
+  --color-laranja-100:  #fef7ed;
+  --color-laranja-200:  #fdefda;
+  --color-laranja-300:  #fde7c8;
+  --color-laranja-400:  #fcdeb5;
+  --color-laranja-500:  #fbd6a3;
+  --color-laranja-600:  #fbcb88;
+  --color-laranja-700:  #fbc06d;
+  --color-laranja-800:  #fab44d;
+  --color-laranja-900:  #f7a826;
+  --color-laranja-1000: #f49c00; /* principal — 2.19:1 no branco: reprova até o mínimo de contorno */
+
+  /* AZUL — 500 e 1000 do Figma; resto [interpolado] pelas âncoras 250/500/750/1000 */
+  --color-azul-50:   #f8fbfc;
+  --color-azul-100:  #f1f8f9;
+  --color-azul-200:  #e4f1f2;
+  --color-azul-250:  #ddedef; /* [fora da rampa] fundo de item selecionado (paginator) */
+  --color-azul-300:  #d6e9ec;
+  --color-azul-400:  #c8e2e5;
+  --color-azul-500:  #badbdf;
+  --color-azul-600:  #acd3d9;
+  --color-azul-700:  #9eccd2;
+  --color-azul-800:  #8ac1c9;
+  --color-azul-900:  #6fb3bc;
+  --color-azul-1000: #54a5af; /* principal — 2.85:1 no branco: reprova o mínimo de contorno */
+
+  /* VERMELHO — 1000 do Figma; resto [interpolado] do branco até #fc5757 */
+  --color-vermelho-50:   #fff7f7;
+  --color-vermelho-100:  #ffeeee;
+  --color-vermelho-200:  #fedddd;
+  --color-vermelho-300:  #fecdcd;
+  --color-vermelho-400:  #febcbc;
+  --color-vermelho-500:  #feabab;
+  --color-vermelho-600:  #fd9a9a;
+  --color-vermelho-700:  #fd8989;
+  --color-vermelho-800:  #fd7979;
+  --color-vermelho-900:  #fc6868;
+  --color-vermelho-1000: #fc5757; /* principal — 3.16:1 no branco: ícone e contorno, NÃO texto */
+
+  /* PRETO — 1000 do Figma; resto [interpolado] do branco até #003234.
+     Não é preto neutro: puxa para o verde-azulado da marca. */
+  --color-preto-50:   #f2f5f5;
+  --color-preto-100:  #e6ebeb;
+  --color-preto-200:  #ccd6d6;
+  --color-preto-300:  #b3c2c2;
+  --color-preto-400:  #99adae;
+  --color-preto-500:  #80999a;
+  --color-preto-600:  #668485;
+  --color-preto-700:  #4d7071;
+  --color-preto-800:  #335b5d;
+  --color-preto-900:  #1a4748;
+  --color-preto-1000: #003234; /* 13.95:1 no branco */
+
+  /* CINZA — 50/100/200/400/600/800/1000 do Figma; 300/500/700/900 [interpolado] */
+  --color-cinza-50:   #fcfcfc;
+  --color-cinza-100:  #fafafa;
+  --color-cinza-200:  #f2f4f4;
+  --color-cinza-300:  #ecf0f0;
+  --color-cinza-400:  #e6ebeb;
+  --color-cinza-500:  #cdd6d7;
+  --color-cinza-600:  #b3c1c3;
+  --color-cinza-700:  #9aadaf;
+  --color-cinza-800:  #80999a;
+  --color-cinza-900:  #63777f;
+  --color-cinza-1000: #465564; /* 7.65:1 no branco — texto padrão da interface */
+
+  /* [fora da rampa] — os dois extremos absolutos.
+     branco é superfície de card; preto-puro só entra em máscara e sombra. */
+  --color-branco:     #ffffff;
+  --color-preto-puro: #000000;
+
+  /* [fora da rampa] AZULADO — acento neutro de observação técnica.
+     Step único: existe só para diferenciar "observação" de erro/aviso/sucesso. */
+  --color-azulado-700: #6b7fa3;
+
+  /* [fora da rampa] AMARELO — fundo de alerta dentro de documento.
+     Step único, mais claro que qualquer laranja da rampa. */
+  --color-amarelo-100: #fffce6;
+
+  /* [fora da rampa] NEUTRO — superfícies de chrome, com leve tom azulado.
+     Não pertencem à rampa cinza: são mais frias e existem para separar o
+     "aplicativo" (desktop, visor de PDF) do "conteúdo" (cards brancos). */
+  --color-neutro-desktop: #e0e2e8; /* fundo da área de trabalho */
+  --color-neutro-surface: #e2e6e6; /* fundo do painel de PDF */
+  --color-neutro-toolbar: #f8f9f9; /* barra de ferramentas do PDF */
+  --color-neutro-divider: #d3d3d3; /* divisória sob a topbar */
+
+  /* [fora da rampa] GOVERNO DO CEARÁ — identidade de terceiro, fixada por
+     manual de marca. Não são cores do produto: nenhuma tela além da topbar
+     institucional pode usá-las, e elas não têm papel semântico. */
+  --color-gov-verde:        #00853b;
+  --color-gov-verde-pill:   #148e4a;
+  --color-gov-verde-borda:  #0c803f;
+  --color-gov-verde-sombra: #1c5033;
+}
+
+/* =============================================================================
+   ESPAÇAMENTO
+   -----------------------------------------------------------------------------
+   rem, base 16px: o padding cresce com a fonte do usuário e o texto não encosta
+   na borda.
+
+   Todos os degraus são múltiplos de 4, menos o 10, que existe por uma conta só:
+   10 + 20 (--font-line-height-sm sobre 14px) + 10 = 40px, a altura de controle
+   do sistema. Use o 10 só em inset vertical de controle — nunca em gap nem
+   entre blocos.
+   ========================================================================== */
+
+:root {
+  --space-0:  0;
+  --space-2:  0.125rem; /*  2px */
+  --space-4:  0.25rem;  /*  4px */
+  --space-8:  0.5rem;   /*  8px */
+  --space-10: 0.625rem; /* 10px [fora da base 4] só inset vertical de controle */
+  --space-12: 0.75rem;  /* 12px */
+  --space-16: 1rem;     /* 16px */
+  --space-20: 1.25rem;  /* 20px */
+  --space-24: 1.5rem;   /* 24px */
+  --space-32: 2rem;     /* 32px */
+  --space-40: 2.5rem;   /* 40px */
+  --space-48: 3rem;     /* 48px */
+  --space-64: 4rem;     /* 64px */
+}
+
+/* =============================================================================
+   RAIO
+   -----------------------------------------------------------------------------
+   px, não rem — única quebra da regra de unidade do sistema. Raio é forma, não
+   legibilidade: em rem, a fonte a 200% transformaria todo controle de 40px em
+   pílula.
+
+   8 é o padrão. 2 e 4 só em componente pequeno, onde 8 come um terço da altura.
+   12 e 16 só em card grande e modal.
+   ========================================================================== */
+
+:root {
+  --radius-0:  0;
+  --radius-2:  2px;
+  --radius-4:  4px;
+  --radius-8:  8px;
+  --radius-12: 12px;
+  --radius-16: 16px;
+
+  /* [fora da escala] pílula e círculo. 9999px em vez de 50% porque 50% deforma
+     em elipse quando o elemento não é quadrado. */
+  --radius-full: 9999px;
+}
+
+/* =============================================================================
+   SOMBRA
+   -----------------------------------------------------------------------------
+   Três degraus, um por altura de empilhamento. A cor não é preto neutro: é o
+   --color-preto-1000 da marca diluído, para a sombra puxar o mesmo verde-azulado
+   das superfícies. A exceção é a sombra de modal, que usa preto puro — ela
+   precisa vencer o overlay e um tom frio a deixaria lavada.
+
+   O blur cresce mais rápido que o deslocamento: é o que faz a sombra parecer
+   distância e não borda deslocada.
+   ========================================================================== */
+
+:root {
+  --shadow-sm: 0 2px 8px  color-mix(in srgb, var(--color-preto-1000) 12%, transparent);
+  --shadow-md: 0 4px 16px color-mix(in srgb, var(--color-preto-1000) 14%, transparent);
+  --shadow-lg: 0 8px 40px color-mix(in srgb, var(--color-preto-puro) 22%, transparent);
+}

@@ -1,0 +1,304 @@
+/* =============================================================================
+   LicIA Design System — TIPOGRAFIA
+   -----------------------------------------------------------------------------
+   Único arquivo com as DUAS camadas, porque aqui o próprio prefixo já as separa:
+
+     --font-*   primitiva  (medida crua)     <- nunca dentro de componente
+     --type-*   semântica  (papel do texto)  <- é isto que componente usa
+
+   Nos outros domínios a separação é por arquivo: primitives.css e semantics.css.
+
+   Fonte dos valores: text styles do Figma da LicIA (Headline/Texto/Legenda).
+   Nenhuma medida foi inventada. O mapa Figma -> papel está no README; hoje ele
+   é de mão única — o Figma ainda usa os nomes antigos e será atualizado depois.
+   ========================================================================== */
+
+/* =============================================================================
+   TIPOGRAFIA — primitivas
+   -----------------------------------------------------------------------------
+   Prefixo: --font-*
+
+   font-size em rem (base 16px) para respeitar o tamanho de fonte configurado no
+   navegador — WCAG 2.1 SC 1.4.4 (Resize Text). O px equivalente está ao lado.
+
+   line-height sem unidade (razão). Com unidade ele é herdado como valor absoluto
+   e quebra em elemento aninhado de outro tamanho; a razão é recalculada em cada
+   elemento. As razões vêm dos pares do Figma e arredondam de volta ao pixel
+   exato (14 x 1.42857 = 20).
+   ========================================================================== */
+
+:root {
+  /* ===== FAMÍLIA ========================================================== */
+  --font-family-base: 'Kanit', system-ui, sans-serif;
+  /* system-ui e sans-serif não são alternativa de marca: são fallback enquanto
+     a webfont baixa e caso ela falhe. Sem a lista o navegador cai no default
+     dele (Times New Roman) e a interface inteira vira serifada.
+     PENDÊNCIA: não existe família monoespaçada. NUP, hash e número alinhado em
+     tabela pedem uma. Ver README > Pendências > Tipografia. */
+
+  /* ===== TAMANHO — 9 degraus. Nome do Figma entre parênteses. ============= */
+  --font-size-2xs: 0.625rem; /* 10px  (Legenda menor)   */
+  --font-size-xs:  0.75rem;  /* 12px  (Legenda)         */
+  --font-size-sm:  0.875rem; /* 14px  (Texto menor)     */
+  --font-size-md:  1rem;     /* 16px  (Texto corrido)   */
+  --font-size-lg:  1.25rem;  /* 20px  (Texto grande/H5) */
+  --font-size-xl:  1.625rem; /* 26px  (H4)              */
+  --font-size-2xl: 2rem;     /* 32px  (H3)              */
+  --font-size-3xl: 2.5rem;   /* 40px  (H2)              */
+  --font-size-4xl: 3.25rem;  /* 52px  (H1)              */
+
+  /* ===== ALTURA DE LINHA — pareada 1:1 com o tamanho de mesmo sufixo ====== */
+  --font-line-height-2xs: 1.4;      /* 10 -> 14px */
+  --font-line-height-xs:  1.33333;  /* 12 -> 16px */
+  --font-line-height-sm:  1.42857;  /* 14 -> 20px */
+  --font-line-height-md:  1.5;      /* 16 -> 24px */
+  --font-line-height-lg:  1.6;      /* 20 -> 32px */
+  --font-line-height-xl:  1.53846;  /* 26 -> 40px */
+  --font-line-height-2xl: 1.625;    /* 32 -> 52px */
+  --font-line-height-3xl: 1.6;      /* 40 -> 64px */
+  --font-line-height-4xl: 1.576923; /* 52 -> 82px */
+  /* A razão NÃO é monotônica e não deve ser "corrigida" para uma curva: ela
+     vem dos pares do Figma. Repare que aqui os títulos respiram MAIS que o
+     corpo (1.6 no 20px contra 1.5 no 16px) — o inverso do usual. É a assinatura
+     da Kanit no projeto: fonte condensada, entrelinha larga. */
+
+  /* ===== PESO ============================================================= */
+  --font-weight-light:    300;
+  --font-weight-regular:  400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+  /* Os tokens nomeiam a fonte, não a carregam. Os 5 cortes precisam estar no
+     <link> do Google Fonts em index.html. Sem o 600, o navegador sintetiza
+     falso-negrito, que engorda o traço e desalinha a métrica — e como semibold
+     é o peso de todo label-*-strong e heading-sm, o defeito apareceria na
+     interface inteira. */
+}
+
+/* =============================================================================
+   TIPOGRAFIA — semântica
+   -----------------------------------------------------------------------------
+   Descreve PAPEL do texto, nunca a medida. É a única camada que componentes
+   consomem. Todo valor aqui é alias de --font-* — nunca escreva rem, razão ou
+   número de peso nesta camada.
+
+   Prefixo: --type-<papel>-<escala>[-<variante>]
+
+   Sem exceção: TODO papel carrega escala, mesmo o que hoje tem um degrau só.
+   caption-sm existe sozinho de propósito — o dia que nascer um caption-lg, ele
+   entra ao lado sem renomear o que já existe.
+
+   Regra de peso, válida em body, label e caption igualmente:
+     sem sufixo  -> regular (400)
+     -strong     -> semibold (600)
+     -bold       -> bold (700)
+
+   heading e display não seguem essa regra: o peso deles é parte do papel e vem
+   fixo do Figma (H1 é light, H2 é medium, H3..H5 são semibold).
+
+   Cada papel expõe 4 tokens: os 3 atômicos (-size, -line-height, -weight) e o
+   atalho sem sufixo, montado a partir deles para a propriedade `font`:
+
+     .cardTitle      { font: var(--type-heading-sm); }
+     .cardTitleLight { font-weight: var(--font-weight-regular); }
+
+   ATENÇÃO ao atalho: por ser shorthand, `font` RESETA font-style, font-variant e
+   font-stretch para `normal`. Desejável na maioria dos casos (estado
+   previsível), mas em elemento itálico use as 3 propriedades atômicas — ou
+   reponha o font-style DEPOIS da linha do shorthand, nunca antes.
+
+   O papel NÃO acompanha o degrau da escala primitiva: body-md usa font-size-md,
+   mas label-md usa font-size-sm. O nome descreve a hierarquia do papel, não a
+   posição na escala crua.
+   ========================================================================== */
+
+:root {
+  /* ===== DISPLAY ==========================================================
+     Escala editorial, fora do fluxo da interface. Número grande, hero, tela de
+     abertura. Um por tela, no máximo.
+
+     52 em light e 40 em medium — em Kanit, peso alto nesse corpo fecha as
+     contraformas.
+
+     HOJE SEM USO na aplicação — vêm do Figma e ficam reservados.
+     ---------------------------------------------------------------------- */
+  --type-display-lg-size:        var(--font-size-4xl);
+  --type-display-lg-line-height: var(--font-line-height-4xl);
+  --type-display-lg-weight:      var(--font-weight-light);
+  --type-display-lg:             var(--type-display-lg-weight) var(--type-display-lg-size)/var(--type-display-lg-line-height) var(--font-family-base);
+
+  --type-display-md-size:        var(--font-size-3xl);
+  --type-display-md-line-height: var(--font-line-height-3xl);
+  --type-display-md-weight:      var(--font-weight-medium);
+  --type-display-md:             var(--type-display-md-weight) var(--type-display-md-size)/var(--type-display-md-line-height) var(--font-family-base);
+
+  /* ===== HEADING ==========================================================
+     Título. Peso fixo por degrau, vindo do Figma.
+
+       heading-xl  32/52 semibold  título de página          (Figma: H3)
+       heading-lg  26/40 semibold  título de seção           (Figma: H4)
+       heading-md  20/32 semibold  título de bloco           (Figma: H5)
+       heading-sm  16/24 semibold  título de card / modal    (Figma: Texto corrido semibold)
+       heading-xs  14/20 semibold  título de subgrupo        (Figma: Texto menor semibold)
+
+     A escala do papel é independente do nível de <h1..h6>: escolha o token pela
+     hierarquia VISUAL e a tag pela estrutura do documento. Um <h2> pode
+     legitimamente usar heading-sm.
+
+     heading-sm e heading-xs partilham medida com body/label do mesmo degrau —
+     ver COLISÕES no fim do arquivo. Não é acidente.
+     ---------------------------------------------------------------------- */
+  --type-heading-xl-size:        var(--font-size-2xl);
+  --type-heading-xl-line-height: var(--font-line-height-2xl);
+  --type-heading-xl-weight:      var(--font-weight-semibold);
+  --type-heading-xl:             var(--type-heading-xl-weight) var(--type-heading-xl-size)/var(--type-heading-xl-line-height) var(--font-family-base);
+
+  --type-heading-lg-size:        var(--font-size-xl);
+  --type-heading-lg-line-height: var(--font-line-height-xl);
+  --type-heading-lg-weight:      var(--font-weight-semibold);
+  --type-heading-lg:             var(--type-heading-lg-weight) var(--type-heading-lg-size)/var(--type-heading-lg-line-height) var(--font-family-base);
+
+  --type-heading-md-size:        var(--font-size-lg);
+  --type-heading-md-line-height: var(--font-line-height-lg);
+  --type-heading-md-weight:      var(--font-weight-semibold);
+  --type-heading-md:             var(--type-heading-md-weight) var(--type-heading-md-size)/var(--type-heading-md-line-height) var(--font-family-base);
+
+  --type-heading-sm-size:        var(--font-size-md);
+  --type-heading-sm-line-height: var(--font-line-height-md);
+  --type-heading-sm-weight:      var(--font-weight-semibold);
+  --type-heading-sm:             var(--type-heading-sm-weight) var(--type-heading-sm-size)/var(--type-heading-sm-line-height) var(--font-family-base);
+
+  --type-heading-xs-size:        var(--font-size-sm);
+  --type-heading-xs-line-height: var(--font-line-height-sm);
+  --type-heading-xs-weight:      var(--font-weight-semibold);
+  --type-heading-xs:             var(--type-heading-xs-weight) var(--type-heading-xs-size)/var(--type-heading-xs-line-height) var(--font-family-base);
+
+  /* ===== BODY =============================================================
+     Texto corrido, parágrafo, descrição. Quebra em múltiplas linhas.
+
+       body-lg  20/32  leitura longa, texto de destaque   (Figma: Texto grande)
+       body-md  16/24  parágrafo                          (Figma: Texto corrido)
+       body-sm  14/20  PADRÃO da interface                (Figma: Texto menor)
+
+     Não existe body-xs. O degrau 12/16 inteiro pertence a caption — ver CAPTION.
+
+     As variantes repetem tamanho e altura de linha e só mudam o peso. -strong é
+     o que <strong> deve usar dentro de um parágrafo; -bold é ênfase máxima e
+     deve ser raro.
+     ---------------------------------------------------------------------- */
+  --type-body-lg-size:        var(--font-size-lg);
+  --type-body-lg-line-height: var(--font-line-height-lg);
+  --type-body-lg-weight:      var(--font-weight-regular);
+  --type-body-lg:             var(--type-body-lg-weight) var(--type-body-lg-size)/var(--type-body-lg-line-height) var(--font-family-base);
+
+  --type-body-md-size:        var(--font-size-md);
+  --type-body-md-line-height: var(--font-line-height-md);
+  --type-body-md-weight:      var(--font-weight-regular);
+  --type-body-md:             var(--type-body-md-weight) var(--type-body-md-size)/var(--type-body-md-line-height) var(--font-family-base);
+
+  --type-body-md-strong-size:        var(--font-size-md);
+  --type-body-md-strong-line-height: var(--font-line-height-md);
+  --type-body-md-strong-weight:      var(--font-weight-semibold);
+  --type-body-md-strong:             var(--type-body-md-strong-weight) var(--type-body-md-strong-size)/var(--type-body-md-strong-line-height) var(--font-family-base);
+
+  --type-body-md-bold-size:        var(--font-size-md);
+  --type-body-md-bold-line-height: var(--font-line-height-md);
+  --type-body-md-bold-weight:      var(--font-weight-bold);
+  --type-body-md-bold:             var(--type-body-md-bold-weight) var(--type-body-md-bold-size)/var(--type-body-md-bold-line-height) var(--font-family-base);
+
+  --type-body-sm-size:        var(--font-size-sm);
+  --type-body-sm-line-height: var(--font-line-height-sm);
+  --type-body-sm-weight:      var(--font-weight-regular);
+  --type-body-sm:             var(--type-body-sm-weight) var(--type-body-sm-size)/var(--type-body-sm-line-height) var(--font-family-base);
+
+  --type-body-sm-strong-size:        var(--font-size-sm);
+  --type-body-sm-strong-line-height: var(--font-line-height-sm);
+  --type-body-sm-strong-weight:      var(--font-weight-semibold);
+  --type-body-sm-strong:             var(--type-body-sm-strong-weight) var(--type-body-sm-strong-size)/var(--type-body-sm-strong-line-height) var(--font-family-base);
+
+  --type-body-sm-bold-size:        var(--font-size-sm);
+  --type-body-sm-bold-line-height: var(--font-line-height-sm);
+  --type-body-sm-bold-weight:      var(--font-weight-bold);
+  --type-body-sm-bold:             var(--type-body-sm-bold-weight) var(--type-body-sm-bold-size)/var(--type-body-sm-bold-line-height) var(--font-family-base);
+
+  /* ===== LABEL ============================================================
+     Texto de controle: botão, rótulo de campo, aba, cabeçalho de tabela, item
+     de menu. Linha única, nunca quebra.
+
+       label-md         14/20 regular   valor de campo, opção de lista, texto
+                                        de controle sem ênfase
+       label-md-strong  14/20 semibold  botão, rótulo de campo, aba, cabeçalho
+                                        de tabela — a MAIORIA dos controles
+
+     ATENÇÃO: aqui o token SEM sufixo não é o mais usado. Botão e rótulo levam
+     -strong. A regra do sistema é peso, não frequência.
+
+     Não existe label-sm. Chip, badge e controle compacto são 12/16, e 12/16 é
+     caption — use caption-md-strong.
+     ---------------------------------------------------------------------- */
+  --type-label-md-size:        var(--font-size-sm);
+  --type-label-md-line-height: var(--font-line-height-sm);
+  --type-label-md-weight:      var(--font-weight-regular);
+  --type-label-md:             var(--type-label-md-weight) var(--type-label-md-size)/var(--type-label-md-line-height) var(--font-family-base);
+
+  --type-label-md-strong-size:        var(--font-size-sm);
+  --type-label-md-strong-line-height: var(--font-line-height-sm);
+  --type-label-md-strong-weight:      var(--font-weight-semibold);
+  --type-label-md-strong:             var(--type-label-md-strong-weight) var(--type-label-md-strong-size)/var(--type-label-md-strong-line-height) var(--font-family-base);
+
+  /* ===== CAPTION ==========================================================
+     DONO EXCLUSIVO dos degraus 12/16 e 10/14. Se o texto é 12 ou 10, é caption
+     — não existe body-xs nem label-sm para disputar a medida.
+
+       caption-md         12/16 regular   ajuda, timestamp, legenda, nota de
+                                          rodapé, texto denso de tabela
+       caption-md-strong  12/16 semibold  erro de campo, chip, badge, controle
+                                          compacto, ênfase dentro da ajuda
+       caption-md-bold    12/16 bold      contador de progresso, rótulo de
+                                          agrupamento, timbre de documento
+       caption-sm         10/14 regular   marcação de página, contador, o menor
+                                          texto do sistema. Use com parcimônia:
+                                          10px reprova qualquer alvo de leitura
+                                          confortável.
+
+     caption é o candidato natural a mudar de cor (--color-text-secondary).
+
+     caption-md-strong é NOVO: o código já consumia --text-caption-semibold-size
+     em 3 arquivos e o token nunca existiu — as regras caíam para o tamanho
+     herdado. Este papel corrige o defeito.
+     ---------------------------------------------------------------------- */
+  --type-caption-md-size:        var(--font-size-xs);
+  --type-caption-md-line-height: var(--font-line-height-xs);
+  --type-caption-md-weight:      var(--font-weight-regular);
+  --type-caption-md:             var(--type-caption-md-weight) var(--type-caption-md-size)/var(--type-caption-md-line-height) var(--font-family-base);
+
+  --type-caption-md-strong-size:        var(--font-size-xs);
+  --type-caption-md-strong-line-height: var(--font-line-height-xs);
+  --type-caption-md-strong-weight:      var(--font-weight-semibold);
+  --type-caption-md-strong:             var(--type-caption-md-strong-weight) var(--type-caption-md-strong-size)/var(--type-caption-md-strong-line-height) var(--font-family-base);
+
+  --type-caption-md-bold-size:        var(--font-size-xs);
+  --type-caption-md-bold-line-height: var(--font-line-height-xs);
+  --type-caption-md-bold-weight:      var(--font-weight-bold);
+  --type-caption-md-bold:             var(--type-caption-md-bold-weight) var(--type-caption-md-bold-size)/var(--type-caption-md-bold-line-height) var(--font-family-base);
+
+  --type-caption-sm-size:        var(--font-size-2xs);
+  --type-caption-sm-line-height: var(--font-line-height-2xs);
+  --type-caption-sm-weight:      var(--font-weight-regular);
+  --type-caption-sm:             var(--type-caption-sm-weight) var(--type-caption-sm-size)/var(--type-caption-sm-line-height) var(--font-family-base);
+
+  /* COLISÕES CONHECIDAS — dois degraus carregam mais de um papel:
+
+       16/24 semibold   heading-sm, body-md-strong
+       14/20 regular    body-sm, label-md
+       14/20 semibold   heading-xs, body-sm-strong, label-md-strong
+
+     14/20 é o degrau mais disputado do sistema por ser a medida padrão da
+     interface. Não é duplicação acidental: a escala tem 9 degraus e a interface
+     tem mais papéis que isso. Mantidos separados para poder mudar um sem caçar
+     ocorrência de "14px" no código — se amanhã o botão crescer para 16px, só
+     label-md-strong muda e o título de subgrupo fica onde está.
+
+     Como decidir entre eles: quebra em várias linhas -> body. Linha única
+     dentro de um controle -> label. Nomeia o bloco abaixo dele -> heading. */
+}

@@ -1,0 +1,258 @@
+.card {
+  position: relative;
+  width: 796px;
+  min-height: 817px;
+  margin: 0 auto;
+  padding: 40px 44px 60px;
+  background: var(--color-surface-card);
+  box-shadow: var(--elevation-raised);
+}
+
+.metaLeft,
+.metaRight {
+  position: absolute;
+  top: 40px;
+  font-size: var(--type-caption-sm-size);
+  color: var(--color-text-secondary);
+}
+
+.metaLeft {
+  left: 44px;
+}
+
+.metaRight {
+  right: 44px;
+}
+
+.rule {
+  position: absolute;
+  top: 57px;
+  left: 44px;
+  right: 44px;
+  height: 2px;
+  background: var(--color-text-heading);
+}
+
+/* ── Timbre ── */
+.gov {
+  margin-top: 22px;
+  font: var(--type-caption-md-bold);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--color-text-heading);
+}
+
+.dept {
+  margin-top: var(--stack-2xs);
+  font-size: var(--type-caption-sm-size);
+  color: var(--color-text-primary);
+}
+
+.accent {
+  width: 36px;
+  height: 2px;
+  margin-top: var(--stack-xs);
+  background: var(--color-surface-brand);
+}
+
+/* Peça a que a folha pertence. */
+.context {
+  margin-top: var(--stack-sm);
+  font-size: var(--type-caption-sm-size);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+/* Título da peça — só na primeira folha dela. */
+.number {
+  margin-top: var(--stack-xs);
+  font: var(--type-body-md-bold);
+  letter-spacing: 0.3px;
+  color: var(--color-text-heading);
+}
+
+.section {
+  margin-top: var(--stack-sm);
+  padding-bottom: var(--inset-2xs);
+  border-bottom: 1px solid var(--color-border-subtle);
+  font: var(--type-caption-md-strong);
+  color: var(--color-text-heading);
+}
+
+/* ── Blocos ── */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-sm);
+  margin-top: var(--stack-md);
+}
+
+.blockHeading {
+  font: var(--type-caption-md-strong);
+  color: var(--color-text-heading);
+}
+
+.paragraph {
+  font-size: var(--type-caption-md-size);
+  line-height: 1.7;
+  text-align: justify;
+  color: var(--color-text-primary);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-2xs);
+  padding-left: var(--inset-md);
+  font-size: var(--type-caption-md-size);
+  line-height: 1.6;
+  color: var(--color-text-primary);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--type-caption-sm-size);
+}
+
+.table th,
+.table td {
+  padding: var(--inset-2xs) var(--inset-xs);
+  border: 1px solid var(--color-border-subtle);
+  text-align: left;
+}
+
+.table th {
+  background: var(--color-surface-subtle);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-heading);
+}
+
+.table td {
+  color: var(--color-text-primary);
+}
+
+.table td:last-child,
+.table th:last-child {
+  text-align: right;
+}
+
+.signature {
+  margin-top: var(--stack-xl);
+  text-align: center;
+}
+
+.signatureRule {
+  width: 220px;
+  height: 1px;
+  margin: 0 auto var(--stack-2xs);
+  background: var(--color-text-primary);
+}
+
+.signatureName {
+  font: var(--type-caption-md-strong);
+  color: var(--color-text-heading);
+}
+
+.signatureRole {
+  font-size: var(--type-caption-sm-size);
+  color: var(--color-text-secondary);
+}
+
+.alert {
+  position: relative;
+  padding: 11px 10px 11px 16px;
+  background: var(--color-surface-alert);
+  border-radius: var(--corner-sm);
+}
+
+.alert::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--color-surface-warning-strong);
+  border-radius: var(--corner-sm) 0 0 var(--corner-sm);
+}
+
+.alertTitle {
+  font: var(--type-caption-sm);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.44px;
+  text-transform: uppercase;
+  color: var(--color-text-heading);
+}
+
+.alertText {
+  margin-top: var(--stack-2xs);
+  font-size: var(--type-caption-md-size);
+  color: var(--color-text-primary);
+}
+
+/* ── Versão compacta (480 × 584, visualizador do sumário) ── */
+.cardCompact {
+  width: 100%;
+  max-width: 480px;
+  min-height: 584px;
+  padding: var(--inset-2xl) var(--inset-3xl) var(--inset-3xl);
+}
+
+.cardCompact .metaLeft,
+.cardCompact .metaRight {
+  top: var(--inset-2xl);
+  font-size: 9px;
+}
+
+.cardCompact .metaLeft {
+  left: var(--inset-3xl);
+}
+
+.cardCompact .metaRight {
+  right: var(--inset-3xl);
+}
+
+.cardCompact .rule {
+  top: 53px;
+  left: var(--inset-3xl);
+  right: var(--inset-3xl);
+}
+
+.cardCompact .gov {
+  margin-top: 18px;
+  font-size: 11px;
+}
+
+.cardCompact .context {
+  margin-top: var(--stack-xs);
+  font-size: 9px;
+}
+
+.cardCompact .number {
+  margin-top: var(--stack-2xs);
+  font: var(--type-caption-md);
+  /* o atalho `font` zera o peso — repõe o bold de .number */
+  font-weight: var(--font-weight-bold);
+}
+
+.cardCompact .section,
+.cardCompact .paragraph,
+.cardCompact .list,
+.cardCompact .blockHeading,
+.cardCompact .alertText,
+.cardCompact .signatureName {
+  font-size: var(--type-caption-sm-size);
+}
+
+.cardCompact .body {
+  margin-top: var(--stack-sm);
+  gap: var(--inline-xs);
+}
+
+.cardCompact .table {
+  font-size: 9px;
+}
+
+.cardCompact .signatureRule {
+  width: 160px;
+}

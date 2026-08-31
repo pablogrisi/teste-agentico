@@ -1,0 +1,95 @@
+/* =============================================================================
+   LicIA Design System — ponto de entrada
+   -----------------------------------------------------------------------------
+   Importe SOMENTE este arquivo na aplicação:
+
+     import "./theme/index.css";
+
+   Ele faz duas coisas: carrega os tokens na ordem de dependência e define o
+   reset/base global. Os tokens em si estão em tokens/ e a documentação em
+   tokens/README.md.
+
+   ORDEM DOS IMPORTS — nunca inverta. Primitiva antes de semântica.
+
+     1. primitives.css   cor + espaço + raio + sombra, valores crus
+     2. semantics.css    cor + espaço + raio + elevação, intenção de uso
+     3. typography.css   as duas camadas de tipografia
+
+   COMO SABER SE UM TOKEN É PRIMITIVO OU SEMÂNTICO
+
+   Prefixos primitivos — NUNCA use em componente:
+     --color-<familia>-<step>   verde | laranja | azul | vermelho | preto |
+                                cinza | azulado | amarelo | neutro | gov
+     --space-<px>               0 | 2 | 4 | 8 | 10 | 12 | 16 | 20 | 24 |
+                                32 | 40 | 48 | 64
+     --radius-<px>              0 | 2 | 4 | 8 | 12 | 16 | full
+     --shadow-<escala>          sm | md | lg
+     --font-*                   family | size | line-height | weight
+
+   Prefixos semânticos — o que componente consome:
+     --color-<categoria>-<papel>  text | surface | border | action
+     --inset-*                    padding interno
+     --inline-*                   espaço entre itens lado a lado
+     --stack-*                    espaço entre itens empilhados
+     --section-*                  espaço entre blocos de página
+     --corner-*                   raio de canto
+     --elevation-*                sombra por altura na pilha
+     --type-<papel>-<escala>      display | heading | body | label | caption
+
+   Repare que --color- é o único prefixo que aparece nas duas camadas; nele quem
+   separa é o segundo segmento (família vs categoria). Nos outros domínios o
+   prefixo já basta, e --space-*, --radius-*, --shadow-* ou --font-* dentro de um
+   componente é sempre erro.
+
+   REGRA DE CONSUMO
+   Componente só usa a camada semântica. Se você precisou escrever uma família de
+   cor (--color-verde-1000), um --space-*, um --radius-*, um --shadow-* ou um
+   --font-* num componente, está faltando um token semântico — crie ele em
+   semantics.css ou typography.css.
+   ========================================================================== */
+
+@import "./tokens/primitives.css";
+@import "./tokens/semantics.css";
+@import "./tokens/typography.css";
+
+/* =============================================================================
+   RESET / BASE
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  /* Base é body-md (16/24), o mesmo 16px que o navegador já dava — mas agora com
+     entrelinha declarada em vez de `normal`. Todo componente redeclara a sua. */
+  font: var(--type-body-md);
+  background: var(--color-surface-desktop);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Controles não herdam tipografia sozinhos em nenhum navegador. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}

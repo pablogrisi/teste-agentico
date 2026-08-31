@@ -1,0 +1,442 @@
+.panel {
+  flex-shrink: 0;
+  width: 596px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border-default);
+  border-right: none;
+  border-radius: var(--corner-md) 0 0 var(--corner-md);
+  overflow: hidden;
+}
+
+/* ── Abas ── */
+.tabs {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--inline-md);
+  padding: 0 var(--inset-2xl) 0 var(--inset-md);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: var(--inline-xs);
+  height: 44px;
+  padding: var(--inset-control) var(--inset-xs);
+  margin-bottom: -1px;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tabInactive {
+  cursor: default;
+}
+
+.tabLabel {
+  font: var(--type-label-md-strong);
+  color: var(--color-text-secondary);
+}
+
+.tabActive {
+  border-bottom-color: var(--color-border-brand);
+}
+
+.tabActive .tabLabel {
+  color: var(--color-text-brand);
+}
+
+.tabInactive .tabLabel {
+  color: var(--color-text-disabled);
+}
+
+.tabBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--corner-lg);
+  background: var(--color-surface-emphasis);
+  color: var(--color-text-secondary);
+  font: var(--type-label-md);
+}
+
+.tabActive .tabBadge {
+  background: var(--color-surface-brand-muted);
+  color: var(--color-text-brand);
+}
+
+/* ── Progresso ── */
+.progress {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-xs);
+  padding: var(--inset-sm) var(--inset-2xl) var(--inset-sm) var(--inset-md);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: var(--inline-md);
+}
+
+.progressLabel {
+  flex: 1;
+  font: var(--type-label-md-strong);
+  color: var(--color-text-secondary);
+}
+
+.progressCounter {
+  font: var(--type-caption-md-bold);
+  color: var(--color-text-heading);
+}
+
+.progressBar {
+  height: 4px;
+  border-radius: 3px;
+  background: var(--color-border-default);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--color-surface-brand);
+  transition: width 0.3s ease;
+}
+
+/* ── Filtros (chips) ── */
+.filters {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--inline-sm);
+  padding: var(--inset-sm) var(--inset-2xl) var(--inset-sm) var(--inset-md);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--inset-2xs) var(--inset-xs);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--corner-md);
+  background: var(--color-surface-card);
+  color: var(--color-text-disabled);
+  font: var(--type-caption-md-strong);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.chipActive {
+  border-color: transparent;
+  color: var(--color-text-inverse);
+}
+
+.chipActiveError {
+  background: var(--color-surface-danger-strong);
+}
+.chipActiveConforme {
+  background: var(--color-surface-brand);
+}
+.chipActiveNa {
+  background: var(--color-border-strong);
+}
+.chipActiveTodos {
+  background: var(--color-surface-info-strong);
+}
+
+/* ── Lista rolável ── */
+.list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-xs);
+  padding: var(--inset-xs) var(--inset-2xl) var(--inset-xs) var(--inset-md);
+  background: var(--color-surface-page);
+}
+
+/* ── Grupo ── */
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-xs);
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--inline-xs);
+}
+
+.groupLabel {
+  font: var(--type-caption-md-bold);
+  color: var(--color-text-primary);
+}
+
+.groupBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--corner-lg);
+  background: var(--color-surface-emphasis);
+  color: var(--color-text-secondary);
+  font: var(--type-caption-md);
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-xs);
+}
+
+/* ── Item (acordeão) ── */
+.item {
+  border-left: 4px solid var(--accent);
+  border-radius: var(--corner-md);
+  overflow: hidden;
+}
+
+.itemSuccess {
+  --accent: var(--color-border-brand);
+}
+.itemWarning {
+  --accent: var(--color-border-warning);
+}
+.itemError {
+  --accent: var(--color-border-danger);
+}
+.itemNa {
+  --accent: var(--color-border-strong);
+}
+.itemObs {
+  --accent: var(--color-border-neutral);
+}
+
+.itemInner {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--corner-md);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.itemOpen .itemInner {
+  border-color: var(--accent);
+}
+
+.itemHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--inline-md);
+  padding: var(--inset-sm) var(--inset-md);
+  border-bottom: 1px solid var(--color-border-default);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s;
+}
+
+.itemHeader:hover {
+  background: var(--color-surface-page);
+}
+
+.itemMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--inline-xs);
+}
+
+.checkbox {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--corner-xs);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s;
+}
+
+.checkbox:checked {
+  background: var(--color-surface-brand);
+  border-color: var(--color-border-brand);
+}
+
+.checkbox:checked::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 4px;
+  width: 5px;
+  height: 9px;
+  border: 2px solid var(--color-text-inverse);
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+.checkbox:disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
+
+.itemText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-3xs);
+}
+
+.question {
+  font: var(--type-body-sm);
+  color: var(--color-text-primary);
+}
+
+.itemNa .question {
+  color: var(--color-text-secondary);
+}
+
+.pages {
+  width: fit-content;
+  font: var(--type-caption-md-strong);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.pages:hover {
+  color: var(--color-text-brand);
+  text-decoration: underline;
+}
+
+.status {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--inline-xs);
+}
+
+.statusLabel {
+  font: var(--type-label-md-strong);
+  white-space: nowrap;
+}
+
+.itemSuccess .statusLabel {
+  color: var(--color-text-brand);
+}
+.itemWarning .statusLabel {
+  color: var(--color-text-warning);
+}
+.itemError .statusLabel {
+  color: var(--color-text-danger);
+}
+.itemNa .statusLabel {
+  color: var(--color-text-disabled);
+}
+
+.chevron {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  color: var(--color-text-secondary);
+  transition: transform 0.2s;
+}
+
+.itemOpen .chevron {
+  transform: rotate(180deg);
+}
+
+/* ── Detalhe ── */
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-md);
+  padding: var(--inset-md);
+}
+
+.detailRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--inline-xs);
+}
+
+.detailText {
+  flex: 1;
+  font: var(--type-body-sm);
+  color: var(--color-text-primary);
+}
+
+.detailActions {
+  display: flex;
+  align-items: center;
+  gap: var(--inline-xs);
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* ── Botões ── */
+.btnLink {
+  display: flex;
+  align-items: center;
+  gap: var(--inline-xs);
+  min-width: 120px;
+  padding: var(--inset-xs) var(--inset-md) var(--inset-xs) var(--inset-sm);
+  border: none;
+  background: none;
+  border-radius: var(--corner-md);
+  font: var(--type-label-md);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.btnLink:hover {
+  background: var(--color-surface-hover);
+}
+
+.btnLink svg {
+  flex-shrink: 0;
+}
+
+.btnEdit {
+  display: flex;
+  align-items: center;
+  gap: var(--inline-xs);
+  padding: var(--inset-xs);
+  background: none;
+  border: none;
+  border-radius: var(--corner-md);
+  font: var(--type-label-md);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnEdit svg {
+  flex-shrink: 0;
+}
+
+.btnEdit:hover {
+  background: var(--color-surface-hover);
+}

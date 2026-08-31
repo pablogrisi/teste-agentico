@@ -1,0 +1,49 @@
+/* Dica de texto. Tokens: surface-inverse + text-inverse (13.9:1 — é o único
+   fundo cheio do sistema que aguenta texto branco), corner-sm e inset-xs, que
+   a camada semântica já reserva para "tag, chip, tooltip".
+
+   O texto é label-md-strong, não caption: a dica é rótulo de um controle, e num
+   balão que aparece e some 12px pesa pouco para ser lido de passagem. */
+.tip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  max-width: 240px;
+  padding: var(--inset-2xs) var(--inset-xs);
+  border-radius: var(--corner-sm);
+  background: var(--color-surface-inverse);
+  box-shadow: var(--elevation-overlay);
+  font: var(--type-label-md-strong);
+  color: var(--color-text-inverse);
+  text-align: center;
+  /* Fora da tela e sem eventos enquanto fechada — mas ainda medível, que é
+     como a posição é calculada antes do primeiro quadro visível. */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s;
+}
+
+.tip[data-open] {
+  opacity: 1;
+}
+
+/* Seta: quadrado girado, mesma cor do balão. `--tip-arrow` vem do JS com a
+   distância até o centro do gatilho, para a ponta acompanhar o botão mesmo
+   quando o balão encostou na margem da janela. */
+.tip::after {
+  content: "";
+  position: absolute;
+  left: var(--tip-arrow, 50%);
+  width: 8px;
+  height: 8px;
+  background: var(--color-surface-inverse);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.tip_top::after {
+  bottom: -3px;
+}
+
+.tip_bottom::after {
+  top: -3px;
+}

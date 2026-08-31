@@ -1,0 +1,113 @@
+/* Confirmação de exclusão — mesma caixa dos outros modais, só mais estreita:
+   o conteúdo é uma pergunta, não um formulário. */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-overlay);
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+  max-width: 480px;
+  background: var(--color-surface-card);
+  border-radius: var(--corner-md);
+  box-shadow: var(--elevation-modal);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin: 0 var(--inline-md);
+  padding: var(--inset-md) 0 var(--inset-xs);
+  border-bottom: 1px solid var(--color-border-brand);
+}
+
+.title {
+  font: var(--type-heading-sm);
+  color: var(--color-text-heading);
+}
+
+.close {
+  display: flex;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--color-text-brand);
+  cursor: pointer;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-xs);
+  padding: var(--inset-md);
+}
+
+.text {
+  margin: 0;
+  font: var(--type-body-sm);
+  color: var(--color-text-primary);
+}
+
+.doc {
+  font: var(--type-label-md-strong);
+  color: var(--color-text-heading);
+}
+
+.hint {
+  margin: 0;
+  font: var(--type-caption-md);
+  color: var(--color-text-primary);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--inline-xs);
+  padding: var(--inset-md);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  padding: var(--inset-xs) var(--inset-md);
+  border-radius: var(--corner-md);
+  font: var(--type-label-md-strong);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cancel {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border-default);
+  color: var(--color-text-primary);
+}
+
+.cancel:hover {
+  background: var(--color-surface-hover);
+}
+
+/* Confirmar é a ação destrutiva, mas na forma suave: o vermelho cheio não tem
+   contraste para texto por cima (ver semantics.css). */
+.confirm {
+  background: var(--color-surface-danger);
+  border: 1px solid var(--color-border-danger);
+  color: var(--color-text-danger);
+}
+
+.confirm:hover {
+  background: var(--color-surface-danger);
+  filter: brightness(0.96);
+}

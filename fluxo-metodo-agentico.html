@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fluxo de trabalho — Método Agêntico</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --border: #2a2f3a;
+    --text: #e6e8ec;
+    --text-dim: #9aa1ac;
+    --accent: #7c9cff;
+    --usuario: #4fb0ff;
+    --ia: #b57cff;
+    --ferramenta: #7d8794;
+    --loop: #3ddc97;
+    --code-bg: #10131a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    padding: 28px 32px 16px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(15,17,21,0.95);
+    backdrop-filter: blur(6px);
+    z-index: 10;
+  }
+  header h1 {
+    margin: 0 0 6px;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  header p.sub {
+    margin: 0 0 18px;
+    color: var(--text-dim);
+    font-size: 14px;
+    max-width: 780px;
+    line-height: 1.5;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: all .15s ease;
+    font-weight: 600;
+  }
+  .tab-btn:hover { color: var(--text); border-color: var(--accent); }
+  .tab-btn.active {
+    background: var(--accent);
+    color: #0f1115;
+    border-color: var(--accent);
+  }
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    font-size: 12.5px;
+    color: var(--text-dim);
+  }
+  .legend .dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  main {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 32px 32px 120px;
+  }
+  .flow-intro {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 13.5px;
+    color: var(--text-dim);
+    line-height: 1.55;
+    margin-bottom: 28px;
+  }
+  .flow { display: none; }
+  .flow.active { display: block; }
+  .step-wrap {
+    position: relative;
+    padding-left: 34px;
+  }
+  .step-wrap::before {
+    content: "";
+    position: absolute;
+    left: 10px;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    background: linear-gradient(var(--border), var(--border));
+  }
+  .step {
+    position: relative;
+    margin-bottom: 22px;
+  }
+  .step-dot {
+    position: absolute;
+    left: -34px;
+    top: 4px;
+    width: 21px;
+    height: 21px;
+    border-radius: 50%;
+    background: var(--panel-2);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--text-dim);
+  }
+  .step-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .step-card.actor-usuario { border-left: 3px solid var(--usuario); }
+  .step-card.actor-ia { border-left: 3px solid var(--ia); }
+  .step-card.actor-ferramenta { border-left: 3px solid var(--ferramenta); }
+  .step-card.actor-loop { border-left: 3px solid var(--loop); background: var(--panel-2); }
+  .step-badges {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: 3px 8px;
+    border-radius: 20px;
+  }
+  .badge.actor-usuario { background: rgba(79,176,255,.15); color: var(--usuario); }
+  .badge.actor-ia { background: rgba(181,124,255,.15); color: var(--ia); }
+  .badge.actor-ferramenta { background: rgba(125,135,148,.18); color: var(--ferramenta); }
+  .badge.actor-loop { background: rgba(61,220,151,.15); color: var(--loop); }
+  .step-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+  .step-text {
+    font-size: 13.5px;
+    color: var(--text-dim);
+    line-height: 1.55;
+    margin: 0 0 10px;
+  }
+  .file-chips {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+  .file-chip {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .file-chip:hover {
+    border-color: var(--accent);
+    background: rgba(124,156,255,.12);
+    transform: translateY(-1px);
+  }
+  /* side panel */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease;
+    z-index: 20;
+  }
+  .overlay.open { opacity: 1; pointer-events: auto; }
+  .panel {
+    position: fixed;
+    top: 2vh;
+    right: -100vw;
+    width: 96vw;
+    height: 96vh;
+    max-width: none;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.55);
+    transition: right .22s ease;
+    z-index: 21;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel.open { right: 2vw; }
+  .panel-header {
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .panel-header code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--accent);
+    word-break: break-all;
+  }
+  .panel-actions { display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+  .panel-actions button {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 15px;
+    padding: 9px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .panel-actions button:hover { color: var(--text); border-color: var(--accent); }
+  .panel-actions button.close { color: var(--text); font-size: 20px; padding: 9px 15px; line-height: 1; }
+  .panel-body {
+    padding: 36px 64px 80px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .md-render { max-width: 900px; margin: 0 auto; }
+  .md-render h1, .md-render h2, .md-render h3 { color: var(--text); }
+  .md-render h1 { font-size: 34px; margin-top: 0; line-height: 1.3; }
+  .md-render h2 { font-size: 26px; border-top: 1px solid var(--border); padding-top: 28px; margin-top: 38px; }
+  .md-render h3 { font-size: 21px; margin-top: 26px; }
+  .md-render p, .md-render li { font-size: 19px; line-height: 1.75; color: #d4d7dd; }
+  .md-render li { margin-bottom: 6px; }
+  .md-render code {
+    background: var(--code-bg);
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 17px;
+    color: #ffd479;
+  }
+  .md-render pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 20px 22px;
+    border-radius: 10px;
+    overflow-x: auto;
+    margin: 20px 0;
+  }
+  .md-render pre code { background: none; padding: 0; color: #d4d7dd; font-size: 16px; line-height: 1.6; }
+  .md-render table { border-collapse: collapse; width: 100%; font-size: 17px; margin: 18px 0; }
+  .md-render th, .md-render td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+  .md-render th { background: var(--panel-2); }
+  .md-render blockquote {
+    border-left: 4px solid var(--accent);
+    margin: 18px 0;
+    padding: 8px 22px;
+    font-size: 19px;
+    color: var(--text-dim);
+    background: var(--panel-2);
+    border-radius: 0 8px 8px 0;
+  }
+  .md-render hr { border: none; border-top: 1px solid var(--border); margin: 30px 0; }
+  .raw-view {
+    display: none;
+    white-space: pre-wrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #d4d7dd;
+    background: var(--code-bg);
+    padding: 24px 28px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  footer {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 11.5px;
+    padding: 20px;
+  }
+
+  .diagram-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px 120px;
+  }
+  .diagram-wrap {
+    overflow-x: auto;
+    display: flex;
+    justify-content: center;
+    padding: 8px 0 20px;
+  }
+  .diagram-wrap svg {
+    width: 100%;
+    max-width: 1040px;
+    height: auto;
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Fluxo de trabalho — Método Agêntico</h1>
+  <p class="sub">Como os arquivos do pacote se chamam uns aos outros, em que momentos a pessoa precisa agir, e o que acontece em cada passo. Clique em qualquer nome de arquivo pra ver o conteúdo real, renderizado.</p>
+  <div class="tabs" id="tabs"></div>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--usuario)"></span>Pessoa</span>
+    <span><span class="dot" style="background:var(--ia)"></span>IA</span>
+    <span><span class="dot" style="background:var(--ferramenta)"></span>Ferramenta (automático)</span>
+    <span><span class="dot" style="background:var(--loop)"></span>Continuação / loop</span>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<div id="visao-geral-view" class="flow diagram-page">
+  <div class="flow-intro">Versão mais abstrata do mesmo fluxo — sem nomear arquivos. Mostra a ordem dos processos e, principalmente, em que momentos a pessoa precisa agir: responder algo à IA, ou aprovar um rascunho antes dela seguir em frente.</div>
+  <div class="diagram-wrap">
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="2147" viewBox="0 0 1180 2147">
+<rect x="0" y="0" width="1180" height="2147" fill="#0f1115"/>
+
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#9aa1ac"/>
+  </marker>
+  <marker id="arrowGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#3ddc97"/>
+  </marker>
+  <marker id="arrowBranch" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#b57cff"/>
+  </marker>
+  <style>
+    .title { font: 700 17px 'Segoe UI', Helvetica, Arial, sans-serif; fill: #e6e8ec; }
+    .note { font: 400 12.5px 'Segoe UI', Helvetica, Arial, sans-serif; fill: #9aa1ac; }
+    .badge { font: 700 13px 'Segoe UI', Helvetica, Arial, sans-serif; }
+    .taglabel { font: 700 9.5px 'Segoe UI', Helvetica, Arial, sans-serif; letter-spacing: .06em; }
+    .sectionlabel { font: 700 13px 'Segoe UI', Helvetica, Arial, sans-serif; letter-spacing: .08em; fill: #9aa1ac; }
+    .maintitle { font: 700 30px 'Segoe UI', Helvetica, Arial, sans-serif; fill: #e6e8ec; }
+    .subtitle { font: 400 14.5px 'Segoe UI', Helvetica, Arial, sans-serif; fill: #9aa1ac; }
+    .legendtext { font: 600 12.5px 'Segoe UI', Helvetica, Arial, sans-serif; fill: #e6e8ec; }
+  </style>
+</defs>
+
+
+<text x="590.0" y="56" text-anchor="middle" class="maintitle">Fluxo de trabalho — visão geral</text>
+<text x="590.0" y="84" text-anchor="middle" class="subtitle">Método Agêntico — ordem dos processos e onde a pessoa precisa interagir</text>
+
+<rect x="190" y="394" width="900" height="748" rx="18" fill="#1c2129" fill-opacity="0.35" stroke="#2a2f3a" stroke-width="1" stroke-dasharray="6,5"/>
+<text x="220" y="420" class="sectionlabel">FUNDAÇÃO — SÓ NA PRIMEIRA VEZ</text>
+<rect x="190" y="1180" width="900" height="762" rx="18" fill="#1c2129" fill-opacity="0.35" stroke="#2a2f3a" stroke-width="1" stroke-dasharray="6,5"/>
+<text x="220" y="1206" class="sectionlabel">CICLO RECORRENTE — A CADA NOVA DEMANDA</text>
+<text x="260" y="156" class="sectionlabel">ENTRADA</text><rect x="260" y="170" width="760" height="72" rx="36.0" fill="#1c2129" stroke="#7d8794" stroke-width="2.5"/><circle cx="226" cy="206.0" r="17" fill="#1c2129" stroke="#7d8794" stroke-width="2"/><text x="226" y="211.0" text-anchor="middle" class="badge" fill="#7d8794">1</text><text x="294" y="199" text-anchor="start" class="title">Entrada</text><text x="294" y="220" text-anchor="start" class="note">a ferramenta reconhece o método sozinha</text><rect x="888" y="184" width="118" height="20" rx="10" fill="#7d879422" stroke="#7d8794" stroke-width="1"/><text x="947.0" y="198" text-anchor="middle" class="taglabel" fill="#7d8794">AUTOMÁTICO</text><polygon points="640.0,272 1020,321.0 640.0,370 260,321.0" fill="#1c2129" stroke="#7d8794" stroke-width="2.5"/><circle cx="210" cy="321.0" r="17" fill="#1c2129" stroke="#7d8794" stroke-width="2"/><text x="210" y="326.0" text-anchor="middle" class="badge" fill="#7d8794">2</text><text x="640.0" y="315.0" text-anchor="middle" class="title">Verificação de estado</text><text x="640.0" y="335.0" text-anchor="middle" class="note">projeto novo ou já com base estabelecida?</text><line x1="640.0" y1="242" x2="640.0" y2="272" stroke="#9aa1ac" stroke-width="2" marker-end="url(#arrow)"/><rect x="260" y="440" width="760" height="72" rx="12" fill="#171a21" stroke="#2a2f3a" stroke-width="1.5"/><rect x="260" y="440" width="6" height="72" rx="3" fill="#4fb0ff"/><circle cx="226" cy="476.0" r="17" fill="#1c2129" stroke="#4fb0ff" stroke-width="2"/><text x="226" y="481.0" text-anchor="middle" class="badge" fill="#4fb0ff">3</text><text x="294" y="469" text-anchor="start" class="title">Entendimento do produto</text><text x="294" y="490" text-anchor="start" class="note">a IA pergunta — problema, público, escopo</text><rect x="888" y="454" width="118" height="20" rx="10" fill="#4fb0ff22" stroke="#4fb0ff" stroke-width="1"/><text x="947.0" y="468" text-anchor="middle" class="taglabel" fill="#4fb0ff">PESSOA RESPONDE</text><line x1="640.0" y1="370" x2="640.0" y2="440" stroke="#b57cff" stroke-width="2" marker-end="url(#arrowBranch)"/><rect x="582.0" y="394.0" width="116" height="22" rx="11" fill="#0f1115" stroke="#b57cff" stroke-width="1.3"/><text x="640.0" y="409.0" text-anchor="middle" class="taglabel" fill="#b57cff">PROJETO NOVO</text><rect x="260" y="542" width="760" height="72" rx="12" fill="#171a21" stroke="#2a2f3a" stroke-width="1.5"/><rect x="260" y="542" width="6" height="72" rx="3" fill="#f5b942"/><circle cx="226" cy="578.0" r="17" fill="#1c2129" stroke="#f5b942" stroke-width="2"/><text x="226" y="583.0" text-anchor="middle" class="badge" fill="#f5b942">4</text><text x="294" y="571" text-anchor="start" class="title">Confirmação do entendimento de produto</text><text x="294" y="592" text-anchor="start" class="note">a pessoa aprova ou corrige o rascunho</text><rect x="888" y="556" width="118" height="20" rx="10" fill="#f5b94222" stroke="#f5b942" stroke-width="1"/><text x="947.0" y="570" text-anchor="middle" class="taglabel" fill="#f5b942">PESSOA APROVA</text><line x1="640.0" y1="512" x2="640.0" y2="542" stroke="#9aa1ac" stroke-width="2" marker-end="url(#arrow)"/><rect x="260" y="644" width="760" height="72" rx="12" fill="#171a21" stroke="#2a2f3a" stroke-width="1.5"/><rect x="260" y="644" width="6" height="72" rx="3" fill="#4fb0ff"/><circle cx="226" cy="680.0" r="17" fill="#1c2129" stroke="#4fb0ff" stroke-width="2"/><text x="226" y="685.0" text-anchor="middle" class="badge" fill="#4fb0ff">5</text><text x="294" y="673" text-anchor="start" class="title">Entendimento técnico</text><text x="294" y="694" text-anchor="start" class="note">a IA pergunta — tecnologia, dependências, limitações</text><rect x="888" y="658" width="118" height="20" rx="10" fill="#4fb0ff22" stroke="#4fb0ff" stroke-width="1"/><text x="947.0" y="672" text-anchor="middle" class="taglabel" fill="#4fb0ff">PESSOA RESPONDE</text><line x1="640.0" y1="614" x2="640.0" y2="644" stroke="#9aa1ac" stroke-width="2" marker-end="url(#arrow)"/><rect x="260" y="746" width="760" height="72" rx="12" fill="#171a21" stroke="#2a2f3a" stroke-width="1.5"/><rect x="260" y="746" width="6" height="72" rx="3" fill="#f5b942"/><circle cx="226" cy="782.0" r="17" fill="#1c2129" stroke="#f5b942" stroke-width="2"/><text x="226" y="787.0" text-anchor="middle" class="badge" fill="#f5b942">6</text><text x="294" y="775" text-anchor="start" class="title">Confirmação do entendimento técnico</text><text x="294" y="796" text-anchor="start" class="note">a pessoa aprova ou corrige o rascunho</text><rect x="888" y="760" width="118" height="20" rx="10" fill="#f5b94222" stroke="#f5b942" stroke-width="1"/><text x="947.0" y="774" text-anchor="middle" class="taglabel" fill="#f5b942">PESSOA APROVA</text><line x1="640.0" y1="716" x2="640.0" y2="746" stroke="#9aa1ac" stroke-width="2" marker-end="url(#arrow)"/><rect x="260" y="848" width="760" height="72" rx="12" fill="#171a21" stroke="#2a2f3a" stroke-width="1.5"/><rect x="260" y="848" width="6" height="72" rx="3" fill="#4fb0ff"/><circle cx="226" cy="884.0" r="17" fill="#1c2129" stroke="#4fb0ff" stroke-width="2"/><text x="226" y="889.0" text-anchor="middle" class="badge" fill="#4fb0ff">7</text><text x="294" y="877" text-anchor="start" class="title">Definição de critério de qualidade</text><text x="294" y="898" text-anchor="start" class="note">perguntas objetivas sobre como validar</text><rect x="888" y="862" width="118" height="20" rx="10" fill="#4fb0ff22" stroke="#4fb0ff" stroke-width="1"/><text x="947.0" y="876" text-anchor="middle" class="taglabel" fill="#4fb0ff">PESSOA RESPONDE</text><line x1="640.0" y1="818" x2="640.0" y2="848" stroke="#9aa1ac" stroke-width="2" marker-end="url(#arrow)"/><rect x="260" y="950" width="760" height="72" rx="12" fill="#171a21" stroke="#2a2f3a" stroke-width="1.5"/><rect x="260" y="950" width="6" height="72" rx="3" fill="#4fb0ff"/><circle cx="226" cy="986.0" r="17" fill="#1c2129" stroke="#4fb0ff" stroke-width="2"/><text x="226" y="991.0" text-anchor="middle" class="badge" fill="#4fb0ff">8</text><text x="294" y="979" text-anchor="start" class="title">Definição de referências complementares</text><text x="294" y="1000" text-anchor="start" class="note">visual e vocabulário — só se aplicável</text><rect x="888" y="964" width="118" height="20" rx="10" fill="#4fb0ff22" stroke="#4fb0ff" stroke-width="1"/><text x="947.0" y="978" text-anchor="middle" class="taglabel" fill="#4fb0ff">PESSOA RESPONDE</text><line x1="640.0" y1="920" x2="640.0" y2="950" stroke="#9aa1ac" stroke-width="2" marker-end="url(#arrow)"/><rect x="260" y="1052" width="760" height="72" rx="12" fill="#171a21" stroke="#2a2f3a" stroke-width="1.5"/><rect x="260" y="1052" width="6" height="72" rx="3" fill="#f5b942"/><circle cx="226" cy="1088.0" r="17" fill="#1c2129" stroke="#f5b942" stroke-width="2"/><text x="226" y="1093.0" text-anchor="middle" class="badge" fill="#f5b942">9</text><text x="294" y="1081" text-anchor="start" class="title">Registro do estado inicial</text><text x="294" y="1102" text-anchor="start" class="note">a pessoa aprova o primeiro passo técnico</text><rect x="888" y="1066" width="118" height="20" rx="10" fill="#f5b94222" stroke="#f5b942" stroke-width="1"/><text x="947.0" y="1080" text-anchor="middle" class="taglabel" fill="#f5b942">PESSOA APROVA</text><line x1="640.0" y1="1022" x2="640.0" y2="1052" stroke="#9aa1ac" stroke-width="2" marker-end="url(#arrow)"/><rect x="260" y="1240" width="760" height="72" rx="12" fill="#171a21" stroke="#2a2f3a" stroke-width="1.5"/><rect x="260" y="1240" width="6" height="72" rx="3" fill="#7d8794"/><circle cx="226" cy="1276.0" r="17" fill="#1c2129" stroke="#7d8794" stroke-width="2"/><text x="226" y="1281.0" text-anchor="middle" class="badge" fill="#7d8794">10</text><text x="294" y="1269" text-anchor="start" class="title">Retomada do contexto</text><text x="294" y="1290" text-anchor="start" class="note">a IA relê o que já existe antes de agir</text><rect x="888" y="1254" width="118" height="20" rx="10" fill="#7d879422" stroke="#7d8794" stroke-width="1"/><text x="947.0" y="1268" text-anchor="middle" class="taglabel" fill="#7d8794">AUTOMÁTICO</text><line x1="640.0" y1="1124" x2="640.0" y2="1240" stroke="#9aa1ac" stroke-width="2" marker-end="url(#arrow)"/><rect x="260" y="1342" width="760" height="72" rx="12" fill="#171a21" stroke="#2a2f3a" stroke-width="1.5"/><rect x="260" y="1342" width="6" height="72" rx="3" fill="#4fb0ff"/><circle cx="226" cy="1378.0" r="17" fill="#1c2129" stroke="#4fb0ff" stroke-width="2"/><text x="226" y="1383.0" text-anchor="middle" class="badge" fill="#4fb0ff">11</text><text x="294" y="1371" text-anchor="start" class="title">Pedido da demanda</text><text x="294" y="1392" text-anchor="start" class="note">a pessoa pede uma funcionalidade, correção ou mudança</text><rect x="888" y="1356" width="118" height="20" rx="10" fill="#4fb0ff22" stroke="#4fb0ff" stroke-width="1"/><text x="947.0" y="1370" text-anchor="middle" class="taglabel" fill="#4fb0ff">PESSOA RESPONDE</text><line x1="640.0" y1="1312" x2="640.0" y2="1342" stroke="#9aa1ac" stroke-width="2" marker-end="url(#arrow)"/><rect x="260" y="1444" width="760" height="72" rx="12" fill="#171a21" stroke="#2a2f3a" stroke-width="1.5"/><rect x="260" y="1444" width="6" height="72" rx="3" fill="#7d8794"/><circle cx="226" cy="1480.0" r="17" fill="#1c2129" stroke="#7d8794" stroke-width="2"/><text x="226" y="1485.0" text-anchor="middle" class="badge" fill="#7d8794">12</text><text x="294" y="1473" text-anchor="start" class="title">Entendimento e classificação do pedido</text><text x="294" y="1494" text-anchor="start" class="note">só pergunta de volta se não conseguir inferir</text><rect x="888" y="1458" width="118" height="20" rx="10" fill="#7d879422" stroke="#7d8794" stroke-width="1"/><text x="947.0" y="1472" text-anchor="middle" class="taglabel" fill="#7d8794">AUTOMÁTICO</text><line x1="640.0" y1="1414" x2="640.0" y2="1444" stroke="#9aa1ac" stroke-width="2" marker-end="url(#arrow)"/><rect x="260" y="1546" width="760" height="72" rx="12" fill="#171a21" stroke="#2a2f3a" stroke-width="1.5"/><rect x="260" y="1546" width="6" height="72" rx="3" fill="#f5b942"/><circle cx="226" cy="1582.0" r="17" fill="#1c2129" stroke="#f5b942" stroke-width="2"/><text x="226" y="1587.0" text-anchor="middle" class="badge" fill="#f5b942">13</text><text x="294" y="1575" text-anchor="start" class="title">Proposta de escopo</text><text x="294" y="1596" text-anchor="start" class="note">a pessoa revisa o que vai e o que não vai ser feito</text><rect x="888" y="1560" width="118" height="20" rx="10" fill="#f5b94222" stroke="#f5b942" stroke-width="1"/><text x="947.0" y="1574" text-anchor="middle" class="taglabel" fill="#f5b942">PESSOA APROVA</text><line x1="640.0" y1="1516" x2="640.0" y2="1546" stroke="#9aa1ac" stroke-width="2" marker-end="url(#arrow)"/><rect x="260" y="1648" width="760" height="72" rx="12" fill="#171a21" stroke="#2a2f3a" stroke-width="1.5"/><rect x="260" y="1648" width="6" height="72" rx="3" fill="#7d8794"/><circle cx="226" cy="1684.0" r="17" fill="#1c2129" stroke="#7d8794" stroke-width="2"/><text x="226" y="1689.0" text-anchor="middle" class="badge" fill="#7d8794">14</text><text x="294" y="1677" text-anchor="start" class="title">Implementação</text><text x="294" y="1698" text-anchor="start" class="note">a IA constrói dentro do escopo aprovado</text><rect x="888" y="1662" width="118" height="20" rx="10" fill="#7d879422" stroke="#7d8794" stroke-width="1"/><text x="947.0" y="1676" text-anchor="middle" class="taglabel" fill="#7d8794">AUTOMÁTICO</text><line x1="640.0" y1="1618" x2="640.0" y2="1648" stroke="#9aa1ac" stroke-width="2" marker-end="url(#arrow)"/><rect x="260" y="1750" width="760" height="72" rx="12" fill="#171a21" stroke="#2a2f3a" stroke-width="1.5"/><rect x="260" y="1750" width="6" height="72" rx="3" fill="#7d8794"/><circle cx="226" cy="1786.0" r="17" fill="#1c2129" stroke="#7d8794" stroke-width="2"/><text x="226" y="1791.0" text-anchor="middle" class="badge" fill="#7d8794">15</text><text x="294" y="1779" text-anchor="start" class="title">Verificação</text><text x="294" y="1800" text-anchor="start" class="note">testes e critérios de qualidade executados</text><rect x="888" y="1764" width="118" height="20" rx="10" fill="#7d879422" stroke="#7d8794" stroke-width="1"/><text x="947.0" y="1778" text-anchor="middle" class="taglabel" fill="#7d8794">AUTOMÁTICO</text><line x1="640.0" y1="1720" x2="640.0" y2="1750" stroke="#9aa1ac" stroke-width="2" marker-end="url(#arrow)"/><rect x="260" y="1852" width="760" height="72" rx="12" fill="#171a21" stroke="#2a2f3a" stroke-width="1.5"/><rect x="260" y="1852" width="6" height="72" rx="3" fill="#f5b942"/><circle cx="226" cy="1888.0" r="17" fill="#1c2129" stroke="#f5b942" stroke-width="2"/><text x="226" y="1893.0" text-anchor="middle" class="badge" fill="#f5b942">16</text><text x="294" y="1881" text-anchor="start" class="title">Prestação de contas</text><text x="294" y="1902" text-anchor="start" class="note">a pessoa vê o que mudou e o próximo passo sugerido</text><rect x="888" y="1866" width="118" height="20" rx="10" fill="#f5b94222" stroke="#f5b942" stroke-width="1"/><text x="947.0" y="1880" text-anchor="middle" class="taglabel" fill="#f5b942">PESSOA APROVA</text><line x1="640.0" y1="1822" x2="640.0" y2="1852" stroke="#9aa1ac" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 1020 1908 L 1075 1908 L 1075 1398 L 1020 1398" fill="none" stroke="#3ddc97" stroke-width="2.5" stroke-dasharray="1,0" marker-end="url(#arrowGreen)"/>
+<text x="1085" y="1653.0" class="note" fill="#3ddc97" transform="rotate(90 1085 1653.0)" text-anchor="middle">próxima demanda</text>
+<path d="M 260 321.0 L 130 321.0 L 130 1224 L 570.0 1224 L 570.0 1240" fill="none" stroke="#b57cff" stroke-width="2.5" stroke-dasharray="7,5" marker-end="url(#arrowBranch)"/>
+<text x="118" y="772.5" class="note" fill="#b57cff" transform="rotate(-90 118 772.5)" text-anchor="middle">PROJETO EXISTENTE — pula a fundação</text>
+<rect x="190" y="2017" width="900" height="120" rx="14" fill="#171a21" stroke="#2a2f3a" stroke-width="1"/><rect x="220" y="2047" width="20" height="20" rx="5" fill="#7d8794"/><text x="250" y="2062" class="legendtext">Automático — a IA age sozinha</text><rect x="660.0" y="2047" width="20" height="20" rx="5" fill="#4fb0ff"/><text x="690.0" y="2062" class="legendtext">Pessoa responde — a IA precisa de uma informação</text><rect x="220" y="2081" width="20" height="20" rx="5" fill="#f5b942"/><text x="250" y="2096" class="legendtext">Pessoa aprova — nada avança sem confirmação</text><rect x="660.0" y="2081" width="20" height="20" rx="5" fill="#3ddc97"/><text x="690.0" y="2096" class="legendtext">Fecha o ciclo e recomeça</text><rect x="220" y="2115" width="20" height="20" rx="5" fill="#b57cff"/><text x="250" y="2130" class="legendtext">Bifurcação — caminho depende do estado do projeto</text>
+</svg>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="panel" id="panel">
+  <div class="panel-header">
+    <code id="panel-path">arquivo.md</code>
+    <div class="panel-actions">
+      <button id="toggle-raw">Ver markdown puro</button>
+      <button class="close" id="panel-close">✕</button>
+    </div>
+  </div>
+  <div class="panel-body">
+    <div class="md-render" id="panel-rendered"></div>
+    <div class="raw-view" id="panel-raw"></div>
+  </div>
+</div>
+
+<footer>Método Agêntico — pacote reutilizável de processo para desenvolvimento assistido por IA.</footer>
+
+<script>
+const FILES = {"AGENTS.md": "# Codex/GPT e agentes compatíveis — {{NOME_DO_PROJETO}}\n\nEste arquivo é a ponte deste agente para o método comum do repositório. Ele não substitui o método completo — apenas aponta para a entrada universal.\n\n## Antes de agir\n\n1. Leia `START_HERE.md`.\n2. Leia `.ai-dev/context-map.md`.\n3. Leia `docs/engineering/checkpoint.md`, se existir.\n4. Verifique se existe TSD ativa em `docs/engineering/specs/`.\n5. Siga `.ai-dev/workflow.md`.\n6. Use os templates em `.ai-dev/templates/` quando precisar criar PRD, SDD, checkpoint, specs, decisões, questões em aberto, glossário ou relatório de sessão.\n\n## Se `docs/engineering/checkpoint.md` não existir\n\nNão é retomada, é fundação. Siga `.ai-dev/bootstrap.md` — o roteiro fixo de perguntas que leva a PRD, SDD, checkpoint inicial e TSD-001. Não implemente nada antes de todas as etapas do roteiro estarem concluídas e aprovadas pelo usuário.\n\n## Conduta esperada\n\n- Preserve alterações locais de outros usuários.\n- Não implemente escopo sem confirmar contexto e spec aplicável.\n- Não altere PRD/SDD silenciosamente; registre impacto quando houver.\n- Para mudanças relevantes, crie ou atualize uma TSD antes da implementação.\n- Execute validações proporcionais ao risco e registre resultados.\n- Não marque critério de aceite ou validação como concluído sem evidência real de que foi executado.\n- Atualize checkpoint e auditoria ao final de uma entrega.\n\n## Se a sessão não carregar este arquivo automaticamente\n\nPeça explicitamente, no início da conversa:\n\n```text\nLeia START_HERE.md e siga o fluxo de desenvolvimento por IA deste repositório antes de propor ou alterar código.\n```\n\n## Sincronia entre agentes\n\nEste arquivo é idêntico a `AGENTS.md`, `CLAUDE.md` e `GEMINI.md`, exceto a primeira linha. O método do projeto é independente da ferramenta — as mesmas regras valem para Codex/GPT, Claude, Gemini ou outro agente compatível. Ao editar este arquivo, edite os outros dois também.\n", "CLAUDE.md": "# Claude Code — {{NOME_DO_PROJETO}}\n\nEste arquivo é a ponte deste agente para o método comum do repositório. Ele não substitui o método completo — apenas aponta para a entrada universal.\n\n## Antes de agir\n\n1. Leia `START_HERE.md`.\n2. Leia `.ai-dev/context-map.md`.\n3. Leia `docs/engineering/checkpoint.md`, se existir.\n4. Verifique se existe TSD ativa em `docs/engineering/specs/`.\n5. Siga `.ai-dev/workflow.md`.\n6. Use os templates em `.ai-dev/templates/` quando precisar criar PRD, SDD, checkpoint, specs, decisões, questões em aberto, glossário ou relatório de sessão.\n\n## Se `docs/engineering/checkpoint.md` não existir\n\nNão é retomada, é fundação. Siga `.ai-dev/bootstrap.md` — o roteiro fixo de perguntas que leva a PRD, SDD, checkpoint inicial e TSD-001. Não implemente nada antes de todas as etapas do roteiro estarem concluídas e aprovadas pelo usuário.\n\n## Conduta esperada\n\n- Preserve alterações locais de outros usuários.\n- Não implemente escopo sem confirmar contexto e spec aplicável.\n- Não altere PRD/SDD silenciosamente; registre impacto quando houver.\n- Para mudanças relevantes, crie ou atualize uma TSD antes da implementação.\n- Execute validações proporcionais ao risco e registre resultados.\n- Não marque critério de aceite ou validação como concluído sem evidência real de que foi executado.\n- Atualize checkpoint e auditoria ao final de uma entrega.\n\n## Se a sessão não carregar este arquivo automaticamente\n\nPeça explicitamente, no início da conversa:\n\n```text\nLeia START_HERE.md e siga o fluxo de desenvolvimento por IA deste repositório antes de propor ou alterar código.\n```\n\n## Sincronia entre agentes\n\nEste arquivo é idêntico a `AGENTS.md`, `CLAUDE.md` e `GEMINI.md`, exceto a primeira linha. O método do projeto é independente da ferramenta — as mesmas regras valem para Codex/GPT, Claude, Gemini ou outro agente compatível. Ao editar este arquivo, edite os outros dois também.\n", "GEMINI.md": "# Gemini — {{NOME_DO_PROJETO}}\n\nEste arquivo é a ponte deste agente para o método comum do repositório. Ele não substitui o método completo — apenas aponta para a entrada universal.\n\n## Antes de agir\n\n1. Leia `START_HERE.md`.\n2. Leia `.ai-dev/context-map.md`.\n3. Leia `docs/engineering/checkpoint.md`, se existir.\n4. Verifique se existe TSD ativa em `docs/engineering/specs/`.\n5. Siga `.ai-dev/workflow.md`.\n6. Use os templates em `.ai-dev/templates/` quando precisar criar PRD, SDD, checkpoint, specs, decisões, questões em aberto, glossário ou relatório de sessão.\n\n## Se `docs/engineering/checkpoint.md` não existir\n\nNão é retomada, é fundação. Siga `.ai-dev/bootstrap.md` — o roteiro fixo de perguntas que leva a PRD, SDD, checkpoint inicial e TSD-001. Não implemente nada antes de todas as etapas do roteiro estarem concluídas e aprovadas pelo usuário.\n\n## Conduta esperada\n\n- Preserve alterações locais de outros usuários.\n- Não implemente escopo sem confirmar contexto e spec aplicável.\n- Não altere PRD/SDD silenciosamente; registre impacto quando houver.\n- Para mudanças relevantes, crie ou atualize uma TSD antes da implementação.\n- Execute validações proporcionais ao risco e registre resultados.\n- Não marque critério de aceite ou validação como concluído sem evidência real de que foi executado.\n- Atualize checkpoint e auditoria ao final de uma entrega.\n\n## Se a sessão não carregar este arquivo automaticamente\n\nPeça explicitamente, no início da conversa:\n\n```text\nLeia START_HERE.md e siga o fluxo de desenvolvimento por IA deste repositório antes de propor ou alterar código.\n```\n\n## Sincronia entre agentes\n\nEste arquivo é idêntico a `AGENTS.md`, `CLAUDE.md` e `GEMINI.md`, exceto a primeira linha. O método do projeto é independente da ferramenta — as mesmas regras valem para Codex/GPT, Claude, Gemini ou outro agente compatível. Ao editar este arquivo, edite os outros dois também.\n", "README.md": "# Método Agêntico — Base reutilizável para desenvolvimento assistido por IA\n\nEste pacote é a camada de **processo** de um método de desenvolvimento assistido por IA, pensado para ser aplicado em qualquer projeto novo, de qualquer stack, por qualquer equipe.\n\nEle não contém nenhuma decisão de produto ou arquitetura — só o processo, os papéis, os critérios de qualidade e os templates que cada projeto novo precisa preencher com conteúdo próprio.\n\n## O que está aqui\n\n**Arquivos de entrada** (`START_HERE.md`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`) — genéricos, prontos pra copiar. Só precisam do nome do projeto preenchido. São a ponte que faz Claude Code, Codex e Gemini CLI carregarem o método automaticamente ao abrir o repositório (cada ferramenta lê o arquivo com seu próprio nome de convenção — `CLAUDE.md`, `AGENTS.md` ou `GEMINI.md` — sem precisar de comando).\n\n**`.ai-dev/`** — o processo em si:\n\n- `workflow.md` — o ciclo de trabalho (fundação → retomada → especificação → construção → validação → fechamento).\n- `agent-roles.md` — papéis explícitos (contexto, especificação, implementação, execução determinística, crítica, documentação).\n- `quality-gates.md` — critérios mínimos de \"pronto\", com espaço pra preencher os comandos reais do stack escolhido.\n- `context-map.md` — roteiro de qual documento ler pra qual tipo de demanda.\n- `session-continuity.md` — prompts prontos pra retomada, troca de LLM, troca de usuário, troca de máquina.\n- `audit.md` — trilha de auditoria cronológica, separada do estado resumido do checkpoint (começa vazio).\n- `bootstrap.md` — o roteiro de perguntas que a IA segue pra fundar um projeto novo: o que perguntar, em que ordem, e o que cada resposta preenche.\n- `visual-reference-workflow.md` — fluxo obrigatório para TSDs que alteram interface visível, quando o projeto tiver uma referência visual formal (Figma, protótipo, etc.): inspeção antes de implementar, seção de referências visuais na TSD, gate de ativação, comparação por screenshot. Opcional — só entra em jogo se o projeto tiver esse tipo de referência.\n- `templates/` — um template pra cada documento que o método exige: TSD, decisão técnica, relatório de sessão, PRD, SDD, checkpoint, questões em aberto, glossário.\n\n## O que NÃO está aqui\n\nPRD, SDD, checkpoint preenchido, TSDs, decisões e glossário reais — esses são específicos de cada produto e precisam ser escritos do zero por cada equipe, usando os templates em `.ai-dev/templates/`. Não existe um jeito de generalizar o *conteúdo* de um PRD; só a *estrutura* dele.\n\n## Como usar em um projeto novo\n\n1. Copie esta pasta inteira pra raiz do repositório novo.\n2. Abra o repositório com Claude Code, Codex ou Gemini CLI e diga algo como \"vamos começar este projeto novo\".\n3. A partir daí, quem preenche os documentos é a IA, não a pessoa — ela segue `.ai-dev/bootstrap.md`, um roteiro fixo de perguntas em etapas (nome do projeto, produto, arquitetura/stack, testes, referência visual, linguagem do domínio). A pessoa só responde e aprova ou corrige cada rascunho antes da IA seguir pra próxima etapa.\n4. Ao final do roteiro, PRD, SDD, checkpoint inicial, `quality-gates.md`/`context-map.md` preenchidos e a TSD-001 já existem, todos aprovados. Só então a implementação de código começa.\n\nIsso não depende de a pessoa saber, de antemão, o que precisa preencher: `docs/engineering/checkpoint.md` não existindo é, por si só, o sinal de que o projeto está em fundação — os arquivos de entrada, o `workflow.md` e o `bootstrap.md` já tratam esse caso de forma explícita, sem precisar de instrução adicional além de pedir pra começar.\n\n## Convenção de caminhos\n\nOs caminhos citados nos arquivos deste pacote (`docs/product/prd.md`, `docs/architecture/sdd.md`, `docs/engineering/checkpoint.md`, `docs/engineering/specs/`, `docs/engineering/decisions/`) são fixos, não um exemplo. A pasta `docs/` já vem criada no pacote, com um `README.md` em cada subpasta explicando o que vai ali — copie a estrutura junto, não só os arquivos de processo.\n\nIsso é proposital: se cada projeto pudesse nomear essa estrutura do seu jeito, os 11 arquivos abaixo que citam esses caminhos teriam que ser editados um por um, por projeto — o mesmo risco de divergência que a regra de sincronia entre `AGENTS.md`/`CLAUDE.md`/`GEMINI.md` já resolve para os arquivos de entrada. Manter fixo custa zero edição.\n\nSe um projeto tiver um motivo real pra usar outra estrutura (ex.: convenção de monorepo já estabelecida), os arquivos que citam esses caminhos e precisariam ser ajustados, todos juntos, são:\n\n- `START_HERE.md`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`\n- `.ai-dev/workflow.md`, `.ai-dev/context-map.md`, `.ai-dev/quality-gates.md`, `.ai-dev/session-continuity.md`, `.ai-dev/bootstrap.md`\n- `.ai-dev/templates/technical-slice.md`, `.ai-dev/templates/prd.md`, `.ai-dev/templates/sdd.md`\n\n## Regra de sincronia\n\n`AGENTS.md`, `CLAUDE.md` e `GEMINI.md` devem ser mantidos idênticos entre si, exceto a primeira linha (o título, que nomeia a ferramenta). Ao editar um, edite os outros dois. Isso não é redundância — é o que garante que Codex, Claude e Gemini recebam exatamente a mesma instrução ao abrir o mesmo projeto.\n", "START_HERE.md": "# Comece aqui — desenvolvimento por IA de {{NOME_DO_PROJETO}}\n\nEste arquivo é a entrada universal do projeto para pessoas e LLMs. Use-o quando estiver começando uma nova sessão no Codex/GPT, Claude, Gemini ou qualquer outra ferramenta.\n\n## Prompt padrão de retomada\n\nSe a ferramenta não carregar automaticamente as instruções do repositório, comece a conversa com:\n\n```text\nLeia START_HERE.md e siga o fluxo de desenvolvimento por IA deste repositório antes de propor ou alterar código.\n```\n\n## O que este repositório está tentando garantir\n\n{{NOME_DO_PROJETO}} deve evoluir com contexto preservado, decisões rastreáveis e validações repetíveis. O objetivo não é apenas acelerar código com IA, mas criar uma prática de engenharia que possa ser continuada por outras pessoas e outras LLMs.\n\nAntes de implementar qualquer mudança relevante:\n\n1. leia o mapa de contexto em `.ai-dev/context-map.md`;\n2. leia o checkpoint atual em `docs/engineering/checkpoint.md`;\n3. identifique se existe uma TSD ativa em `docs/engineering/specs/`;\n4. confirme se a demanda afeta produto, arquitetura, implementação, documentação, testes ou processo;\n5. siga o fluxo de `.ai-dev/workflow.md`.\n\n## Se este é o primeiro dia do projeto\n\nSe `docs/engineering/checkpoint.md` ainda não existir, isto não é uma retomada — é fundação. Não implemente nada antes de seguir `.ai-dev/bootstrap.md`, o roteiro de perguntas que leva a PRD, SDD, checkpoint inicial e TSD-001. É quem pede o projeto que responde; é a IA que pergunta, rascunha os documentos e só implementa depois de cada etapa aprovada.\n\n## Fontes de verdade\n\n- Produto: `docs/product/prd.md`\n- Arquitetura: `docs/architecture/sdd.md`\n- Estado atual: `docs/engineering/checkpoint.md`\n- Specs técnicas: `docs/engineering/specs/`\n- Decisões pontuais: `docs/engineering/decisions/`\n- Questões em aberto: `docs/product/questoes-abertas.md`\n- Linguagem do domínio: `docs/product/glossario.md` (se existir)\n- Método de desenvolvimento por IA: `.ai-dev/`\n\n## Regras rápidas\n\n- Não comece codando antes de entender o contexto e a spec ativa.\n- Mudanças funcionais, visuais, arquiteturais ou estruturais devem ter TSD.\n- Referência visual (protótipo, Figma) é referência de UX, não fonte de cópia direta.\n- Registre validações, decisões e próximos passos.\n- Não marque um critério de aceite ou validação como concluído sem tê-lo executado de fato.\n- Ao encerrar uma sessão, deixe o projeto retomável por outra pessoa ou LLM.\n", ".ai-dev/agent-roles.md": "# Papéis de agentes\n\nEstes papéis podem ser executados por agentes separados ou por uma única LLM simulando etapas explícitas. O importante é deixar o raciocínio operacional auditável.\n\n## Agente de contexto\n\nResponsável por:\n\n- ler `START_HERE.md`, mapa de contexto e checkpoint;\n- identificar documentos aplicáveis;\n- resumir estado atual;\n- apontar riscos, lacunas e decisões abertas.\n\n## Agente de especificação\n\nResponsável por:\n\n- transformar demanda em TSD;\n- separar escopo e fora do escopo;\n- definir validações;\n- criar prompt de execução para implementação futura.\n\n## Agente implementador\n\nResponsável por:\n\n- implementar apenas o que a TSD autoriza;\n- preservar alterações locais;\n- evitar expansão silenciosa de escopo.\n\n## Executor determinístico\n\nResponsável por:\n\n- executar lint, typecheck, testes, cobertura e build quando aplicável;\n- registrar comandos, resultados e falhas.\n\n## Agente crítico\n\nResponsável por:\n\n- revisar se a entrega atende à TSD;\n- detectar testes frágeis, acoplamento indevido ou decisões implícitas;\n- conferir se documentação, checkpoint e auditoria foram atualizados.\n\n## Agente documentador\n\nResponsável por:\n\n- atualizar checkpoint;\n- atualizar auditoria;\n- registrar próximos passos;\n- produzir relatório de sessão quando necessário.\n\n## Observação\n\nNem toda tarefa precisa de agentes separados. Para tarefas pequenas, uma única LLM pode executar os papéis em sequência. Para tarefas maiores, os papéis devem ser separados explicitamente.\n", ".ai-dev/audit.md": "# Auditoria — {{NOME_DO_PROJETO}}\n\nTrilha cronológica detalhada de sessões e intervenções, separada do estado resumido do checkpoint. Cada entrada deve ser suficiente para reconstituir o que foi feito, por quê, e o que ficou pendente, sem precisar ler o git log inteiro.\n\nUma entrada nova a cada sessão relevante (implementação, decisão, investigação, correção de processo). Não é necessário registrar leituras que não geraram mudança.\n\n## Formato sugerido por entrada\n\n```text\n## <data> — <resumo curto>\n\nContexto: <por que essa sessão aconteceu>\nAlterações: <o que mudou, com caminhos de arquivo>\nValidações: <o que foi executado e o resultado>\nDecisões: <decisões tomadas nesta sessão, com link pro decision record se houver>\nPendências: <o que ficou em aberto>\n```\n\n---\n\n<!-- Entradas abaixo, da mais recente para a mais antiga -->\n", ".ai-dev/bootstrap.md": "# Roteiro de fundação — perguntas que a IA faz num projeto novo\n\nEste roteiro existe porque, na fundação de um projeto (quando `docs/engineering/checkpoint.md` ainda não existe), não há nenhum documento de onde inferir respostas — perguntar é a única opção correta. Sem um roteiro fixo, cada sessão perguntaria de um jeito diferente, o que quebra a promessa de método consistente entre ferramentas. Este arquivo fixa a ordem e o conteúdo das perguntas, para que qualquer agente (Claude, Codex, Gemini ou outro) conduza a mesma entrevista e produza os mesmos documentos a partir das mesmas respostas.\n\nQuem preenche os documentos é a IA, não o usuário. O usuário só responde perguntas e aprova ou corrige rascunhos.\n\n## Regras gerais\n\n- Pergunte em etapas, uma seção de cada vez — nunca uma lista longa de uma vez só.\n- Depois de cada etapa, rascunhe o documento correspondente e mostre para o usuário antes de seguir para a próxima etapa.\n- Só avance depois de confirmação explícita (ou correção) do rascunho anterior.\n- Se uma resposta já ficar clara a partir de uma etapa anterior, não pergunte de novo — infira, declare o que foi inferido em uma linha, e confirme, em vez de reabrir a pergunta.\n- Não implemente nenhum código de produto antes da Etapa 6 estar concluída e aprovada.\n\n## Etapa 0 — nome do projeto\n\nPergunta: \"Qual o nome do projeto?\"\n\nAção: substitua `{{NOME_DO_PROJETO}}` em `START_HERE.md`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.ai-dev/workflow.md`, `.ai-dev/quality-gates.md`, `.ai-dev/audit.md` pelo nome informado.\n\n## Etapa 1 — produto (alimenta o PRD)\n\nPerguntas, em ordem:\n\n1. Qual problema esse projeto resolve, e para quem?\n2. Quem são os usuários/personas, e o que cada um precisa?\n3. Qual a jornada principal, do início ao fim, na primeira versão?\n4. O que o projeto NÃO vai fazer nesta primeira versão? (tão importante quanto o que vai fazer)\n5. Quais requisitos funcionais sustentam essa jornada, e qual a prioridade de cada um (Must/Should/Could)?\n6. Que regras de negócio já são conhecidas?\n7. Como o sistema deve se comportar em erro, estado vazio, sem permissão?\n\nAção: rascunhar `docs/product/prd.md` a partir de `.ai-dev/templates/prd.md`, mostrar para o usuário, aguardar confirmação ou correção antes de seguir.\n\n## Etapa 2 — arquitetura e stack (alimenta o SDD e o quality-gates)\n\nPerguntas, em ordem:\n\n1. Qual stack técnica (linguagem, framework, banco de dados, infraestrutura)?\n2. O projeto depende de outros sistemas/serviços já existentes? Quais, e como se relaciona com eles?\n3. Existe alguma limitação técnica já conhecida (processamento demorado, dado sensível, integração externa instável)?\n4. Existe alguma decisão de arquitetura já tomada antes desta conversa que precisa ser preservada?\n\nAção: rascunhar `docs/architecture/sdd.md` a partir de `.ai-dev/templates/sdd.md`, usando o PRD já confirmado como insumo — não repita perguntas cuja resposta já esteja implícita nele. Mostrar para o usuário, aguardar confirmação ou correção. Preencher `.ai-dev/quality-gates.md` com os comandos reais do stack informado (lint, typecheck, test, build, cobertura).\n\n## Etapa 3 — testes e validação\n\nPergunta: \"Que framework de teste, lint e build o projeto vai usar? Já existe configuração, ou é preciso propor uma?\"\n\nAção: preencher a seção de testes/cobertura de `.ai-dev/quality-gates.md` (se ainda não coberta na Etapa 2) e a seção \"quando a demanda afetar testes\" de `.ai-dev/context-map.md`.\n\n## Etapa 4 — referência visual (só se o projeto tiver interface)\n\nPergunta: \"Existe protótipo, design ou referência visual (Figma, imagem, outro sistema) para essa interface? Onde está?\"\n\nAção: se sim, preencher a seção \"contexto visual e discovery\" de `.ai-dev/context-map.md` com a referência, e avisar que toda TSD futura que altere interface deve seguir `.ai-dev/visual-reference-workflow.md`. Se não houver interface ou referência visual, pule esta etapa sem criar seção vazia.\n\n## Etapa 5 — linguagem do domínio (só se necessário)\n\nPergunta: \"Esse domínio tem termos que podem ser ambíguos, ou que já têm significado diferente em outro sistema relacionado?\"\n\nAção: se sim, rascunhar `docs/product/glossario.md` a partir de `.ai-dev/templates/glossario.md` com os termos levantados, mostrar para o usuário. Se não, pule — não crie o arquivo até a primeira ambiguidade real aparecer durante o desenvolvimento.\n\n## Etapa 6 — checkpoint inicial e TSD-001\n\nDepois que PRD e SDD estiverem confirmados:\n\n1. Criar `docs/engineering/checkpoint.md` a partir de `.ai-dev/templates/checkpoint.md`, com estado inicial = \"fundação concluída, nenhuma feature de produto implementada ainda\".\n2. Propor a TSD-001 — a fundação técnica mínima (ex.: bootstrap do projeto, estrutura de pastas, ferramentas de lint/test configuradas, nenhuma feature de produto) — a partir de `.ai-dev/templates/technical-slice.md`.\n3. Mostrar a TSD-001 para o usuário e aguardar aprovação explícita antes de implementar qualquer código.\n\n## O que nunca fazer neste roteiro\n\n- Nunca pular direto para implementação de código antes da Etapa 6 estar concluída e aprovada.\n- Nunca assumir a resposta de uma etapa sem perguntar, mesmo que pareça óbvia — a única exceção é reaproveitar algo já confirmado em etapa anterior.\n- Nunca escrever PRD, SDD, checkpoint ou glossário como versão definitiva sem antes mostrar o rascunho para o usuário.\n- Nunca prosseguir para a etapa seguinte sem confirmação explícita da etapa atual.\n", ".ai-dev/context-map.md": "# Mapa de contexto obrigatório\n\nEste arquivo define o caminho de leitura antes de qualquer mudança relevante em {{NOME_DO_PROJETO}}. A estrutura abaixo já vem pronta; preencha o conteúdo específico do projeto onde houver `<preencher>`.\n\n## Leitura mínima em toda nova sessão\n\n1. `START_HERE.md`\n2. `.ai-dev/workflow.md`\n3. `docs/engineering/checkpoint.md`, se existir\n\n## Quando a demanda afetar produto\n\nLeia também:\n\n- `docs/product/prd.md`\n- `docs/product/questoes-abertas.md`, se existir\n\nUse o PRD para entender escopo do MVP, personas, requisitos funcionais, não objetivos e pontos ainda em aberto. Use `questoes-abertas.md` como índice consolidado de decisões de produto/arquitetura ainda pendentes — confira lá antes de assumir que um ponto em aberto já foi resolvido.\n\n## Quando a demanda afetar arquitetura\n\nLeia também:\n\n- `docs/architecture/sdd.md`\n\nUse o SDD para entender fronteiras técnicas, componentes, fluxos de dados e decisões abertas.\n\n## Quando a demanda afetar implementação\n\nLeia também:\n\n- a TSD ativa em `docs/engineering/specs/`, se existir;\n- a TSD-001, quando precisar entender a fundação já entregue;\n- os arquivos de configuração/manifesto do projeto (ex.: `package.json`, `pyproject.toml`), para comandos e scripts disponíveis.\n\n## Quando a demanda afetar testes\n\n<preencher com os arquivos de configuração de teste do projeto (ex.: `vitest.config.ts`, `pytest.ini`) e eventuais docs de estratégia de testes>\n\n## Contexto visual e discovery\n\n<preencher, se o projeto tiver protótipo visual, Figma ou documento de discovery de produto — indicar onde estão e como devem ser usados como referência, nunca como fonte de cópia direta de código>\n\nSe houver referência visual formal, leia também `.ai-dev/visual-reference-workflow.md` antes de qualquer TSD que altere interface — ele define o fluxo obrigatório de inspeção, preenchimento da seção \"Referências visuais\" da TSD, e comparação por screenshot.\n\n## Linguagem do domínio\n\nSe o projeto tiver termos ambíguos ou compartilhados com outros sistemas da suíte, use `docs/product/glossario.md` como referência de nomenclatura antes de nomear entidades, campos ou eventos novos.\n\n## Fonte de verdade do estado atual\n\nO checkpoint de engenharia é a fonte de verdade do estado atual. Se houver divergência entre lembrança da sessão e checkpoint, atualize a investigação pelo checkpoint.\n", ".ai-dev/quality-gates.md": "# Quality gates\n\nQuality gates são validações mínimas antes de considerar uma mudança pronta. Este arquivo precisa ser preenchido com os comandos reais do stack de {{NOME_DO_PROJETO}} antes do início da implementação — a estrutura abaixo é um ponto de partida, não uma lista fixa.\n\n## Para documentação/processo\n\n- Links internos apontam para arquivos existentes.\n- O texto deixa claro fonte de verdade, próximo passo e responsabilidade.\n- Não contradiz PRD, SDD ou checkpoint.\n- Quando altera o método, atualiza `START_HERE.md` ou o `.ai-dev/` correspondente.\n\n## Para implementação (preencher por stack)\n\nSubstitua os comandos abaixo pelos reais do projeto. Exemplos de referência:\n\n```text\n# Node/TypeScript (Next.js, NestJS)\nnpm run lint\nnpm run typecheck\nnpm run test\nnpm run build\n\n# Python (FastAPI, Flask)\nruff check .\nmypy .\npytest\n\n# outro stack\n<preencher>\n```\n\n## Para testes e cobertura\n\nDefina aqui o comando de cobertura e o formato esperado (ex.: `lcov.info` para integração com SonarQube), se aplicável.\n\n## Para mudanças de produto\n\n- O comportamento está previsto no PRD ou a lacuna foi registrada em `docs/product/questoes-abertas.md`.\n- Estados vazios, erro, carregamento e permissões foram considerados quando aplicável.\n- A decisão final humana continua preservada quando envolver sugestão de IA.\n\n## Para mudanças de arquitetura\n\n- O SDD foi consultado.\n- Fronteiras entre os componentes/serviços do sistema foram respeitadas.\n- Decisões abertas não foram fechadas implicitamente sem registro.\n\n## Para mudanças de interface visual (se o projeto tiver referência visual formal)\n\nSiga `.ai-dev/visual-reference-workflow.md`. Resumo mínimo:\n\n- A TSD tem a seção \"Referências visuais\" preenchida e sem campos pendentes antes de ser ativada.\n- A referência visual foi inspecionada antes da implementação.\n- Screenshots antes/depois foram capturados e comparados com a referência.\n- Elementos de chrome do protótipo/ferramenta de design (molduras, nomes internos de camada) não foram implementados como produto.\n\n## Exceções\n\nSe uma validação não puder ser executada, registre o motivo em `.ai-dev/audit.md` ou no relatório de sessão.\n", ".ai-dev/session-continuity.md": "# Continuidade de sessão\n\nUse este arquivo quando outra pessoa, outra sessão ou outra LLM for continuar o trabalho.\n\n## Prompt universal\n\n```text\nLeia START_HERE.md e siga o fluxo de desenvolvimento por IA deste repositório antes de propor ou alterar código.\n```\n\n## Prompt para retomar uma tarefa em andamento\n\n```text\nLeia START_HERE.md, .ai-dev/context-map.md e docs/engineering/checkpoint.md.\nDepois identifique a TSD ativa, resuma o estado atual, confira alterações locais e proponha o menor próximo passo seguro.\nNão altere arquivos até confirmar o escopo.\n```\n\n## O que precisa estar atualizado ao final de uma sessão\n\n- Checkpoint de engenharia.\n- `.ai-dev/audit.md`.\n- TSD ativa, se a sessão tiver alterado seu estado.\n- Relatório de sessão, quando houver handoff relevante.\n\n## Troca de LLM\n\nAo migrar entre Codex/GPT, Claude, Gemini ou outra LLM:\n\n1. informe o prompt universal;\n2. peça para a nova LLM resumir o estado atual antes de agir;\n3. compare o resumo com o checkpoint;\n4. só então peça implementação ou revisão.\n\n## Troca de usuário\n\nAo passar o projeto para outro usuário:\n\n- compartilhe a branch atual;\n- indique `START_HERE.md`;\n- indique o checkpoint;\n- indique a TSD ativa;\n- informe quais validações foram executadas e quais ficaram pendentes.\n\n## Troca de máquina\n\nAo continuar o projeto em outra máquina:\n\n- confirme os repositórios e branches corretos (registre isso no checkpoint, numa seção de mapa de repositórios, se o projeto tiver mais de um repositório);\n- confirme que o clone novo está na branch de trabalho, não na branch principal;\n- nunca faça push direto na branch principal ao sincronizar.\n", ".ai-dev/visual-reference-workflow.md": "# Workflow de referência visual\n\nEste workflow define como TSDs que alteram interface visível devem usar uma referência visual formal (Figma ou outra ferramenta de design, um protótipo navegável, ou imagens fornecidas por quem pediu o projeto) durante especificação, implementação e validação. Existe para reduzir deriva entre o que foi projetado e o que foi implementado, sem transformar a referência visual em fonte de arquitetura, domínio ou contratos de dados.\n\nSó se aplica a projetos que tenham uma referência visual formal. Se o projeto não tiver nenhuma ainda, pule este arquivo — não invente uma referência que não existe, e não bloqueie a implementação por causa dele.\n\n## Princípio\n\nA referência visual é fonte de verdade visual e de composição de interface para slices de UI. Arquitetura, contratos de domínio, fronteira de adapter/serviço, regras de produto e limitações de escopo continuam sendo definidos por PRD, SDD, checkpoint e pela TSD ativa — nunca pela referência visual.\n\nQuando houver conflito entre a referência visual e a documentação de produto/arquitetura:\n\n- não assuma mudança de comportamento automaticamente;\n- registre a divergência na TSD;\n- pergunte ou sinalize necessidade de decisão antes de implementar comportamento novo;\n- implemente apenas ajustes visuais quando a slice for de fidelidade de interface.\n\n## Fluxo obrigatório para TSDs de interface\n\nToda TSD que altere interface visível deve conter a seção \"Referências visuais\" (ver `.ai-dev/templates/technical-slice.md`), preenchida por elemento de referência (tela, estado, modal, variação) com, no mínimo:\n\n- papel do elemento na aplicação;\n- link ou localização da referência;\n- nome/identificação na ferramenta de origem;\n- estados relevantes representados (vazio, erro, carregando, preenchido);\n- screenshots obrigatórios para comparação pós-implementação;\n- lacunas conhecidas entre a implementação atual e a referência.\n\nQuando a slice envolver mais de um estado visual relevante (tela principal, modal, estado vazio, filtros ativos, paginação, versão mobile), registre um elemento de referência por estado, em vez de usar só a tela principal.\n\nAntes de implementar uma TSD de interface:\n\n1. ler o checkpoint, a TSD ativa, PRD/SDD apenas quando necessário, e este workflow;\n2. inspecionar a referência visual selecionada;\n3. antes de ativar a TSD no checkpoint, preencher a seção de referências visuais com os dados observados;\n4. definir quais diferenças em relação ao que já existe implementado são apenas visuais e quais podem representar comportamento de produto novo;\n5. se houver comportamento novo não coberto por PRD/SDD/TSD, parar e pedir decisão antes de implementar;\n6. implementar somente o escopo visual/comportamental autorizado pela TSD;\n7. capturar screenshots pós-implementação;\n8. comparar screenshots com a referência visual;\n9. registrar resultado, gaps remanescentes e validações no checkpoint e na TSD.\n\n## Regras de implementação\n\n- Usar a referência visual como fonte primária para layout, hierarquia, espaçamento, estados visuais, textos visíveis e padrões de interação já confirmados.\n- Não copiar código, CSS, estrutura rígida do protótipo, nomes internos de camadas/componentes da ferramenta de design, ou posicionamentos absolutos, sem adaptação técnica ao projeto real.\n- Não permitir que a referência visual substitua os contratos de domínio ou a fronteira de adapter/serviço já definidos nas specs anteriores.\n- Não introduzir autenticação real, backend real, upload real ou qualquer fluxo fora do escopo da TSD só porque aparece sugerido na referência.\n- Elementos de chrome da ferramenta de design ou do protótipo (molduras, barras de janela, wrappers de apresentação, nomes internos de camada) não são UI de produto, salvo decisão explícita em contrário.\n- Registrar explicitamente qualquer diferença intencional entre implementação e referência.\n\n## Gate\n\nUma TSD de interface não deve ser ativada no checkpoint nem implementada enquanto a seção \"Referências visuais\" não estiver preenchida e revisada. Isso não é burocracia — é o que impede a implementação de começar a partir de memória ou suposição sobre como a tela deveria ficar, em vez da referência real.\n\n## Validações visuais mínimas\n\n- screenshot antes (se a tela já existir) e depois da implementação;\n- comparação visual manual (ou automatizada, se houver ferramenta disponível) com a referência;\n- checagem de que a UI preserva a fronteira de dados definida no SDD/contratos (não importa fixtures ou implementação mockada diretamente);\n- registro de gaps visuais remanescentes, se houver, no checkpoint e na TSD.\n", ".ai-dev/workflow.md": "# Workflow de desenvolvimento por IA\n\nEste fluxo deve ser seguido por pessoas e LLMs ao evoluir {{NOME_DO_PROJETO}}.\n\n## 0. Fundação (só na primeira vez)\n\nSe `docs/engineering/checkpoint.md` ainda não existir, este não é um passo de retomada — é fundação do projeto. Nenhum documento existe ainda pra inferir contexto, então esta é a única etapa do método em que perguntar é obrigatório, não exceção.\n\nSiga `.ai-dev/bootstrap.md` — o roteiro fixo de perguntas, em etapas, que leva a PRD, SDD, checkpoint inicial e TSD-001 confirmados pelo usuário. Não invente uma ordem própria de perguntas nem pule para implementação antes de todas as etapas do roteiro estarem concluídas e aprovadas.\n\nSó depois de concluído esse roteiro, siga o fluxo normal abaixo para as próximas slices.\n\n## 1. Retomada de contexto\n\n- Leia `START_HERE.md`.\n- Leia `.ai-dev/context-map.md`.\n- Leia o checkpoint de engenharia (`docs/engineering/checkpoint.md`).\n- Identifique se existe TSD ativa.\n- Verifique alterações locais antes de editar arquivos.\n\n## 2. Entendimento da demanda\n\nClassifique a demanda:\n\n- produto;\n- arquitetura;\n- implementação (frontend/backend/serviço);\n- documentação;\n- testes;\n- processo.\n\nDepois, confirme quais fontes de contexto precisam ser lidas. Faça perguntas apenas quando a decisão não puder ser inferida dos documentos existentes.\n\n## 3. Especificação\n\nCrie ou atualize uma TSD quando a mudança for:\n\n- funcional;\n- visual;\n- arquitetural;\n- estrutural;\n- ou quando alterar contratos, fluxo de dados, validações ou comportamento observável.\n\nUse `.ai-dev/templates/technical-slice.md`.\n\nA TSD deve definir objetivo, escopo, fora do escopo, impacto, validações, critérios de aceite, rollback e prompt de execução.\n\n## 4. Construção\n\n- Implemente apenas o escopo autorizado pela TSD.\n- Não misture feature, refatoração e testes não relacionados.\n- Preserve decisões de PRD e SDD.\n- Use referências visuais (protótipo, Figma) como direção de UX, não como fonte de cópia direta.\n- Preserve alterações locais de outros usuários.\n\n## 5. Validação\n\nExecute os comandos e critérios definidos em `.ai-dev/quality-gates.md` para este projeto, proporcionais ao risco da mudança.\n\nSe algum comando falhar, registre:\n\n- comando executado;\n- erro observado;\n- hipótese;\n- correção feita ou pendência aberta.\n\nNão marque uma validação como concluída sem tê-la executado de fato.\n\n## 6. Fechamento\n\nAo concluir uma entrega:\n\n- atualize `docs/engineering/checkpoint.md`;\n- atualize `.ai-dev/audit.md`;\n- registre validações executadas;\n- registre impactos em PRD/SDD, mesmo quando não houver impacto;\n- deixe próximo passo recomendado;\n- se útil, gere um relatório usando `.ai-dev/templates/session-report.md`.\n\n## Ajustes pequenos\n\nCorreções pequenas de documentação, links, typos ou ajustes sem impacto funcional podem ser feitas sem nova TSD, desde que sejam registradas quando relevantes.\n", ".ai-dev/templates/checkpoint.md": "# Engineering Checkpoint - <nome do projeto>\n\n---\ntitle: Engineering Checkpoint - <nome do projeto>\ntype: checkpoint\nstatus: draft\ncreated: <data> // <autor>\nupdated: <data> // <autor>\n---\n\n## 1. Estado atual\n\nResuma em um parágrafo o que já está entregue e funcionando.\n\n## 2. Spec ativa\n\n- Spec ativa no momento: <caminho da TSD ou \"nenhuma\">\n- Última spec concluída: <caminho>\n\n## 3. Specs concluídas\n\n| Spec | Resultado | Validação |\n|---|---|---|\n\n## 4. Decisões relevantes\n\n| Decisão | Onde está documentada |\n|---|---|\n\n## 5. Pendências\n\n- [ ] \n\n## 6. Riscos / pontos de atenção\n\n- \n\n## 7. Próximo passo recomendado\n\n\n\n## 8. Prompt de retomada\n\n```text\nLeia START_HERE.md, .ai-dev/context-map.md e este checkpoint.\nIdentifique a spec ativa; se não houver, identifique se há uma spec candidata aguardando ativação.\nResuma objetivo, escopo, critérios de aceite e validações obrigatórias da spec ativa.\nIdentifique o menor próximo passo seguro.\nIdentifique riscos ou questões abertas antes de implementar.\nNão altere arquivos.\nNão implemente nada ainda.\nNão atualize este checkpoint ainda.\nEspere instrução explícita de construção/implementação.\n```\n\n<!-- Ao evoluir o projeto, mantenha este checkpoint enxuto e o histórico detalhado em .ai-dev/audit.md, em vez de acumular tudo aqui. -->\n", ".ai-dev/templates/decision-record.md": "# Decisão técnica — <título>\n\n---\nstatus: proposed\ndate: <data>\nowners:\n- <nome>\n---\n\n## Contexto\n\nExplique o problema ou decisão em aberto.\n\n## Opções consideradas\n\n1. \n2. \n3. \n\n## Decisão\n\nRegistre a decisão escolhida.\n\n## Motivos\n\n- \n\n## Consequências\n\n### Positivas\n\n- \n\n### Negativas / riscos\n\n- \n\n## Impactos documentais\n\n- PRD:\n- SDD:\n- Checkpoint:\n- TSD:\n", ".ai-dev/templates/glossario.md": "# Glossário / linguagem ubíqua — <nome do projeto>\n\nDefine os termos do domínio deste projeto, para evitar que specs, código e conversas usem nomes diferentes para a mesma coisa — ou o mesmo nome para coisas diferentes. Especialmente importante quando o projeto compartilha domínio com outros sistemas da mesma suíte.\n\nPara cada termo: o que ele significa neste projeto, e o que evitar.\n\n## <Termo 1>\n\n**Definição**: \n\n_Evitar_: <sinônimos ou termos próximos que não devem ser usados no lugar deste>\n\n## <Termo 2>\n\n**Definição**: \n\n_Evitar_: \n\n## Como manter\n\n- Ao nomear uma entidade, campo, evento ou rota nova, confira aqui antes de decidir o nome.\n- Se o termo já existe em outro sistema da mesma suíte com definição diferente, registre a diferença explicitamente em vez de ignorá-la.\n- Termos descontinuados não devem ser apagados — marque como \"descontinuado\" e aponte para o termo atual, para que specs antigas continuem legíveis.\n", ".ai-dev/templates/prd.md": "# PRD - <nome do produto>\n\n---\ntitle: PRD - <nome do produto>\ntype: prd\nstatus: draft\ncreated: <data> // <autor>\nupdated: <data> // <autor>\nrelated (internal files):\n- docs/architecture/sdd.md\n---\n\n## 1. Resumo\n\nDescreva em um parágrafo o que o produto faz, para quem, e o problema que resolve.\n\n## 2. Usuários / Personas\n\n| Usuário | Necessidade | Contexto de uso |\n|---|---|---|\n| | | |\n\n## 3. Problema do usuário\n\nDescreva o problema real que motivou o produto, com o máximo de concretude possível — evite descrever a solução aqui.\n\n## 4. Objetivos do produto\n\n- \n\n## 5. Não objetivos\n\nListe explicitamente o que o produto NÃO vai fazer nesta versão. Isso é tão importante quanto os objetivos.\n\n- \n\n## 6. Jornada principal\n\n1. \n2. \n3. \n\n## 7. Requisitos funcionais\n\n| ID | Requisito | Prioridade | Critério de aceite |\n|---|---|---|---|\n| RF-001 | | Must/Should/Could | |\n\n## 8. Regras de negócio\n\n- \n\n## 9. Estados de erro e vazio\n\n| Situação | Comportamento esperado |\n|---|---|\n| Sem dados | |\n| Erro de carregamento | |\n| Sem permissão | |\n\n## 10. Critérios de aceite gerais\n\n- [ ] \n\n## 11. Dependências\n\n- \n\n## 12. Questões em aberto\n\n- [ ] \n\nSe a lista crescer, mova para `docs/product/questoes-abertas.md` e referencie a partir daqui.\n", ".ai-dev/templates/questoes-abertas.md": "# Questões em aberto — <nome do projeto>\n\nÍndice consolidado de decisões de produto e arquitetura ainda pendentes, hoje possivelmente espalhadas entre PRD, SDD, decision records e checkpoint. Confira aqui antes de assumir que um ponto em aberto já foi resolvido — e mantenha isto sincronizado quando uma questão for fechada.\n\n## Produto\n\n| # | Questão | Onde apareceu | Status |\n|---|---|---|---|\n\n## Arquitetura\n\n| # | Questão | Onde apareceu | Status |\n|---|---|---|---|\n\n## Como usar\n\n- Ao abrir uma questão nova durante qualquer sessão, registre aqui, mesmo que ainda não tenha dono ou prazo.\n- Ao fechar uma questão, mova para a seção \"Resolvidas\" com a data e o link do decision record ou da atualização de PRD/SDD que a resolveu, em vez de simplesmente apagar a linha.\n\n## Resolvidas\n\n| # | Questão | Resolução | Data | Referência |\n|---|---|---|---|---|\n", ".ai-dev/templates/sdd.md": "# SDD — <nome do produto>\n\n---\ntitle: SDD - <nome do produto>\ntype: sdd\nstatus: draft\ncreated: <data> // <autor>\nupdated: <data> // <autor>\nrelated (internal files):\n- docs/product/prd.md\n---\n\n## 1. Objetivo da solução\n\nDescreva o que a solução precisa viabilizar tecnicamente, em lista, sem entrar em detalhe de implementação.\n\n## 2. Contexto técnico atual\n\n- Sistema atual: \n- Stack: \n- Módulos/serviços envolvidos: \n- Integrações: \n- Limitações conhecidas: \n\n## 3. Escopo técnico\n\n### Dentro do escopo\n\n- \n\n### Fora do escopo\n\n- \n\n## 4. Estratégia da solução\n\nDescreva a estratégia de alto nível — como os componentes se relacionam e por quê, sem contrato de endpoint ou modelagem física.\n\n## 5. Arquitetura proposta\n\n```text\n<diagrama em texto dos componentes principais e suas relações>\n```\n\n## 6. Componentes principais\n\n| Componente | Responsabilidade | Observações |\n|---|---|---|\n\n## 7. Fluxos técnicos principais\n\n### Fluxo - <nome>\n\n1. \n2. \n\n## 8. Dados e contratos\n\n| Entidade/Contrato | Responsabilidade | Observações |\n|---|---|---|\n\n## 9. Decisões técnicas relevantes\n\n| Decisão | Motivo | Consequência |\n|---|---|---|\n\nDecisões pontuais que precisem de mais detalhe (alternativas descartadas, reversibilidade) devem virar um decision record em `docs/engineering/decisions/`, referenciado aqui.\n\n## 10. Riscos técnicos\n\n| Risco | Impacto | Mitigação |\n|---|---|---|\n\n## 11. Estratégia de validação\n\n- [ ] \n\n## 12. Questões em aberto\n\n- [ ] \n", ".ai-dev/templates/session-report.md": "# Relatório de sessão — <data>\n\n## Objetivo da sessão\n\n\n## Contexto lido\n\n- \n\n## Alterações realizadas\n\n- \n\n## Validações executadas\n\n| Comando | Resultado | Observações |\n|---|---|---|\n| | | |\n\n## Decisões tomadas\n\n- \n\n## Pendências\n\n- \n\n## Próximo passo recomendado\n\n\n## Prompt de retomada\n\n```text\nLeia START_HERE.md, .ai-dev/context-map.md, o checkpoint de engenharia e este relatório de sessão.\nDepois resuma o estado atual e proponha o menor próximo passo seguro.\n```\n", ".ai-dev/templates/technical-slice.md": "# TSD — <nome da slice>\n\n---\ntitle: TSD - <nome da slice>\ntype: tsd\nstatus: draft\ncreated: <data> // <autor>\nupdated: <data> // <autor>\nrelated:\n- docs/product/prd.md\n- docs/architecture/sdd.md\n---\n\n## 1. Resumo\n\nExplique em poucas linhas o que esta slice entrega e por que ela existe.\n\n## 2. Objetivo técnico\n\nDescreva o resultado técnico esperado.\n\n## 3. Escopo\n\n### Incluído\n\n- \n\n### Fora do escopo\n\n- \n\n## 4. Contexto consultado\n\n- `START_HERE.md`\n- `.ai-dev/context-map.md`\n- `docs/engineering/checkpoint.md`\n\nAdicione PRD, SDD, protótipo/referência visual ou outros documentos conforme aplicável.\n\n## 5. Impacto esperado\n\nDescreva impacto em produto, arquitetura, implementação, testes, documentação e operação.\n\n## 6. Plano de implementação\n\n1. \n2. \n3. \n\n## 7. Validação\n\nComandos previstos (ver `.ai-dev/quality-gates.md` para os comandos reais do projeto):\n\n```text\n<lint>\n<typecheck>\n<test>\n<build>\n```\n\nAdapte conforme o escopo.\n\n## 8. Critérios de aceite\n\n- \n\n## 9. Riscos e decisões abertas\n\n- \n\n## 10. Referências visuais (preencher apenas se esta slice alterar interface visível)\n\nSe o projeto tiver uma referência visual formal (ver `.ai-dev/visual-reference-workflow.md`), preencha por elemento de referência:\n\n| ID | Papel na aplicação | Link/localização | Nome na ferramenta de origem | Estados representados | Status de inspeção |\n|---|---|---|---|---|---|\n| | | | | | Pendente / Inspecionado |\n\nScreenshots obrigatórios: <preencher>\n\nGaps conhecidos entre implementação atual e referência: <preencher>\n\nEsta TSD não deve ser ativada nem implementada enquanto esta seção estiver com campos pendentes, se ela alterar interface visível.\n\n## 11. Rollback\n\nDescreva como reverter esta slice caso seja necessário — o que remover, isolar ou desativar sem quebrar o que já estava funcionando antes dela.\n\n## 12. Prompt de execução para agente\n\n```text\nLeia START_HERE.md, .ai-dev/context-map.md, esta TSD e o checkpoint de engenharia.\nImplemente apenas o escopo desta TSD. Não expanda escopo silenciosamente.\nExecute as validações previstas e registre o resultado real de cada uma.\nMarque um critério de aceite ou validação como concluído somente quando houver evidência real de que foi cumprido — não marque itens não executados.\nAtualize checkpoint e auditoria ao final, incluindo pendências e próximo passo recomendado.\n```\n", "docs/architecture/README.md": "# docs/architecture/\n\nFica aqui a camada de arquitetura do projeto.\n\n- `sdd.md` — o SDD. Use `.ai-dev/templates/sdd.md` como ponto de partida.\n\nNenhum desses arquivos existe ainda neste pacote — este `README.md` é só um marcador de pasta. Apague-o ou deixe-o quando o arquivo real for criado, como preferir.\n", "docs/engineering/README.md": "# docs/engineering/\n\nFica aqui o estado de engenharia do projeto.\n\n- `checkpoint.md` — o checkpoint de engenharia, direto nesta pasta (não numa subpasta). Use `.ai-dev/templates/checkpoint.md`.\n- `specs/` — as TSDs, uma por fatia vertical.\n- `decisions/` — decision records pontuais.\n\n`checkpoint.md` não existe ainda neste pacote — sua ausência é o próprio sinal de que o projeto está em fundação, não em retomada (ver `START_HERE.md` e `.ai-dev/workflow.md`, seção 0).\n", "docs/engineering/decisions/README.md": "# docs/engineering/decisions/\n\nUma decisão técnica pontual por arquivo, nomeada `NNN-titulo-curto.md` (numeração sequencial de 3 dígitos). Use `.ai-dev/templates/decision-record.md` como ponto de partida.\n\nDiferença para o SDD: o SDD descreve a arquitetura vigente; um decision record aqui registra o momento de uma decisão específica — contexto, opções consideradas, motivo da escolha e o que foi descartado. Quando uma decisão aqui muda algo estrutural, atualize também o SDD e referencie o decision record por lá.\n", "docs/engineering/specs/README.md": "# docs/engineering/specs/\n\nUma TSD por fatia vertical, nomeada `NNN-nome-da-slice.tsd.md` (numeração sequencial de 3 dígitos, começando em `001`). Use `.ai-dev/templates/technical-slice.md` como ponto de partida para cada uma.\n\nA primeira TSD deste projeto (`001-...`) deve cobrir a fundação técnica — o mínimo necessário para o projeto rodar antes de qualquer feature de produto.\n", "docs/product/README.md": "# docs/product/\n\nFica aqui a camada de produto do projeto.\n\n- `prd.md` — o PRD. Use `.ai-dev/templates/prd.md` como ponto de partida.\n- `questoes-abertas.md` — índice consolidado de decisões de produto/arquitetura pendentes. Use `.ai-dev/templates/questoes-abertas.md`. Só crie este arquivo quando a primeira questão pendente aparecer.\n- `glossario.md` — linguagem ubíqua do domínio, se o projeto tiver termos ambíguos ou compartilhados com outros sistemas. Use `.ai-dev/templates/glossario.md`. Opcional.\n\nNenhum desses arquivos existe ainda neste pacote — este `README.md` é só um marcador de pasta. Apague-o ou deixe-o quando os arquivos reais forem criados, como preferir.\n"};
+const FLOWS = {"novo": {"label": "1. Projeto novo, do zero", "intro": "Roda quando docs/engineering/checkpoint.md ainda não existe. É o único momento do método em que perguntar é obrigatório — nenhum documento existe ainda pra inferir contexto.", "steps": [{"actors": ["usuario"], "title": "Copiar o pacote e abrir o projeto", "text": "A pessoa copia a pasta Método Agêntico inteira pra raiz do repositório novo, e abre com Claude Code, Codex ou Gemini CLI pedindo pra começar o projeto.", "files": []}, {"actors": ["ferramenta"], "title": "Carregamento automático", "text": "A ferramenta lê sozinha o arquivo de ponte correspondente ao seu nome de convenção — sem precisar de comando.", "files": ["CLAUDE.md", "AGENTS.md", "GEMINI.md"]}, {"actors": ["ia"], "title": "Arquivo de ponte aponta a entrada universal", "text": "O arquivo carregado manda ler START_HERE.md antes de qualquer coisa.", "files": ["START_HERE.md"]}, {"actors": ["ia"], "title": "Checkpoint não existe → é fundação", "text": "A IA verifica docs/engineering/checkpoint.md. Ele não existe (só a pasta com um marcador) — isso por si só é o sinal de fundação, não retomada. Segue a Etapa 0 do workflow, que aponta pro roteiro fixo.", "files": [".ai-dev/workflow.md", ".ai-dev/bootstrap.md", "docs/engineering/README.md"]}, {"actors": ["ia", "usuario"], "title": "Etapa 0 — nome do projeto", "text": "A IA pergunta o nome do projeto e substitui {{NOME_DO_PROJETO}} em todos os arquivos de entrada e no .ai-dev/.", "files": [".ai-dev/bootstrap.md"]}, {"actors": ["ia", "usuario"], "title": "Etapa 1 — produto", "text": "A IA pergunta, em ordem: problema e público, personas, jornada principal, não objetivos, requisitos funcionais, regras de negócio, estados de erro/vazio. Rascunha o PRD e mostra pra pessoa aprovar ou corrigir.", "files": [".ai-dev/templates/prd.md", "docs/product/README.md"]}, {"actors": ["ia", "usuario"], "title": "Etapa 2 — arquitetura e stack", "text": "A IA pergunta a stack, dependências de outros sistemas, limitações técnicas conhecidas. Rascunha o SDD usando o PRD já confirmado como insumo, e preenche quality-gates.md com os comandos reais do stack.", "files": [".ai-dev/templates/sdd.md", ".ai-dev/quality-gates.md", "docs/architecture/README.md"]}, {"actors": ["ia", "usuario"], "title": "Etapa 3 — testes e validação", "text": "A IA pergunta framework de teste, lint e build, e preenche a seção correspondente em quality-gates.md e context-map.md.", "files": [".ai-dev/quality-gates.md", ".ai-dev/context-map.md"]}, {"actors": ["ia", "usuario"], "title": "Etapa 4 — referência visual (se houver interface)", "text": "Se existir protótipo, Figma ou outra referência visual, a IA registra em context-map.md e avisa que toda TSD de interface vai seguir o workflow de referência visual daqui em diante. Se não houver, pula sem criar seção vazia.", "files": [".ai-dev/context-map.md", ".ai-dev/visual-reference-workflow.md"]}, {"actors": ["ia", "usuario"], "title": "Etapa 5 — linguagem do domínio (se necessário)", "text": "Se o domínio tiver termos ambíguos ou compartilhados com outro sistema, a IA rascunha o glossário. Se não, o arquivo só é criado quando a primeira ambiguidade real aparecer.", "files": [".ai-dev/templates/glossario.md", "docs/product/README.md"]}, {"actors": ["ia", "usuario"], "title": "Etapa 6 — checkpoint inicial e TSD-001", "text": "Com PRD e SDD confirmados, a IA cria o checkpoint inicial (estado = fundação concluída) e propõe a TSD-001, a fundação técnica do projeto. Só implementa depois de aprovação explícita.", "files": [".ai-dev/templates/checkpoint.md", ".ai-dev/templates/technical-slice.md", "docs/engineering/specs/README.md"]}, {"actors": ["ia"], "title": "Construção da TSD-001", "text": "A IA implementa só o escopo autorizado pela TSD-001 — a fundação técnica, sem features de produto.", "files": [".ai-dev/workflow.md"]}, {"actors": ["ia"], "title": "Validação", "text": "Roda os comandos definidos em quality-gates.md, proporcionais ao risco. Falha registrada com comando, erro, hipótese e correção.", "files": [".ai-dev/quality-gates.md"]}, {"actors": ["ia"], "title": "Fechamento", "text": "Atualiza o checkpoint, registra a entrada em audit.md, confirma impacto (ou ausência de impacto) em PRD/SDD, e deixa o próximo passo recomendado.", "files": [".ai-dev/templates/checkpoint.md", ".ai-dev/audit.md"]}, {"actors": ["loop"], "title": "Daqui em diante...", "text": "O projeto já tem checkpoint. Toda próxima demanda passa a seguir o fluxo “Nova feature em projeto existente”, na outra aba.", "files": []}]}, "feature": {"label": "2. Nova feature em projeto existente", "intro": "Roda quando docs/engineering/checkpoint.md já existe — a fundação (PRD, SDD, checkpoint, TSD-001) já foi feita antes. Este é o ciclo normal, passos 1 a 6 do workflow.md, que se repete a cada nova demanda.", "steps": [{"actors": ["usuario"], "title": "Pedido de uma nova demanda", "text": "A pessoa abre o projeto e pede algo — uma feature, uma correção, uma mudança de arquitetura.", "files": []}, {"actors": ["ferramenta"], "title": "Carregamento automático", "text": "A ferramenta lê sozinha o arquivo de ponte correspondente, sem comando.", "files": ["CLAUDE.md", "AGENTS.md", "GEMINI.md"]}, {"actors": ["ia"], "title": "Checkpoint existe → é retomada normal", "text": "START_HERE.md confirma: docs/engineering/checkpoint.md existe, não é fundação. Segue o passo 1 do workflow.", "files": ["START_HERE.md", ".ai-dev/workflow.md"]}, {"actors": ["ia"], "title": "Passo 1 — Retomada de contexto", "text": "Lê context-map.md e o checkpoint atual, identifica se há TSD ativa, confere alterações locais antes de editar qualquer coisa.", "files": [".ai-dev/context-map.md", ".ai-dev/templates/checkpoint.md"]}, {"actors": ["ia"], "title": "Passo 2 — Entendimento da demanda", "text": "Classifica o pedido (produto, arquitetura, implementação, documentação, testes, processo) e usa o context-map.md pra saber quais documentos ler — PRD se for produto, SDD se for arquitetura. Só pergunta quando a resposta não estiver em nenhum documento.", "files": [".ai-dev/context-map.md", ".ai-dev/templates/prd.md", ".ai-dev/templates/sdd.md"]}, {"actors": ["ia"], "title": "Passo 3 — Especificação", "text": "Cria ou atualiza a TSD da fatia em docs/engineering/specs/. Se a mudança alterar interface visível, preenche a seção “Referências visuais” seguindo o workflow visual — a TSD não pode ser ativada com essa seção pendente.", "files": [".ai-dev/templates/technical-slice.md", ".ai-dev/visual-reference-workflow.md", "docs/engineering/specs/README.md"]}, {"actors": ["usuario"], "title": "Revisão da TSD", "text": "A pessoa revisa escopo, fora de escopo e critérios de aceite antes da implementação começar.", "files": []}, {"actors": ["ia"], "title": "Passo 4 — Construção", "text": "Implementa só o escopo autorizado pela TSD. Preserva alterações locais de outras pessoas, não mistura refatoração não relacionada.", "files": [".ai-dev/workflow.md"]}, {"actors": ["ia"], "title": "Passo 5 — Validação", "text": "Executa os comandos definidos em quality-gates.md. Nunca marca uma validação como concluída sem ter executado de fato.", "files": [".ai-dev/quality-gates.md"]}, {"actors": ["ia"], "title": "Passo 6 — Fechamento", "text": "Atualiza checkpoint e audit.md, registra impacto em PRD/SDD (mesmo quando não houver), deixa o próximo passo recomendado. Se houver handoff pra outra pessoa/sessão, gera um relatório de sessão.", "files": [".ai-dev/templates/checkpoint.md", ".ai-dev/audit.md", ".ai-dev/templates/session-report.md"]}, {"actors": ["loop"], "title": "Próxima demanda", "text": "O ciclo recomeça no passo 1 pra próxima demanda, usando o checkpoint agora atualizado.", "files": []}]}};
+const ACTORS = {"usuario": {"label": "Pessoa", "cls": "actor-usuario"}, "ia": {"label": "IA", "cls": "actor-ia"}, "ferramenta": {"label": "Ferramenta (automático)", "cls": "actor-ferramenta"}, "loop": {"label": "Continuação", "cls": "actor-loop"}};
+
+const tabsEl = document.getElementById('tabs');
+const mainEl = document.getElementById('main');
+
+const visaoEl = document.getElementById('visao-geral-view');
+
+const TAB_DEFS = [
+  { key: 'novo', label: FLOWS.novo.label },
+  { key: 'feature', label: FLOWS.feature.label },
+  { key: 'visao', label: '3. Visão geral, sem nomes de arquivo' },
+];
+
+function renderTabs(activeKey) {
+  tabsEl.innerHTML = '';
+  TAB_DEFS.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (t.key === activeKey ? ' active' : '');
+    btn.textContent = t.label;
+    btn.onclick = () => renderFlow(t.key);
+    tabsEl.appendChild(btn);
+  });
+}
+
+function renderFlow(key) {
+  renderTabs(key);
+
+  if (key === 'visao') {
+    mainEl.style.display = 'none';
+    visaoEl.classList.add('active');
+    return;
+  }
+  visaoEl.classList.remove('active');
+  mainEl.style.display = '';
+  mainEl.innerHTML = '';
+
+  const flow = FLOWS[key];
+
+  const intro = document.createElement('div');
+  intro.className = 'flow-intro';
+  intro.textContent = flow.intro;
+  mainEl.appendChild(intro);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'step-wrap';
+
+  flow.steps.forEach((step, i) => {
+    const stepEl = document.createElement('div');
+    stepEl.className = 'step';
+
+    const dot = document.createElement('div');
+    dot.className = 'step-dot';
+    dot.textContent = (i + 1);
+    stepEl.appendChild(dot);
+
+    const card = document.createElement('div');
+    const primaryActor = step.actors[0];
+    card.className = 'step-card ' + ACTORS[primaryActor].cls;
+
+    const badges = document.createElement('div');
+    badges.className = 'step-badges';
+    step.actors.forEach(a => {
+      const b = document.createElement('span');
+      b.className = 'badge ' + ACTORS[a].cls;
+      b.textContent = ACTORS[a].label;
+      badges.appendChild(b);
+    });
+    card.appendChild(badges);
+
+    const title = document.createElement('p');
+    title.className = 'step-title';
+    title.textContent = step.title;
+    card.appendChild(title);
+
+    const text = document.createElement('p');
+    text.className = 'step-text';
+    text.textContent = step.text;
+    card.appendChild(text);
+
+    if (step.files.length) {
+      const chips = document.createElement('div');
+      chips.className = 'file-chips';
+      step.files.forEach(fp => {
+        const chip = document.createElement('button');
+        chip.className = 'file-chip';
+        chip.textContent = fp;
+        chip.onclick = () => openPanel(fp);
+        chips.appendChild(chip);
+      });
+      card.appendChild(chips);
+    }
+
+    stepEl.appendChild(card);
+    wrap.appendChild(stepEl);
+  });
+
+  mainEl.appendChild(wrap);
+}
+
+const overlay = document.getElementById('overlay');
+const panel = document.getElementById('panel');
+const panelPath = document.getElementById('panel-path');
+const panelRendered = document.getElementById('panel-rendered');
+const panelRaw = document.getElementById('panel-raw');
+const toggleRawBtn = document.getElementById('toggle-raw');
+let showingRaw = false;
+
+function openPanel(path) {
+  const content = FILES[path] || '(arquivo não encontrado no pacote: ' + path + ')';
+  panelPath.textContent = path;
+  panelRendered.innerHTML = marked.parse(content);
+  panelRaw.textContent = content;
+  showingRaw = false;
+  panelRendered.style.display = 'block';
+  panelRaw.style.display = 'none';
+  toggleRawBtn.textContent = 'Ver markdown puro';
+  overlay.classList.add('open');
+  panel.classList.add('open');
+}
+
+function closePanel() {
+  overlay.classList.remove('open');
+  panel.classList.remove('open');
+}
+
+toggleRawBtn.onclick = () => {
+  showingRaw = !showingRaw;
+  panelRendered.style.display = showingRaw ? 'none' : 'block';
+  panelRaw.style.display = showingRaw ? 'block' : 'none';
+  toggleRawBtn.textContent = showingRaw ? 'Ver renderizado' : 'Ver markdown puro';
+};
+
+document.getElementById('panel-close').onclick = closePanel;
+overlay.onclick = closePanel;
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+
+renderFlow('novo');
+</script>
+</body>
+</html>
