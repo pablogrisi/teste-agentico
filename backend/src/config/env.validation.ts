@@ -17,6 +17,9 @@ export interface ValidatedEnv {
   IA_ADAPTER: IaAdapter;
   ARMAZENAMENTO_PDF_DIR: string;
   ANALISE_PDF_TAMANHO_MAX_MB: number;
+  IA_TIMEOUT_MS: number;
+  PROCESSAMENTO_INTERVALO_MS: number;
+  PROCESSAMENTO_AUTO: boolean;
 }
 
 export function validateEnv(config: Record<string, unknown>): ValidatedEnv {
@@ -73,6 +76,30 @@ export function validateEnv(config: Record<string, unknown>): ValidatedEnv {
     );
   }
 
+  const inteiroPositivo = (chave: string, padrao: number): number => {
+    const raw = asString(chave, { required: false }) || String(padrao);
+    const n = Number(raw);
+    if (!Number.isInteger(n) || n <= 0) {
+      errors.push(`${chave} deve ser um inteiro positivo (recebido: "${raw}")`);
+    }
+    return n;
+  };
+  const IA_TIMEOUT_MS = inteiroPositivo('IA_TIMEOUT_MS', 120000);
+  const PROCESSAMENTO_INTERVALO_MS = inteiroPositivo(
+    'PROCESSAMENTO_INTERVALO_MS',
+    5000,
+  );
+
+  const processamentoAutoRaw = (
+    asString('PROCESSAMENTO_AUTO', { required: false }) || 'true'
+  ).toLowerCase();
+  if (processamentoAutoRaw !== 'true' && processamentoAutoRaw !== 'false') {
+    errors.push(
+      `PROCESSAMENTO_AUTO deve ser "true" ou "false" (recebido: "${processamentoAutoRaw}")`,
+    );
+  }
+  const PROCESSAMENTO_AUTO = processamentoAutoRaw === 'true';
+
   if (errors.length > 0) {
     throw new Error(
       `Configuração de ambiente inválida:\n- ${errors.join('\n- ')}`,
@@ -88,5 +115,8 @@ export function validateEnv(config: Record<string, unknown>): ValidatedEnv {
     IA_ADAPTER: iaAdapterRaw as IaAdapter,
     ARMAZENAMENTO_PDF_DIR,
     ANALISE_PDF_TAMANHO_MAX_MB,
+    IA_TIMEOUT_MS,
+    PROCESSAMENTO_INTERVALO_MS,
+    PROCESSAMENTO_AUTO,
   };
 }

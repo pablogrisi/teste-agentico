@@ -10,6 +10,8 @@ const defaults: Record<string, string> = {
   ANALISTA_ATUAL_NOME: 'Analista de Teste',
   IA_ADAPTER: 'stub',
   ARMAZENAMENTO_PDF_DIR: './var/pdfs-test',
+  // Testes controlam o worker manualmente — nada de agendamento/varredura.
+  PROCESSAMENTO_AUTO: 'false',
 };
 
 for (const [chave, valor] of Object.entries(defaults)) {

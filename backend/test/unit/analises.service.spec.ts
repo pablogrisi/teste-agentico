@@ -1,5 +1,6 @@
 import {
   BadGatewayException,
+  ConflictException,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -15,6 +16,7 @@ function build(over: {
   ler?: jest.Mock;
   findMany?: jest.Mock;
   count?: jest.Mock;
+  update?: jest.Mock;
 }) {
   const validacao = {
     validar: jest.fn().mockReturnValue(over.validarErros ?? []),
@@ -29,6 +31,9 @@ function build(over: {
   };
   const findMany = over.findMany ?? jest.fn().mockResolvedValue([]);
   const count = over.count ?? jest.fn().mockResolvedValue(0);
+  const update =
+    over.update ??
+    jest.fn().mockResolvedValue({ id: 'a1', status: 'PENDENTE' });
   const prisma = {
     analise: {
       create:
@@ -37,16 +42,28 @@ function build(over: {
       findFirst: over.findFirst ?? jest.fn(),
       findMany,
       count,
+      update,
     },
     $transaction: (ops: unknown[]) => Promise.all(ops),
   };
+  const processamento = { disparar: jest.fn() };
   const service = new AnalisesService(
     prisma as never,
     validacao as never,
     analistaAtual as never,
+    processamento as never,
     armazenamentoPdf as never,
   );
-  return { service, validacao, armazenamentoPdf, prisma, findMany, count };
+  return {
+    service,
+    validacao,
+    armazenamentoPdf,
+    prisma,
+    findMany,
+    count,
+    update,
+    processamento,
+  };
 }
 
 const entrada = {
@@ -56,8 +73,8 @@ const entrada = {
 };
 
 describe('AnalisesService.criar', () => {
-  it('valida, persiste o PDF e cria a análise PENDENTE', async () => {
-    const { service, armazenamentoPdf, prisma } = build({});
+  it('valida, persiste o PDF, cria a análise PENDENTE e dispara o processamento', async () => {
+    const { service, armazenamentoPdf, prisma, processamento } = build({});
     await service.criar(entrada);
 
     expect(armazenamentoPdf.salvar).toHaveBeenCalledWith(PDF);
@@ -70,6 +87,7 @@ describe('AnalisesService.criar', () => {
         status: 'PENDENTE',
       }),
     });
+    expect(processamento.disparar).toHaveBeenCalledWith('a1');
   });
 
   it('lança 422 e não toca no armazenamento quando a validação falha', async () => {
@@ -128,6 +146,40 @@ describe('AnalisesService.buscarPorId / lerPdf', () => {
       ler: jest.fn().mockRejectedValue(new Error('ENOENT')),
     });
     await expect(service.lerPdf('a1')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+});
+
+describe('AnalisesService.reprocessar', () => {
+  it('volta a análise para PENDENTE e dispara, quando está em ERRO_PROCESSAMENTO', async () => {
+    const { service, update, processamento } = build({
+      findFirst: jest
+        .fn()
+        .mockResolvedValue({ id: 'a1', status: 'ERRO_PROCESSAMENTO' }),
+    });
+    await service.reprocessar('a1');
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 'a1' },
+      data: { status: 'PENDENTE', motivoErro: null },
+    });
+    expect(processamento.disparar).toHaveBeenCalledWith('a1');
+  });
+
+  it('409 quando a análise não está em ERRO_PROCESSAMENTO', async () => {
+    const { service } = build({
+      findFirst: jest
+        .fn()
+        .mockResolvedValue({ id: 'a1', status: 'PRONTA_PARA_REVISAO' }),
+    });
+    await expect(service.reprocessar('a1')).rejects.toBeInstanceOf(
+      ConflictException,
+    );
+  });
+
+  it('404 quando a análise não existe', async () => {
+    const { service } = build({ findFirst: jest.fn().mockResolvedValue(null) });
+    await expect(service.reprocessar('x')).rejects.toBeInstanceOf(
       NotFoundException,
     );
   });

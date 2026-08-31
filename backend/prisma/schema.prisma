@@ -44,6 +44,8 @@ model Requisito {
   criadoEm     DateTime @default(now()) @map("criado_em")
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
 
+  avaliacoes AvaliacaoRequisito[]
+
   @@index([area, ordem])
   @@map("requisito")
 }
@@ -66,6 +68,34 @@ model Analise {
   criadoEm      DateTime  @default(now()) @map("criado_em")
   atualizadoEm  DateTime  @updatedAt @map("atualizado_em")
 
+  avaliacoes AvaliacaoRequisito[]
+
   @@index([analistaId, iniciadaEm])
   @@map("analise")
+}
+
+/// Avaliação de um requisito dentro de uma análise (RF-005/RF-007).
+///
+/// `statusSugeridoIa` é o parecer da capacidade de IA; `statusFinal` começa
+/// igual e passa a ser editável pelo analista (RF-008). `statusSugeridoIa` e
+/// `statusFinal` usam os três valores de `src/core/domain/status-requisito.ts`
+/// (string validada em código, não enum de banco).
+model AvaliacaoRequisito {
+  id               String   @id @default(uuid()) @db.Uuid
+  analiseId        String   @map("analise_id") @db.Uuid
+  requisitoId      String   @map("requisito_id") @db.Uuid
+  statusSugeridoIa String   @map("status_sugerido_ia")
+  statusFinal      String   @map("status_final")
+  verificado       Boolean  @default(false)
+  comentario       String?
+  paginaReferencia Int?     @map("pagina_referencia")
+  criadoEm         DateTime @default(now()) @map("criado_em")
+  atualizadoEm     DateTime @updatedAt @map("atualizado_em")
+
+  analise   Analise   @relation(fields: [analiseId], references: [id], onDelete: Cascade)
+  requisito Requisito @relation(fields: [requisitoId], references: [id])
+
+  @@unique([analiseId, requisitoId])
+  @@index([analiseId])
+  @@map("avaliacao_requisito")
 }

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ProcessamentoModule } from '../processamento/processamento.module';
 import { AnalisesController } from './analises.controller';
 import { AnalisesService } from './analises.service';
 import { ValidacaoAnaliseService } from './validacao-analise.service';
@@ -13,6 +14,7 @@ import { ValidacaoAnaliseService } from './validacao-analise.service';
  * `CoreModule` (global).
  */
 @Module({
+  imports: [ProcessamentoModule],
   controllers: [AnalisesController],
   providers: [AnalisesService, ValidacaoAnaliseService],
   exports: [AnalisesService],

@@ -22,6 +22,11 @@ export interface AppConfig {
   analise: {
     pdfTamanhoMaxBytes: number;
   };
+  processamento: {
+    iaTimeoutMs: number;
+    intervaloMs: number;
+    auto: boolean;
+  };
 }
 
 export default (): AppConfig => ({
@@ -43,5 +48,10 @@ export default (): AppConfig => ({
   analise: {
     pdfTamanhoMaxBytes:
       Number(process.env.ANALISE_PDF_TAMANHO_MAX_MB ?? '25') * 1024 * 1024,
+  },
+  processamento: {
+    iaTimeoutMs: Number(process.env.IA_TIMEOUT_MS ?? '120000'),
+    intervaloMs: Number(process.env.PROCESSAMENTO_INTERVALO_MS ?? '5000'),
+    auto: (process.env.PROCESSAMENTO_AUTO ?? 'true').toLowerCase() !== 'false',
   },
 });

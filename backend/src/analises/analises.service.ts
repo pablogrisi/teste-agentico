@@ -1,5 +1,6 @@
 import {
   BadGatewayException,
+  ConflictException,
   Inject,
   Injectable,
   Logger,
@@ -8,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { Analise } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { ProcessamentoService } from '../processamento/processamento.service';
 import { AnalistaAtualProvider } from '../core/analista-atual/analista-atual.provider';
 import {
   ARMAZENAMENTO_PDF_PORT,
@@ -49,6 +51,7 @@ export class AnalisesService {
     private readonly prisma: PrismaService,
     private readonly validacao: ValidacaoAnaliseService,
     private readonly analistaAtual: AnalistaAtualProvider,
+    private readonly processamento: ProcessamentoService,
     @Inject(ARMAZENAMENTO_PDF_PORT)
     private readonly armazenamentoPdf: ArmazenamentoPdfPort,
   ) {}
@@ -76,8 +79,9 @@ export class AnalisesService {
       );
     }
 
+    let analise: Analise;
     try {
-      return await this.prisma.analise.create({
+      analise = await this.prisma.analise.create({
         data: {
           nup: entrada.nup!.trim(),
           objeto: entrada.objeto!.trim(),
@@ -93,6 +97,25 @@ export class AnalisesService {
       );
       throw erro;
     }
+
+    this.processamento.disparar(analise.id);
+    return analise;
+  }
+
+  /** Reenfileira uma análise que ficou em `ERRO_PROCESSAMENTO`. */
+  async reprocessar(id: string): Promise<Analise> {
+    const analise = await this.buscarPorId(id);
+    if (analise.status !== 'ERRO_PROCESSAMENTO') {
+      throw new ConflictException(
+        `Só é possível reprocessar uma análise em ERRO_PROCESSAMENTO (status atual: ${analise.status})`,
+      );
+    }
+    const atualizada = await this.prisma.analise.update({
+      where: { id },
+      data: { status: 'PENDENTE', motivoErro: null },
+    });
+    this.processamento.disparar(id);
+    return atualizada;
   }
 
   async listar(params: ListarAnalisesParams): Promise<PaginaAnalises> {

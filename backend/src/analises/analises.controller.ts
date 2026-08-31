@@ -73,6 +73,13 @@ export class AnalisesController {
     };
   }
 
+  @Post(':id/reprocessar')
+  @HttpCode(200)
+  async reprocessar(@Param('id') id: string) {
+    const a = await this.analises.reprocessar(id);
+    return { id: a.id, status: a.status };
+  }
+
   @Get(':id/pdf')
   async pdf(@Param('id') id: string): Promise<StreamableFile> {
     const { bytes, nomeArquivo } = await this.analises.lerPdf(id);
