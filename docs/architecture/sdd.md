@@ -135,7 +135,7 @@ Não há identidade no MVP: o `AnalistaAtualProvider` devolve sempre o analista 
 1. `POST /analises` (multipart: NUP, objeto/descrição, arquivo PDF). `AnalistaAtualProvider` resolve o analista configurado.
 2. Valida campos obrigatórios e o PDF (tipo/assinatura de arquivo, tamanho máximo). PDF inválido → 422 sem criar a análise.
 3. `ArmazenamentoPdfPort` grava o PDF; falha de gravação → 502/500, nada é criado.
-4. Cria `analise` com `status = PENDENTE`, `analista_id`, `iniciada_em`, referência do arquivo. Responde `202` com o id e o status.
+4. Cria `analise` com `status = PENDENTE`, `analista_id`, `iniciada_em`, referência do arquivo. Responde `201` com o id e o status. *(A TSD-004 usa 201: nada assíncrono é disparado na requisição — o worker do RF-005 pega os `PENDENTE` por varredura.)* Erro de validação → `422` sem criar nada; falha ao gravar o PDF → `502` sem criar nada.
 5. Worker seleciona a análise `PENDENTE`, muda para `PROCESSANDO`.
 6. Worker carrega a base de requisitos ativa e chama `AnaliseIaPort` com o PDF + requisitos.
 7. Para cada requisito retornado, cria `avaliacao_requisito` com `status_sugerido_ia` (Conforme | Não conforme | Não se aplica), `pagina_referencia` (ou nulo), `status_final = status_sugerido_ia`, `verificado = false`.
@@ -169,7 +169,7 @@ Não há identidade no MVP: o `AnalistaAtualProvider` devolve sempre o analista 
 
 | Entidade/Contrato | Responsabilidade | Observações |
 |---|---|---|
-| `analise` | Uma análise, sob o analista atual | Campos: `id`, `nup`, `objeto`, `analista_id`, `arquivo_pdf_ref`, `status` (PENDENTE, PROCESSANDO, PRONTA_PARA_REVISAO, ERRO_PROCESSAMENTO, CONCLUIDA), `motivo_erro`, `iniciada_em`, `concluida_em`, timestamps |
+| `analise` | Uma análise, sob o analista atual | **Implementada (TSD-004).** Campos: `id`, `nup`, `objeto`, `analista_id`, `arquivo_pdf_ref`, `status` (string validada por `STATUS_ANALISE` em `src/analises/status-analise.ts` — **não** enum de banco: `PENDENTE`, `PROCESSANDO`, `PRONTA_PARA_REVISAO`, `ERRO_PROCESSAMENTO`, `CONCLUIDA`), `motivo_erro`, `iniciada_em`, `concluida_em`, `criado_em`, `atualizado_em`. Índice (`analista_id`, `iniciada_em`) |
 | `requisito` | Item da base fixa de verificação | **Implementado (TSD-003).** Campos: `id`, `codigo` (único), `area` (string livre validada por allowlist em `src/requisitos/areas.ts` — **não** enum; começa com `CHECKLIST`/`TECNICA`), `titulo`, `descricao`, `obrigatorio` (bool), `ordem`, `ativo`, referência normativa estruturada (`norma_lei`/`artigo`/`inciso`/`paragrafo`/`alinea`, opcionais), `criado_em`/`atualizado_em`. Sem coluna de versão: texto + `obrigatorio` imutáveis após publicação; mudança normativa = novo `codigo` + antigo `ativo=false`. Populado por importador de CSV externo (`prisma/seed-data/requisitos.csv`). Conteúdo real do 1º subconjunto ainda pendente (P-07) |
 | `avaliacao_requisito` | Avaliação de um requisito dentro de uma análise | Campos: `id`, `analise_id`, `requisito_id`, `status_sugerido_ia`, `status_final` (Conforme \| Não conforme \| Não se aplica), `verificado` (bool), `comentario`, `pagina_referencia` (int nulo), `atualizado_em`, timestamps. Único por (`analise_id`, `requisito_id`) |
 | Contrato REST LicIA ↔ Frontend | Endpoints de §7 + formato de erro padronizado | Detalhamento fica para a TSD de cada feature, não para o SDD |

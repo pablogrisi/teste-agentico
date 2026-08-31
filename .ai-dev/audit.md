@@ -20,6 +20,20 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 31/08/2026 — RF-001 + RF-004 + RF-018 / TSD-004: criar análise com PDF persistido (backend)
+
+Contexto: usuário pediu "abre o ciclo do PM e siga com o desenvolvimento das próximas partes". Ciclo completo na branch `backend/rf-001-criar-analise` (a partir do `main` `13b111e`).
+
+Papéis:
+- **PM**: agrupou RF-001+RF-004+RF-018 num ciclo backend. User Story + critérios no roadmap; 4 perguntas ao usuário. Respostas: PDF válido = mimetype `application/pdf` + magic bytes `%PDF-` + limite 25 MB (`ANALISE_PDF_TAMANHO_MAX_MB`) + recusa `/Encrypt`; NUP string livre (≤60); `status` todos os valores do SDD como string+allowlist; NUP repetido permitido (sem unique).
+- **Engenheiro**: `docs/engineering/specs/004-criar-analise.tsd.md`.
+- **Dev**: model `Analise` + migration `20260901000000_criar_analise`; `src/analises/` (`status-analise.ts`, `ValidacaoAnaliseService`, `AnalisesService`, `AnalisesController`); `POST /analises` (multipart via `FileInterceptor`), `GET /analises/:id`, `GET /analises/:id/pdf` (`StreamableFile`); config `ANALISE_PDF_TAMANHO_MAX_MB`; dep `@types/multer`. +15 unit + 1 integração (`analises.integration-spec`).
+- **Testes**: `npm run ci` ✅ (lint, typecheck, prisma validate, **38 unit**, build) · `npm run test:e2e` ✅ **9/9** (health + requisitos-importador + analises: criar→buscar→baixar PDF, 422 sem criar linha, 404s), Postgres embutido.
+- **Crítico**: aprovado. Refinação: `POST /analises` responde **201** (não 202 — nada assíncrono na requisição); SDD §7 ajustado. Menores: `STATUS_ANALISE` seam para RF-005; heurística `/Encrypt`; teto multer 60 MB; PDF órfão possível se `create` falha após `salvar` (aceito no MVP).
+- **Documentador**: SDD §7/§8 (`analise` implementada, 201); checkpoint §1/§2/§3/§5/§7; roadmap RF-001/004/018 → `implementada`; nova questão **P-11** (máscara do NUP).
+
+Estado: ciclo fechado, **branch aguardando sign-off + merge na `main`**. Próximo backend: RF-002 (listagem — depende de P-06).
+
 ## 31/08/2026 — Merge da fundação backend + RF-006 na `main`; modelo de branch definido
 
 Contexto: usuário questionou se valia fazer merge na `main` ou manter uma branch longa por pessoa até o fim. Decidido: **merge frequente na `main`**, porque os documentos vivos do método (`checkpoint.md`, `roadmap.md`, `audit.md`, `questoes-abertas.md`) são fonte de verdade única e branches longas divergentes os inviabilizam.

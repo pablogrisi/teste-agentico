@@ -16,6 +16,7 @@
 | P-08 | Quais métricas serão usadas para medir impacto e produtividade da solução? | PRD §12 | aberta |
 | P-09 | Por quanto tempo o PDF de entrada persistido deve ficar disponível (política de retenção/expiração)? | PRD §12, RF-018 | aberta — direção parcial: ver A-05 |
 | P-10 | Quando e como entra identidade real (login/token do serviço de identidade), múltiplos analistas e a separação de acesso por analista (RF-003)? O MVP roda com analista único fixo. | Sessão de bootstrap; PRD RF-003 | aberta |
+| P-11 | O NUP precisa de validação de formato (máscara `NNNNN.NNNNNN/NNNN-NN` do Processo Administrativo)? O MVP (TSD-004) aceita string livre não-vazia até 60 chars. | Ciclo RF-001 (TSD-004) | aberta |
 
 ## Arquitetura
 
