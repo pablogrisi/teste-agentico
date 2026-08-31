@@ -1,0 +1,39 @@
+/* Ponto único de entrada do tema. Importa os tokens (na ordem de dependência)
+   e define o reset/base global da aplicação. */
+@import "./primitiveColors.css";
+@import "./semanticColors.css";
+@import "./typography.css";
+@import "./spacing.css";
+@import "./borderRadius.css";
+@import "./elevation.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: var(--font-family-base);
+  background: var(--color-bg-desktop);
+  color: var(--color-text-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}

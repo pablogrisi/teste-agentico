@@ -1,0 +1,116 @@
+:root {
+  /* Family */
+  --font-family-base: 'Kanit', sans-serif;
+
+  /* Weights — espelham os estilos do Figma (Headline/Texto/Legenda).
+     SemiBold (600) é usado pelos componentes (botões, abas, labels);
+     Bold (700) é o peso da escala de texto documentada. */
+  --font-weight-light:    300;
+  --font-weight-regular:  400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+
+  /* Sizes */
+  --font-size-10: 0.625rem;
+  --font-size-12: 0.75rem;
+  --font-size-14: 0.875rem;
+  --font-size-16: 1rem;
+  --font-size-20: 1.25rem;
+  --font-size-26: 1.625rem;
+  --font-size-32: 2rem;
+  --font-size-40: 2.5rem;
+  --font-size-52: 3.25rem;
+
+  /* Line heights */
+  --line-height-14: 0.875rem;
+  --line-height-16: 1rem;
+  --line-height-20: 1.25rem;
+  --line-height-24: 1.5rem;
+  --line-height-32: 2rem;
+  --line-height-40: 2.5rem;
+  --line-height-52: 3.25rem;
+  --line-height-64: 4rem;
+  --line-height-82: 5.125rem;
+
+  /* ════════════════════════════════════════════════════════════
+     Estilos de texto — espelham 1:1 os text styles do Figma.
+     Cada bloco corresponde a um estilo nomeado no design system.
+     ════════════════════════════════════════════════════════════ */
+
+  /* ── Headline ── */
+
+  /* Headline/H1 — Kanit Light 52/82 */
+  --text-h1-size:        var(--font-size-52);
+  --text-h1-line-height: var(--line-height-82);
+  --text-h1-weight:      var(--font-weight-light);
+
+  /* Headline/H2 — Kanit Medium 40/64 */
+  --text-h2-size:        var(--font-size-40);
+  --text-h2-line-height: var(--line-height-64);
+  --text-h2-weight:      var(--font-weight-medium);
+
+  /* Headline/H3 — Kanit Bold 32/52 */
+  --text-h3-size:        var(--font-size-32);
+  --text-h3-line-height: var(--line-height-52);
+  --text-h3-weight:      var(--font-weight-bold);
+
+  /* Headline/H4 — Kanit Bold 26/40 */
+  --text-h4-size:        var(--font-size-26);
+  --text-h4-line-height: var(--line-height-40);
+  --text-h4-weight:      var(--font-weight-bold);
+
+  /* Headline/H5 — Kanit Bold 20/32 */
+  --text-h5-size:        var(--font-size-20);
+  --text-h5-line-height: var(--line-height-32);
+  --text-h5-weight:      var(--font-weight-bold);
+
+  /* ── Texto ── */
+
+  /* Texto/Texto grande — Kanit Regular 20/32 */
+  --text-large-size:        var(--font-size-20);
+  --text-large-line-height: var(--line-height-32);
+  --text-large-weight:      var(--font-weight-regular);
+
+  /* Texto/Texto corrido — Kanit Regular 16/24 */
+  --text-body-size:        var(--font-size-16);
+  --text-body-line-height: var(--line-height-24);
+  --text-body-weight:      var(--font-weight-regular);
+
+  /* Texto/--text-body-semibold — Kanit SemiBold 16/24 (componentes) */
+  --text-body-semibold-size:        var(--font-size-16);
+  --text-body-semibold-line-height: var(--line-height-24);
+  --text-body-semibold-weight:      var(--font-weight-semibold);
+
+  /* Texto/Texto corrido bold — Kanit Bold 16/24 */
+  --text-body-bold-size:        var(--font-size-16);
+  --text-body-bold-line-height: var(--line-height-24);
+  --text-body-bold-weight:      var(--font-weight-bold);
+
+  /* Texto/Texto menor — Kanit Regular 14/20 */
+  --text-small-size:        var(--font-size-14);
+  --text-small-line-height: var(--line-height-20);
+  --text-small-weight:      var(--font-weight-regular);
+
+  /* Texto/--text-small-semibold — Kanit SemiBold 14/20 (componentes) */
+  --text-small-semibold-size:        var(--font-size-14);
+  --text-small-semibold-line-height: var(--line-height-20);
+  --text-small-semibold-weight:      var(--font-weight-semibold);
+
+  /* Texto/Texto menor bold — Kanit Bold 14/20 */
+  --text-small-bold-size:        var(--font-size-14);
+  --text-small-bold-line-height: var(--line-height-20);
+  --text-small-bold-weight:      var(--font-weight-bold);
+
+  /* ── Legenda ── */
+
+  /* Legenda/Legenda — Kanit Regular 12/16 */
+  --text-caption-size:        var(--font-size-12);
+  --text-caption-line-height: var(--line-height-16);
+  --text-caption-weight:      var(--font-weight-regular);
+
+  /* Legenda/Legenda menor — Kanit Regular 10/14 */
+  --text-caption-xs-size:        var(--font-size-10);
+  --text-caption-xs-line-height: var(--line-height-14);
+  --text-caption-xs-weight:      var(--font-weight-regular);
+}

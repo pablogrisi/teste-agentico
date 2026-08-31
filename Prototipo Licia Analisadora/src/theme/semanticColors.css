@@ -1,0 +1,77 @@
+@import "./primitiveColors.css";
+
+:root {
+  /* Brand */
+  --color-brand-default:  var(--color-verde-1000);
+  --color-brand-hover:    var(--color-verde-900);
+  --color-brand-active:   var(--color-verde-800);
+  --color-brand-subtle:   var(--color-verde-200);
+  --color-brand-muted:    var(--color-verde-100);
+
+  /* Text */
+  --color-text-title:     var(--color-preto-1000);
+  --color-text-body:      var(--color-cinza-1000);
+  --color-text-secondary: var(--color-cinza-800);
+  --color-text-disabled:  var(--color-cinza-600);
+  --color-text-inverse:   var(--color-branco-1000);
+  --color-text-brand:     var(--color-verde-1000);
+
+  /* Icon */
+  --color-icon-default:   var(--color-cinza-1000);
+  --color-icon-secondary: var(--color-cinza-800);
+  --color-icon-disabled:  var(--color-cinza-600);
+  --color-icon-inverse:   var(--color-branco-1000);
+  --color-icon-brand:     var(--color-verde-1000);
+  --color-icon-success:   var(--color-verde-1000);
+  --color-icon-warning:   var(--color-laranja-1000);
+  --color-icon-error:     var(--color-vermelho-1000);
+  --color-icon-info:      var(--color-azul-1000);
+
+  /* Background */
+  --color-bg-page:        var(--color-cinza-100);
+  --color-bg-card:        var(--color-branco-1000);
+  --color-bg-subtle:      var(--color-cinza-50);
+  --color-bg-hover:       var(--color-cinza-200);
+  --color-bg-desktop:     var(--color-neutro-desktop);
+  --color-bg-viewer:      var(--color-neutro-surface);
+  --color-bg-toolbar:     var(--color-neutro-toolbar);
+  --color-bg-alert:       var(--color-amarelo-100);
+  --color-bg-selected:    var(--color-azul-250);
+
+  /* Topbar institucional (Governo do Ceará) */
+  --color-topbar-base:        var(--color-verde-gov-1000);
+  --color-topbar-shade:       var(--color-verde-gov-shade);
+  --color-topbar-user:        var(--color-verde-gov-pill);
+  --color-topbar-user-border: var(--color-verde-gov-pill-border);
+  --color-topbar-divider:     var(--color-neutro-divider);
+
+  /* Border */
+  --color-border-default: var(--color-cinza-500);
+  --color-border-strong:  var(--color-cinza-600);
+  --color-border-subtle:  var(--color-cinza-200);
+  --color-border-brand:   var(--color-verde-1000);
+  --color-border-viewer:  var(--color-cinza-500);
+
+  /* Observação técnica (item neutro) */
+  --color-obs-accent:     var(--color-azulado-700);
+
+  /* Feedback — success */
+  --color-success-default: var(--color-verde-1000);
+  --color-success-subtle:  var(--color-verde-100);
+  --color-success-text:    var(--color-verde-1000);
+
+  /* Feedback — warning */
+  --color-warning-default: var(--color-laranja-1000);
+  --color-warning-subtle:  var(--color-laranja-100);
+  --color-warning-text:    var(--color-laranja-1000);
+
+  /* Feedback — error */
+  --color-error-default:   var(--color-vermelho-1000);
+  --color-error-subtle:    var(--color-vermelho-100);
+  --color-error-text:      var(--color-vermelho-1000);
+
+  /* Feedback — info */
+  --color-info-default:    var(--color-azul-1000);
+  --color-info-subtle:     var(--color-azul-100);
+  --color-info-text:       var(--color-azul-1000);
+}

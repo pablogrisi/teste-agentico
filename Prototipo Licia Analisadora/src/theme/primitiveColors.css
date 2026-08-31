@@ -1,0 +1,101 @@
+:root {
+  /* Verde — 100–1000 from Figma, 50 interpolated */
+  --color-verde-1000: #26a736;
+  --color-verde-900: #3baf4b;
+  --color-verde-800: #50b85e;
+  --color-verde-700: #67c172;
+  --color-verde-600: #7cca87;
+  --color-verde-500: #93d39a;
+  --color-verde-400: #a8dbaf;
+  --color-verde-300: #bde4c3;
+  --color-verde-200: #d4edd6;
+  --color-verde-100: #e9f6eb;
+  --color-verde-50: #f4fbf5;
+
+  /* Laranja — 500 and 1000 from Figma, rest interpolated via anchors 250/500/750/1000 */
+  --color-laranja-1000: #f49c00;
+  --color-laranja-900: #f7a826;
+  --color-laranja-800: #fab44d;
+  --color-laranja-700: #fbc06d;
+  --color-laranja-600: #fbcb88;
+  --color-laranja-500: #fbd6a3;
+  --color-laranja-400: #fcdeb5;
+  --color-laranja-300: #fde7c8;
+  --color-laranja-200: #fdefda;
+  --color-laranja-100: #fef7ed;
+  --color-laranja-50: #fffbf6;
+
+  /* Azul — 500 and 1000 from Figma, rest interpolated via anchors 250/500/750/1000 */
+  --color-azul-1000: #54a5af;
+  --color-azul-900: #6fb3bc;
+  --color-azul-800: #8ac1c9;
+  --color-azul-700: #9eccd2;
+  --color-azul-600: #acd3d9;
+  --color-azul-500: #badbdf;
+  --color-azul-400: #c8e2e5;
+  --color-azul-300: #d6e9ec;
+  --color-azul-250: #ddedef; /* paginator — página ativa */
+  --color-azul-200: #e4f1f2;
+  --color-azul-100: #f1f8f9;
+  --color-azul-50: #f8fbfc;
+
+  /* Verde institucional — brasão Governo do Ceará (topbar). Distinto do verde de marca. */
+  --color-verde-gov-1000: #00853b;
+  --color-verde-gov-pill: #148e4a;
+  --color-verde-gov-pill-border: #0c803f;
+  --color-verde-gov-shade: #1c5033; /* sombra do gradiente da topbar */
+
+  /* Azulado — observações técnicas (item neutro) */
+  --color-azulado-700: #6b7fa3;
+
+  /* Amarelo — fundo de alerta em documentos */
+  --color-amarelo-100: #fffce6;
+
+  /* Neutro — superfícies de chrome (área de trabalho, visor de PDF) com leve tom azulado */
+  --color-neutro-desktop: #e0e2e8;  /* fundo da área de trabalho */
+  --color-neutro-surface: #e2e6e6;  /* fundo do painel de PDF */
+  --color-neutro-toolbar: #f8f9f9;  /* barra de ferramentas do PDF */
+  --color-neutro-divider: #d3d3d3;  /* divisória sob a topbar */
+
+  /* Preto — 1000 from Figma, rest interpolated from white to #003234 */
+  --color-preto-1000: #003234;
+  --color-preto-900: #1a4748;
+  --color-preto-800: #335b5d;
+  --color-preto-700: #4d7071;
+  --color-preto-600: #668485;
+  --color-preto-500: #80999a;
+  --color-preto-400: #99adae;
+  --color-preto-300: #b3c2c2;
+  --color-preto-200: #ccd6d6;
+  --color-preto-100: #e6ebeb;
+  --color-preto-50: #f2f5f5;
+
+  /* Cinza — 50/100/200/400/600/800/1000 from Figma, 300/500/700/900 interpolated */
+  --color-cinza-1000: #465564;
+  --color-cinza-900: #63777f;
+  --color-cinza-800: #80999a;
+  --color-cinza-700: #9aadaf;
+  --color-cinza-600: #b3c1c3;
+  --color-cinza-500: #cdd6d7;
+  --color-cinza-400: #e6ebeb;
+  --color-cinza-300: #ecf0f0;
+  --color-cinza-200: #f2f4f4;
+  --color-cinza-100: #fafafa;
+  --color-cinza-50: #fcfcfc;
+
+  /* Branco — single token, white has no meaningful lighter variants */
+  --color-branco-1000: #ffffff;
+
+  /* Vermelho — 1000 from Figma, rest interpolated from white to #fc5757 */
+  --color-vermelho-1000: #fc5757;
+  --color-vermelho-900: #fc6868;
+  --color-vermelho-800: #fd7979;
+  --color-vermelho-700: #fd8989;
+  --color-vermelho-600: #fd9a9a;
+  --color-vermelho-500: #feabab;
+  --color-vermelho-400: #febcbc;
+  --color-vermelho-300: #fecdcd;
+  --color-vermelho-200: #fedddd;
+  --color-vermelho-100: #ffeeee;
+  --color-vermelho-50: #fff7f7;
+}

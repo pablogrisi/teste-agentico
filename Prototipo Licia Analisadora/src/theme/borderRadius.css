@@ -1,0 +1,10 @@
+:root {
+  --radius-0:    0;          /* sharp — tables, full-width dividers */
+  --radius-2:    0.125rem;   /* 2px  — tags, badges compactos */
+  --radius-4:    0.25rem;    /* 4px  — inputs pequenos, tooltips */
+  --radius-8:    0.5rem;     /* 8px  — botões, inputs, cards (padrão) */
+  --radius-12:   0.75rem;    /* 12px — cards grandes */
+  --radius-16:   1rem;       /* 16px — modais, bottom sheets */
+  --radius-24:   1.5rem;     /* 24px — chips pill, hero cards */
+  --radius-full: 9999px;     /* circular — avatares, toggle, loader */
+}

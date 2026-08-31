@@ -1,0 +1,58 @@
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--spacing-48);
+  overflow: hidden;
+  border-bottom: 1px solid var(--color-topbar-divider);
+  background:
+    linear-gradient(
+      270deg,
+      color-mix(in srgb, var(--color-topbar-shade) 62%, transparent) 0%,
+      transparent 3%
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-topbar-shade) 68%, transparent) 0%,
+      transparent 8.5%
+    ),
+    var(--color-topbar-base);
+}
+
+.logo {
+  height: 32px;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  width: 263px;
+  padding: var(--spacing-8) var(--spacing-12) var(--spacing-8) var(--spacing-16);
+  background: var(--color-topbar-user);
+  border: 1px solid var(--color-topbar-user-border);
+  border-radius: var(--radius-8);
+  color: var(--color-text-inverse);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.user:hover {
+  background: var(--color-topbar-user-border);
+}
+
+.userName {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-small-semibold-size);
+  font-weight: var(--text-small-semibold-weight);
+  line-height: var(--text-small-semibold-line-height);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
