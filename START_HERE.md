@@ -1,4 +1,4 @@
-# Comece aqui — desenvolvimento por IA de {{NOME_DO_PROJETO}}
+# Comece aqui — desenvolvimento por IA de LicIA Analisadora
 
 Este arquivo é a entrada universal do projeto para pessoas e LLMs. Use-o quando estiver começando uma nova sessão no Codex/GPT, Claude, Gemini ou qualquer outra ferramenta.
 
@@ -12,7 +12,7 @@ Leia START_HERE.md e siga o fluxo de desenvolvimento por IA deste repositório a
 
 ## O que este repositório está tentando garantir
 
-{{NOME_DO_PROJETO}} deve evoluir com contexto preservado, decisões rastreáveis e validações repetíveis. O objetivo não é apenas acelerar código com IA, mas criar uma prática de engenharia que possa ser continuada por outras pessoas e outras LLMs.
+LicIA Analisadora deve evoluir com contexto preservado, decisões rastreáveis e validações repetíveis. O objetivo não é apenas acelerar código com IA, mas criar uma prática de engenharia que possa ser continuada por outras pessoas e outras LLMs.
 
 Antes de implementar qualquer mudança relevante:
 

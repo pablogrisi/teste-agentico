@@ -1,6 +1,6 @@
 # Mapa de contexto obrigatório
 
-Este arquivo define o caminho de leitura antes de qualquer mudança relevante em {{NOME_DO_PROJETO}}. A estrutura abaixo já vem pronta; preencha o conteúdo específico do projeto onde houver `<preencher>`.
+Este arquivo define o caminho de leitura antes de qualquer mudança relevante em LicIA Analisadora. A estrutura abaixo já vem pronta; preencha o conteúdo específico do projeto onde houver `<preencher>`.
 
 ## Leitura mínima em toda nova sessão
 
@@ -32,21 +32,37 @@ Use o SDD para entender fronteiras técnicas, componentes, fluxos de dados e dec
 
 ## Quando a demanda afetar implementação
 
+O repositório é um **monorepo** com duas frentes independentes, cada uma com seu ciclo e suas TSDs:
+
+- `backend/` — serviço NestJS (responsável: Pablo). Fundação: TSD-001.
+- `frontend/` — app Next.js (responsável: Vinicius). Fundação: TSD-002.
+- Raiz — método (`.ai-dev/`), docs (`docs/`), protótipo (`Prototipo Licia Analisadora/`), compartilhados.
+
 Leia também:
 
-- a TSD ativa em `docs/engineering/specs/`, se existir;
-- a TSD-001, quando precisar entender a fundação já entregue;
-- os arquivos de configuração/manifesto do projeto (ex.: `package.json`, `pyproject.toml`), para comandos e scripts disponíveis.
+- a TSD ativa da sua frente em `docs/engineering/specs/`;
+- a TSD de fundação da sua frente (001 backend, 002 frontend), para entender o que já foi entregue;
+- o `package.json` da frente (`backend/package.json` ou `frontend/package.json`) para comandos e scripts;
+- quando um RF envolve as duas frentes, o contrato de API é definido na TSD de backend do RF e consumido pela de frontend.
 
 ## Quando a demanda afetar testes
 
-<preencher com os arquivos de configuração de teste do projeto (ex.: `vitest.config.ts`, `pytest.ini`) e eventuais docs de estratégia de testes>
+- `.ai-dev/quality-gates.md` — comandos reais por frente e o que cada tipo de teste prova/não prova neste projeto.
+- **Backend** (`backend/`): runner **Jest** (`jest.config.ts` / seção `jest` no `package.json`), config e2e separada (`test/jest-e2e.json`), **Supertest** para a API real, PostgreSQL de teste (Docker Compose ou Testcontainers). Passa a existir com a TSD-001.
+- **Frontend** (`frontend/`): **Vitest + React Testing Library + jsdom** para teste de componente; slices de interface exigem também screenshots antes/depois vs. referência visual (`.ai-dev/visual-reference-workflow.md`). Passa a existir com a TSD-002.
+- Dependência externa cara/instável: a capacidade de análise por IA. Todo teste automatizado do backend usa o `StubAdapter` da `AnaliseIaPort`; o comportamento real só via smoke manual. O frontend trabalha com fixtures atrás da camada de dados até os contratos por RF existirem.
 
 ## Contexto visual e discovery
 
-<preencher, se o projeto tiver protótipo visual, Figma ou documento de discovery de produto — indicar onde estão e como devem ser usados como referência, nunca como fonte de cópia direta de código>
+- **Protótipo navegável:** `Prototipo Licia Analisadora/` (React + Vite + React Router; rodar com `npm install && npm run dev`). Telas: `/` (lista de análises + modal "Nova análise") e `/analise/:id` (visor de PDF + painel com abas Checklist e Técnica, filtros por parecer, modal de alteração de parecer, modal de conclusão). É **referência de UX** — layout, hierarquia, estados visuais, textos e padrões de interação —, **nunca fonte de cópia de código, de contrato de dados ou de arquitetura**. Backend, upload e dados do protótipo são fake.
+- **Discovery de produto:** `docs/licia-analisadora-product-discovery.md` (citado no frontmatter do PRD; confirmar se está versionado neste repo).
+- **Divergências conhecidas protótipo × PRD/SDD** (o PRD/SDD vence; registrar na TSD que tocar o tema):
+  - O protótipo tem **4 situações** de item (`Conforme`, `Com ressalva`, `Não-conforme`, `Não se aplica`). O PRD define **3** (`Conforme`, `Não conforme`, `Não se aplica`) — "Com ressalva" **não** existe no MVP.
+  - No protótipo, a aba **Técnica** são "observações" neutras sem situação; a semântica definitiva de Checklist × Técnica é questão aberta (`questoes-abertas.md` P-04).
+  - O protótipo mostra "responsável pela adição" por linha; no MVP há analista único fixo (RF-003 adiado).
+- O frontend real é uma aplicação **Next.js separada**, não este protótipo.
 
-Se houver referência visual formal, leia também `.ai-dev/visual-reference-workflow.md` antes de qualquer TSD que altere interface — ele define o fluxo obrigatório de inspeção, preenchimento da seção "Referências visuais" da TSD, e comparação por screenshot.
+Referência visual formal existe: leia `.ai-dev/visual-reference-workflow.md` antes de qualquer TSD que altere interface — ele define o fluxo obrigatório de inspeção, preenchimento da seção "Referências visuais" da TSD, e comparação por screenshot.
 
 ## Linguagem do domínio
 

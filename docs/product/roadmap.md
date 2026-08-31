@@ -1,0 +1,180 @@
+# Roadmap - LicIA Analisadora
+
+---
+title: Roadmap - LicIA Analisadora
+type: roadmap
+status: living
+created: 31/08/2026 // Pablo Grisi
+updated: 31/08/2026 // Pablo Grisi
+related (internal files):
+- docs/product/prd.md
+- docs/engineering/checkpoint.md
+---
+
+Este arquivo combina duas coisas de propósito:
+
+- **As tabelas de sequenciamento abaixo** são o roadmap leve — sequência e status de todas as features do PRD. Geradas de uma vez, ao final da Etapa 6 do bootstrap, e reordenadas sempre que o Agente PM reabrir um ciclo e confirmar (ou corrigir) a sequência.
+- **As seções de Feature**, abaixo das tabelas, começam vazias (só título, ID e frentes). Cada uma só é preenchida com a User Story completa quando chega a vez daquela feature naquela frente — nunca antes.
+
+## Duas frentes em paralelo
+
+O projeto é desenvolvido em **duas frentes independentes dentro do mesmo repositório (monorepo):**
+
+- **Backend** (`backend/`, NestJS) — responsável: Pablo Grisi.
+- **Frontend** (`frontend/`, Next.js) — responsável: Vinicius.
+
+Método, PRD, SDD, roadmap, glossário e questões abertas vivem na raiz e são compartilhados. Cada frente roda seu **próprio ciclo de seis papéis** (PM → Engenheiro → Dev → Testes → Crítico → Documentador) contra o mesmo PRD/SDD, com suas próprias TSDs. Quando um RF exige as duas frentes, cada frente abre o ciclo do seu lado; o contrato de API entre elas é definido na TSD de backend do RF e consumido pela TSD de frontend correspondente.
+
+Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são independentes e podem ser implementadas em paralelo — Pablo na TSD-001, Vinicius numa branch na TSD-002. Não estão nas tabelas abaixo (são fundação, não feature de produto).
+
+> Nota de sequenciamento: há uma linha por RF em cada frente que precisa entregá-lo. Vários RFs adjacentes tendem a ser entregues no mesmo ciclo (ex.: no backend, RF-001 + RF-004 + RF-018 = "criar análise com PDF persistido"). O Agente PM de cada frente confirma o agrupamento ao abrir cada ciclo.
+
+## Tabela de sequenciamento — Frente Backend (`backend/`)
+
+| Sequência | ID | Feature (recorte backend) | Prioridade | Status |
+|---|---|---|---|---|
+| 1 | RF-006 | Base fixa de requisitos: modelo + seed persistido | Must | não iniciada |
+| 2 | RF-001 | Endpoint de criação de análise (NUP, objeto, PDF) | Must | não iniciada |
+| 3 | RF-004 | Recebimento de upload manual de PDF (multipart) | Must | não iniciada |
+| 4 | RF-018 | Persistência do PDF de entrada associada à análise | Must | não iniciada |
+| 5 | RF-002 | Endpoint de listagem das análises do analista | Must | não iniciada |
+| 6 | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort` | Must | não iniciada |
+| 7 | RF-007 | Gravação da sugestão de status por requisito (3 valores) | Must | não iniciada |
+| 8 | RF-009 | Ordenação da resposta priorizando não conformes | Must | não iniciada |
+| 9 | RF-008 | Endpoint de definição do status final do requisito | Must | não iniciada |
+| 10 | RF-011 | Endpoint de marcação de "verificado" | Must | não iniciada |
+| 11 | RF-017 | Validação de comentário obrigatório nas ações de revisão | Must | não iniciada |
+| 12 | RF-014 | Referência de página + entrega do PDF por página | Must | não iniciada |
+| 13 | RF-012 | Endpoint de conclusão global com trava por obrigatórios | Must | não iniciada |
+| 14 | RF-013 | Registro de responsável, datas e status final | Must | não iniciada |
+| 15 | RF-015 | Conclusão interna sem aprovação/assinatura/dupla revisão | Must | não iniciada |
+| 16 | RF-016 | Geração sob demanda do relatório PDF final | Must | não iniciada |
+| 17 | RF-003 | Escopo de acesso por analista | Must (fase com identidade) | não iniciada — pós-MVP (P-10) |
+
+## Tabela de sequenciamento — Frente Frontend (`frontend/`)
+
+| Sequência | ID | Feature (recorte frontend) | Prioridade | Status |
+|---|---|---|---|---|
+| 1 | RF-002 | Tela de listagem de análises + estado vazio | Must | não iniciada |
+| 2 | RF-001 | Modal "Nova análise" (NUP, objeto) + validação | Must | não iniciada |
+| 3 | RF-004 | Campo de upload de PDF no modal + estados de erro | Must | não iniciada |
+| 4 | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre | Must | não iniciada |
+| 5 | RF-007 | Exibição dos requisitos com status sugerido pela IA | Must | não iniciada |
+| 6 | RF-009 | Visão inicial priorizando não conformes + filtros por status | Must | não iniciada |
+| 7 | RF-008 | Modal de alteração de status final ("parecer") | Must | não iniciada |
+| 8 | RF-011 | Controle de "marcar como verificado" | Must | não iniciada |
+| 9 | RF-017 | Campo de comentário obrigatório nas ações de revisão | Must | não iniciada |
+| 10 | RF-014 | Visor de PDF + referência de página clicável / ausência explícita | Must | não iniciada |
+| 11 | RF-012 | Modal de conclusão + botão global bloqueado até tudo verificado | Must | não iniciada |
+| 12 | RF-016 | Ação de baixar o relatório PDF da análise concluída | Must | não iniciada |
+
+Status possíveis, nessa ordem de progresso dentro de um ciclo: `não iniciada` → `user story em aprovação` → `user story aprovada` → `TSD em aprovação` → `TSD aprovada` → `em construção` → `em validação` → `implementada`.
+
+RFs sem recorte de frontend (só backend): RF-005, RF-006, RF-013, RF-015, RF-018, RF-003.
+
+## Seções de Feature
+
+Uma seção por RF. O Agente PM da frente correspondente preenche a User Story do seu recorte quando a feature entra em ciclo; nunca antes.
+
+### RF-006 — Base fixa de requisitos
+
+**Frentes:** Backend
+**Status:** não iniciada
+
+<!-- Agente PM (backend): preencher User Story, critérios de aceite e perguntas em aberto ao abrir o ciclo. -->
+
+### RF-001 — Criar análise (NUP, objeto/descrição, PDF)
+
+**Frentes:** Backend · Frontend
+**Status (backend):** não iniciada
+**Status (frontend):** não iniciada
+
+### RF-004 — Upload manual de PDF na criação da análise
+
+**Frentes:** Backend · Frontend
+**Status (backend):** não iniciada
+**Status (frontend):** não iniciada
+
+### RF-018 — Persistência do PDF de entrada, associado à análise
+
+**Frentes:** Backend
+**Status:** não iniciada
+
+### RF-002 — Listagem das análises do analista
+
+**Frentes:** Backend · Frontend
+**Status (backend):** não iniciada
+**Status (frontend):** não iniciada
+
+### RF-005 — Processamento do PDF pela capacidade de análise por IA
+
+**Frentes:** Backend
+**Status:** não iniciada
+
+### RF-007 — Sugestão de status por requisito
+
+**Frentes:** Backend · Frontend
+**Status (backend):** não iniciada
+**Status (frontend):** não iniciada
+
+### RF-009 — Abertura da análise priorizando requisitos não conformes
+
+**Frentes:** Backend · Frontend
+**Status (backend):** não iniciada
+**Status (frontend):** não iniciada
+
+### RF-010 — Navegação livre entre seções e abas da análise
+
+**Frentes:** Frontend (backend entrega os requisitos agrupados por área)
+**Status:** não iniciada
+
+### RF-008 — Definição do status final de cada requisito
+
+**Frentes:** Backend · Frontend
+**Status (backend):** não iniciada
+**Status (frontend):** não iniciada
+
+### RF-011 — Marcar requisito como verificado
+
+**Frentes:** Backend · Frontend
+**Status (backend):** não iniciada
+**Status (frontend):** não iniciada
+
+### RF-017 — Comentário obrigatório nas ações de revisão
+
+**Frentes:** Backend · Frontend
+**Status (backend):** não iniciada
+**Status (frontend):** não iniciada
+
+### RF-014 — Rastreabilidade documental por referência de página do PDF
+
+**Frentes:** Backend · Frontend
+**Status (backend):** não iniciada
+**Status (frontend):** não iniciada
+
+### RF-012 — Conclusão global da análise
+
+**Frentes:** Backend · Frontend
+**Status (backend):** não iniciada
+**Status (frontend):** não iniciada
+
+### RF-013 — Registro de responsável, datas e status final
+
+**Frentes:** Backend
+**Status:** não iniciada
+
+### RF-015 — Conclusão interna sem aprovação, assinatura ou dupla revisão
+
+**Frentes:** Backend
+**Status:** não iniciada
+
+### RF-016 — Relatório PDF final da análise concluída
+
+**Frentes:** Backend · Frontend
+**Status (backend):** não iniciada
+**Status (frontend):** não iniciada
+
+### RF-003 — Restrição de visualização das análises ao analista que as iniciou
+
+**Frentes:** Backend
+**Status:** não iniciada — pós-MVP (depende de `questoes-abertas.md` P-10)

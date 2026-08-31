@@ -1,6 +1,6 @@
 # Workflow de desenvolvimento por IA
 
-Este fluxo deve ser seguido por pessoas e LLMs ao evoluir {{NOME_DO_PROJETO}}.
+Este fluxo deve ser seguido por pessoas e LLMs ao evoluir LicIA Analisadora.
 
 ## 0. Fundação (só na primeira vez)
 

@@ -8,7 +8,7 @@ created: <data> // <autor>
 updated: <data> // <autor>
 related (internal files):
 - docs/product/prd.md
-- docs/engineering/licia-analisadora-engineering-checkpoint.md (ou equivalente do projeto)
+- docs/engineering/checkpoint.md (ou equivalente do projeto)
 ---
 
 Este arquivo combina duas coisas de propósito, e a diferença entre elas é a regra mais importante do arquivo:

@@ -1,11 +1,13 @@
 ---
 title: PRD - LicIA Analisadora
 type: prd
-status: draft
+status: aprovado
 created: 06/07/2026 - 15:00 // Rolf Matela
-updated: 05/08/2026 - 16:05 // Rolf Matela
+updated: 31/08/2026 // Pablo Grisi (fundação: baseline aprovado, decisões de bootstrap aplicadas)
 related (internal files):
 - docs/licia-analisadora-product-discovery.md
+- docs/architecture/sdd.md
+- docs/product/questoes-abertas.md
 related (external files):
 - decisoes-analisadora-api.md
 ---
@@ -68,7 +70,7 @@ LicIA Analisadora busca reduzir esse esforço ao usar IA para sugerir o status d
 |---|---|---|---|
 | RF-001 | O sistema deve permitir que o analista crie uma nova análise informando NUP, objeto/descrição e um arquivo PDF. | Must | A análise só pode ser criada quando os campos obrigatórios estiverem preenchidos e um PDF válido tiver sido enviado. |
 | RF-002 | O sistema deve registrar a análise criada em uma lista/tabela de análises do próprio analista. | Must | Após criar uma análise, ela deve aparecer na listagem do analista com identificação suficiente para reabertura posterior. |
-| RF-003 | O sistema deve restringir a visualização das análises ao analista que as iniciou. | Must | Um analista autenticado não deve visualizar análises iniciadas por outro analista. |
+| RF-003 | [Adiado — pós-MVP] O sistema deve restringir a visualização das análises ao analista que as iniciou. | Must (fase com identidade) | Depende de identidade real, fora do MVP (que roda com analista único). Quando implementado: um analista não deve visualizar análises iniciadas por outro. Ver `questoes-abertas.md`, P-10. |
 | RF-004 | O sistema deve permitir upload manual de PDF na primeira versão. | Must | O fluxo de criação de análise deve aceitar envio manual de PDF sem depender de integração externa. |
 | RF-005 | O sistema deve processar o PDF enviado por uma camada de análise assistida por IA para apoiar a verificação dos requisitos. | Must | Após o upload, a análise deve resultar em requisitos avaliáveis com sugestão inicial de status pela IA. |
 | RF-006 | O sistema deve usar uma base fixa e persistida de requisitos normativos, jurídicos e técnicos. | Must | Cada análise deve ser avaliada contra um conjunto de requisitos previamente definido e persistido pelo sistema. |
@@ -81,14 +83,16 @@ LicIA Analisadora busca reduzir esse esforço ao usar IA para sugerir o status d
 | RF-013 | O sistema deve registrar o analista responsável, a data/hora de início, a data/hora de conclusão e o status final de cada requisito. | Must | Esses dados devem permanecer associados à análise concluída e disponíveis para consulta posterior. |
 | RF-014 | O sistema deve apresentar rastreabilidade documental mínima por referência de página do PDF para cada requisito. | Must | Quando existir referência, o analista deve conseguir acessá-la de forma clicável e abrir a página correspondente do PDF. Quando a referência não existir ou não for aplicável, sua ausência deve ser apresentada claramente. |
 | RF-015 | O sistema deve permitir a conclusão interna da análise sem depender de aprovação, assinatura ou dupla revisão. | Must | O analista deve conseguir concluir a análise sozinho quando todos os requisitos forem verificados. |
-| RF-016 | [Parcialmente validado] O sistema deve permitir gerar um relatório PDF final da análise, caso essa funcionalidade entre no MVP. | Should | Se a decisão for confirmada para o MVP, o analista deve conseguir gerar um relatório contendo, no mínimo, identificação da análise e status final dos requisitos. |
-| RF-017 | [Parcialmente validado] O sistema deve exigir comentário nas ações de revisão definidas para o MVP. | Must | Comentários integram o MVP e são obrigatórios. As ações exatas que exigirão comentário ainda devem ser consolidadas antes da implementação da revisão persistida. |
-| RF-018 | [Decisão crítica em aberto] O sistema deve definir uma estratégia para persistência ou descarte controlado do PDF de entrada. | Should | A decisão deve especificar se o PDF será persistido, onde será armazenado, por quanto tempo ficará disponível e como será associado à análise. |
+| RF-016 | O sistema deve permitir gerar um relatório PDF final da análise concluída. | Must | O analista deve conseguir gerar, para uma análise concluída, um relatório PDF contendo no mínimo: identificação da análise (NUP, objeto), responsável, data/hora de início e de conclusão, e o status final de cada requisito. Confirmado para o MVP na fundação (ver `questoes-abertas.md`, R-01). |
+| RF-017 | [Parcialmente validado] O sistema deve exigir comentário nas ações de revisão definidas para o MVP. | Must | Comentários integram o MVP e são obrigatórios. As ações exatas que exigirão comentário ainda devem ser consolidadas antes da implementação da revisão persistida (ver `questoes-abertas.md`, P-03). |
+| RF-018 | O sistema deve persistir o PDF de entrada e mantê-lo associado à análise. | Must | O PDF enviado é persistido e permanece recuperável a partir da análise (incluindo para o visor com referência de página). Estratégia do MVP: a mais simples viável (ver SDD §9); política de retenção/expiração e migração para object storage permanecem em aberto (ver `questoes-abertas.md`, P-09 e A-05). |
 
 ## 8. Regras de negócio
 
 - O único usuário previsto para o MVP é o analista técnico.
-- Cada analista visualiza apenas as análises que iniciou.
+- O MVP não tem autenticação nem múltiplos usuários: roda com um analista único e fixo, definido por configuração. Não há cadastro, login, emissão de token nem consumo de identidade externa nesta versão.
+- Toda análise é registrada sob esse analista fixo (sustentando RF-013). A separação por analista (RF-003) só passa a valer numa fase futura, quando entrar identidade real — ver `questoes-abertas.md`, P-10.
+- O processamento do PDF pela camada de IA é assíncrono: a criação da análise não espera o resultado, e a tela acompanha o status do processamento até os requisitos ficarem prontos para revisão.
 - A criação de uma análise exige NUP, objeto/descrição e PDF.
 - O PDF de entrada é enviado manualmente na primeira versão.
 - A primeira versão não depende de integração com sistemas externos.
@@ -106,7 +110,7 @@ LicIA Analisadora busca reduzir esse esforço ao usar IA para sugerir o status d
 - O MVP não inclui fluxo de aprovação, assinatura ou dupla revisão.
 - A rastreabilidade mínima validada para o MVP é uma referência de página clicável que leve ao ponto correspondente do PDF.
 - Um requisito pode permanecer sem referência de página quando a evidência não existir ou não for aplicável, desde que essa ausência seja apresentada claramente.
-- Relatório PDF final, persistência do PDF de entrada e auditoria expandida continuam como pontos abertos ou parcialmente validados.
+- Relatório PDF final (RF-016) e persistência do PDF de entrada (RF-018) fazem parte do MVP; auditoria expandida continua ponto aberto.
 - Comentários integram o MVP e são obrigatórios, mas as ações exatas que exigirão comentário ainda precisam ser consolidadas.
 
 ## 9. Estados de erro e vazio
@@ -123,13 +127,13 @@ LicIA Analisadora busca reduzir esse esforço ao usar IA para sugerir o status d
 | Erro no processamento da análise | O sistema deve informar que não foi possível gerar a sugestão inicial dos requisitos e orientar o próximo passo disponível, como tentar novamente ou retornar mais tarde. |
 | Tentativa de conclusão com requisitos pendentes | O sistema deve impedir a conclusão da análise e indicar claramente quais requisitos ainda precisam ser verificados. |
 | Erro de persistência | O sistema deve informar falha ao salvar análise, revisão ou conclusão e orientar o usuário a tentar novamente sem assumir sucesso da operação. |
-| Sem permissão | Se um analista tentar acessar uma análise que não iniciou, o sistema deve negar o acesso e redirecionar para uma tela segura, sem expor dados da análise. |
+| Sem permissão | (Pós-MVP, junto com RF-003) Se um analista tentar acessar uma análise que não iniciou, o sistema deve negar o acesso e redirecionar para uma tela segura, sem expor dados da análise. No MVP, com analista único, não se aplica. |
 | Requisito sem referência de página | O sistema deve permitir exibir o requisito mesmo sem página associada, deixando clara a ausência da referência. |
 
 ## 10. Critérios de aceite gerais
 
 - [ ] Um analista consegue criar uma análise com NUP, objeto/descrição e PDF sem depender de integração externa.
-- [ ] Um analista consegue visualizar apenas as análises iniciadas por ele.
+- [ ] (Pós-MVP) Um analista consegue visualizar apenas as análises iniciadas por ele — depende de identidade real (RF-003).
 - [ ] Toda análise utiliza uma base fixa de requisitos para gerar sugestões iniciais da IA.
 - [ ] Todo requisito apresenta status sugerido pela IA dentro dos três valores permitidos no MVP.
 - [ ] O analista consegue alterar o status final de qualquer requisito.
@@ -144,29 +148,23 @@ LicIA Analisadora busca reduzir esse esforço ao usar IA para sugerir o status d
 
 ## 11. Dependências
 
-- Definição e disponibilidade de uma base fixa/persistida de requisitos normativos para a primeira versão.
-- Definição do primeiro subconjunto de requisitos do MVP.
-- Definição do novo backend responsável por persistir análises, requisitos e resultados.
-- Disponibilidade da estratégia de processamento de PDF via LLM/File API.
-- Definição da estratégia de autenticação suficiente para identificar o analista e restringir acesso às suas análises.
-- Definição da estratégia de persistência dos PDFs de entrada.
-- Decisão sobre a entrada ou não de relatório PDF final no MVP.
-- Definição do modelo mínimo de auditoria além do registro básico já validado.
+- Definição e disponibilidade de uma base fixa/persistida de requisitos normativos para a primeira versão (estrutura mínima proposta no SDD; ver `questoes-abertas.md`, A-03).
+- Definição do primeiro subconjunto de requisitos do MVP (ver `questoes-abertas.md`, P-07).
+- Novo backend responsável por persistir análises, requisitos e resultados — stack e arquitetura definidas no SDD.
+- (Pós-MVP) Serviço de identidade do ecossistema para fornecer a identidade validada do analista, quando a separação por analista (RF-003) entrar; formato do header/token a confirmar (ver `questoes-abertas.md`, A-01 e P-10).
+- Capacidade de análise assistida por IA que gera a sugestão de status por requisito a partir do PDF — consumida/acionada por este projeto; contrato a confirmar (ver `questoes-abertas.md`, A-02).
+- Definição do modelo mínimo de auditoria além do registro básico já validado (ver `questoes-abertas.md`, P-02).
 - Definição da experiência de listagem e tela de análise em Design.
 - Alinhamento com Jurídico/Compliance sobre valor formal do resultado.
 - Definição das métricas de impacto e produtividade do produto.
 
 ## 12. Questões em aberto
 
-- [ ] O relatório PDF final entra no MVP ou fica para fase posterior?
-- [ ] Qual é o valor formal da análise concluída: apoio interno, recomendação operacional ou outro enquadramento?
-- [ ] Os PDFs de entrada serão persistidos? Se sim, por quanto tempo e em qual estratégia de armazenamento?
-- [ ] Caso exista relatório final, ele também será persistido?
-- [ ] O modelo mínimo de auditoria do MVP é suficiente ou será necessário registrar histórico mais detalhado de alterações humanas?
-- [ ] Em quais ações de revisão o comentário obrigatório deve ser exigido: confirmação da sugestão da IA, alteração de status, verificação de item técnico ou todas elas?
-- [ ] Qual é a semântica definitiva de Checklist e Técnica? Até nova validação, permanecem áreas separadas e obrigatórias.
-- [ ] Em quais situações a ausência de referência de página é válida e o analista poderá corrigir as páginas sugeridas pela IA?
-- [ ] Quais campos, filtros, colunas, direções de ordenação e regras de busca serão suportados na listagem do MVP?
-- [ ] Qual será a estrutura exata da base fixa de requisitos?
-- [ ] Quais requisitos entram no primeiro subconjunto do MVP?
-- [ ] Quais métricas serão usadas para medir impacto e produtividade da solução?
+A lista consolidada de questões de produto e arquitetura ainda pendentes fica em [`docs/product/questoes-abertas.md`](questoes-abertas.md). Consulte lá antes de assumir que um ponto foi resolvido.
+
+Resolvidas na fundação (31/08/2026), detalhadas em `questoes-abertas.md`:
+
+- Relatório PDF final **entra no MVP** (RF-016).
+- O PDF de entrada **será persistido** e associado à análise (RF-018); estratégia mais simples no MVP, retenção e object storage seguem abertos.
+- O MVP roda com **analista único fixo**, sem autenticação nem identidade externa; a separação por analista (RF-003) é pós-MVP.
+- Stack do backend: **Node.js + TypeScript**; arquitetura no SDD.

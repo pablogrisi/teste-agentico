@@ -1,4 +1,4 @@
-# Codex/GPT e agentes compatíveis — {{NOME_DO_PROJETO}}
+# Codex/GPT e agentes compatíveis — LicIA Analisadora
 
 Este arquivo é a ponte deste agente para o método comum do repositório. Ele não substitui o método completo — apenas aponta para a entrada universal.
 
