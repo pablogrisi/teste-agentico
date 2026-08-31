@@ -9,3 +9,7 @@ export const STATUS_REQUISITO = [
 ] as const;
 
 export type StatusRequisito = (typeof STATUS_REQUISITO)[number];
+
+export function isStatusRequisito(valor: string): valor is StatusRequisito {
+  return (STATUS_REQUISITO as readonly string[]).includes(valor);
+}

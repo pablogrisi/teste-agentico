@@ -20,7 +20,15 @@ import {
   ValidacaoAnaliseService,
 } from './validacao-analise.service';
 import { ListarAnalisesParams } from './listar-analises.query';
-import { AnaliseDetalhe, montarAnaliseDetalhe } from './analise-detalhe';
+import {
+  AnaliseDetalhe,
+  AvaliacaoItem,
+  ResumoAnalise,
+  calcularResumo,
+  montarAnaliseDetalhe,
+  toItem,
+} from './analise-detalhe';
+import { PatchRevisaoBody, validarEResolverPatch } from './revisao-requisito';
 
 /** Campos de uma análise numa listagem (RF-002). */
 export type AnaliseResumo = Pick<
@@ -169,6 +177,54 @@ export class AnalisesService {
       include: { requisito: true },
     });
     return montarAnaliseDetalhe(analise, avaliacoes);
+  }
+
+  /** Revisão de um requisito: parecer final, verificado e comentário (RF-008/011/017). */
+  async revisarRequisito(
+    analiseId: string,
+    requisitoId: string,
+    body: PatchRevisaoBody,
+  ): Promise<{ item: AvaliacaoItem; resumo: ResumoAnalise }> {
+    const analise = await this.buscarPorId(analiseId);
+    if (analise.status !== 'PRONTA_PARA_REVISAO') {
+      throw new ConflictException(
+        `A análise não está em revisão (status atual: ${analise.status})`,
+      );
+    }
+
+    const avaliacao = await this.prisma.avaliacaoRequisito.findUnique({
+      where: { analiseId_requisitoId: { analiseId, requisitoId } },
+      include: { requisito: true },
+    });
+    if (!avaliacao) {
+      throw new NotFoundException(
+        `Requisito ${requisitoId} não avaliado nesta análise`,
+      );
+    }
+
+    const { erros, dados } = validarEResolverPatch(avaliacao, body);
+    if (erros.length > 0) {
+      throw new UnprocessableEntityException({
+        message: 'Não foi possível salvar a revisão',
+        erros,
+      });
+    }
+
+    const atualizada =
+      Object.keys(dados).length > 0
+        ? await this.prisma.avaliacaoRequisito.update({
+            where: { id: avaliacao.id },
+            data: dados,
+            include: { requisito: true },
+          })
+        : avaliacao;
+
+    const todas = await this.prisma.avaliacaoRequisito.findMany({
+      where: { analiseId },
+      include: { requisito: true },
+    });
+
+    return { item: toItem(atualizada), resumo: calcularResumo(todas) };
   }
 
   async lerPdf(id: string): Promise<{ bytes: Buffer; nomeArquivo: string }> {

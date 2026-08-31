@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   Param,
+  Patch,
   Post,
   Query,
   StreamableFile,
@@ -16,6 +17,7 @@ import {
   ListarAnalisesQueryRaw,
   parseListarAnalisesQuery,
 } from './listar-analises.query';
+import { PatchRevisaoBody } from './revisao-requisito';
 
 // Teto rígido do multer; o limite real (configurável) é checado na validação,
 // que devolve 422 com mensagem clara para arquivos entre o limite e este teto.
@@ -69,6 +71,15 @@ export class AnalisesController {
   async reprocessar(@Param('id') id: string) {
     const a = await this.analises.reprocessar(id);
     return { id: a.id, status: a.status };
+  }
+
+  @Patch(':id/requisitos/:requisitoId')
+  async revisar(
+    @Param('id') id: string,
+    @Param('requisitoId') requisitoId: string,
+    @Body() body: PatchRevisaoBody,
+  ) {
+    return this.analises.revisarRequisito(id, requisitoId, body ?? {});
   }
 
   @Get(':id/pdf')

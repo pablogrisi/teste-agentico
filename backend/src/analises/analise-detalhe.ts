@@ -58,7 +58,7 @@ export interface AnaliseDetalhe {
 
 const NAO_CONFORME: StatusRequisito = 'NAO_CONFORME';
 
-function toItem(a: AvaliacaoComRequisito): AvaliacaoItem {
+export function toItem(a: AvaliacaoComRequisito): AvaliacaoItem {
   const r = a.requisito;
   return {
     id: a.id,
@@ -81,6 +81,24 @@ function toItem(a: AvaliacaoComRequisito): AvaliacaoItem {
     verificado: a.verificado,
     comentario: a.comentario,
     paginaReferencia: a.paginaReferencia,
+  };
+}
+
+/** Contagens da análise (RF-009 / RF-012), por `statusFinal`. */
+export function calcularResumo(
+  avaliacoes: AvaliacaoComRequisito[],
+): ResumoAnalise {
+  return {
+    total: avaliacoes.length,
+    conforme: avaliacoes.filter((a) => a.statusFinal === 'CONFORME').length,
+    naoConforme: avaliacoes.filter((a) => a.statusFinal === 'NAO_CONFORME')
+      .length,
+    naoSeAplica: avaliacoes.filter((a) => a.statusFinal === 'NAO_SE_APLICA')
+      .length,
+    verificados: avaliacoes.filter((a) => a.verificado).length,
+    obrigatoriosPendentes: avaliacoes.filter(
+      (a) => a.requisito.obrigatorio && !a.verificado,
+    ).length,
   };
 }
 
@@ -112,19 +130,6 @@ export function montarAnaliseDetalhe(
       }),
     }));
 
-  const resumo: ResumoAnalise = {
-    total: avaliacoes.length,
-    conforme: avaliacoes.filter((a) => a.statusFinal === 'CONFORME').length,
-    naoConforme: avaliacoes.filter((a) => a.statusFinal === 'NAO_CONFORME')
-      .length,
-    naoSeAplica: avaliacoes.filter((a) => a.statusFinal === 'NAO_SE_APLICA')
-      .length,
-    verificados: avaliacoes.filter((a) => a.verificado).length,
-    obrigatoriosPendentes: avaliacoes.filter(
-      (a) => a.requisito.obrigatorio && !a.verificado,
-    ).length,
-  };
-
   return {
     id: analise.id,
     nup: analise.nup,
@@ -133,7 +138,7 @@ export function montarAnaliseDetalhe(
     motivoErro: analise.motivoErro,
     iniciadaEm: analise.iniciadaEm,
     concluidaEm: analise.concluidaEm,
-    resumo,
+    resumo: calcularResumo(avaliacoes),
     avaliacoesPorArea,
   };
 }
