@@ -40,9 +40,9 @@ Cria a primeira tabela de domínio do backend — `requisito` — e o mecanismo 
   - `area` (string) — **não** é enum Prisma nem enum de banco; campo livre, validado na importação contra uma allowlist em código (`src/requisitos/areas.ts`), fácil de estender
   - `titulo` (string) — texto imutável após publicação
   - `descricao` (string) — texto imutável após publicação
-  - `obrigatorio` (boolean, default `true`) — metadado operacional, mutável
-  - `ordem` (int) — ordem de exibição dentro da área, mutável
-  - `ativo` (boolean, default `true`) — mutável; é assim que um requisito é "aposentado"
+  - `obrigatorio` (boolean, default `true`) — **imutável** após publicação: se um requisito passa a bloquear (ou deixa de bloquear) a conclusão, isso é mudança de regra → novo `codigo`
+  - `ordem` (int) — ordem de exibição dentro da área, **mutável** (puro display)
+  - `ativo` (boolean, default `true`) — **mutável**; é assim que um requisito é "aposentado"
   - referência normativa estruturada, todos opcionais: `normaLei`, `normaArtigo`, `normaInciso`, `normaParagrafo`, `normaAlinea` (`@map` para snake_case)
   - `criadoEm`, `atualizadoEm`
   - índice `@@index([area, ordem])`
@@ -52,8 +52,8 @@ Cria a primeira tabela de domínio do backend — `requisito` — e o mecanismo 
   - `validarLinhas(linhas): ResultadoValidacao` — checa: campos obrigatórios presentes; `area` na allowlist; `ordem` inteiro; `obrigatorio`/`ativo` boolean (`true`/`false`); `codigo` único dentro do arquivo. Erros acumulam com número da linha; qualquer erro aborta a importação inteira.
   - `ImportadorRequisitosService.importar(linhas): ResumoImportacao` — numa única transação Prisma:
     - `codigo` inexistente → insere.
-    - `codigo` existente com `titulo` + `descricao` + `norma*` idênticos → atualiza só `ativo`, `ordem`, `obrigatorio`.
-    - `codigo` existente com qualquer campo de **texto** (`titulo`, `descricao`, `norma*`) divergente → **aborta** a transação e reporta o `codigo` e o diff. Mensagem orienta criar um novo `codigo`.
+    - `codigo` existente com `titulo` + `descricao` + `norma*` + `obrigatorio` idênticos → atualiza só `ativo` e `ordem`.
+    - `codigo` existente com qualquer campo **imutável** (`titulo`, `descricao`, `norma*`, `obrigatorio`) divergente → **aborta** a transação e reporta o `codigo` e o diff. Mensagem orienta criar um novo `codigo`.
     - `codigo` ausente do arquivo → **não** é desativado automaticamente (desativar é sempre explícito, via `ativo=false` na linha).
   - `ResumoImportacao`: inseridos, atualizados, inalterados, e (em erro) a lista de motivos.
 - **Seed do Prisma**: `prisma/seed.ts` lê `prisma/seed-data/requisitos.csv` e chama o importador. Registrado em `package.json` (`"prisma": { "seed": "ts-node prisma/seed.ts" }`). Script `npm run seed` (arquivo padrão) e `npm run seed:file -- <caminho>` (arquivo arbitrário).
@@ -136,8 +136,8 @@ npm run seed                # popula o placeholder (requer PostgreSQL)
 - [ ] Existe a migration `*_base_fixa_requisitos`; aplicá-la num banco limpo cria a tabela `requisito` com todas as colunas e o índice `(area, ordem)`.
 - [ ] `area` não é enum Prisma nem enum de banco; a allowlist está em `src/requisitos/areas.ts` e estendê-la é uma mudança de uma linha.
 - [ ] O importador popula a base a partir de `prisma/seed-data/requisitos.csv`; reimportar o mesmo arquivo não duplica nada nem altera texto.
-- [ ] Importar um arquivo cujo `codigo` existente tenha `titulo`/`descricao`/`norma*` diferente **falha** com mensagem clara citando o `codigo`, e **nada** é gravado (transação revertida).
-- [ ] Importar um arquivo que só altera `ativo`/`ordem`/`obrigatorio` de um `codigo` existente aplica essas mudanças.
+- [ ] Importar um arquivo cujo `codigo` existente tenha `titulo`/`descricao`/`norma*`/`obrigatorio` diferente **falha** com mensagem clara citando o `codigo`, e **nada** é gravado (transação revertida).
+- [ ] Importar um arquivo que só altera `ativo`/`ordem` de um `codigo` existente aplica essas mudanças.
 - [ ] `codigo` ausente do arquivo não é desativado automaticamente.
 - [ ] `RequisitosService.listarAtivos()` retorna apenas `ativo = true`, ordenado por `area` e depois `ordem`, e está exportado por `RequisitosModule`.
 - [ ] O CSV placeholder tem 8–12 linhas entre `CHECKLIST` e `TECNICA`, com referência normativa estruturada preenchida onde aplicável, e um comentário deixando claro que é provisório.
@@ -147,7 +147,7 @@ npm run seed                # popula o placeholder (requer PostgreSQL)
 
 ## 9. Riscos e decisões abertas
 
-- **Split texto imutável × campos operacionais:** esta TSD trata `titulo`, `descricao` e `norma*` como imutáveis, e `ativo`/`ordem`/`obrigatorio` como mutáveis pelo importador. Se `obrigatorio` também precisar ser imutável (por ser efeito normativo), ajustar antes do Dev.
+- **Split imutável × mutável (decidido):** imutáveis pelo importador = `titulo`, `descricao`, `norma*` e `obrigatorio` (bloquear ou não a conclusão é efeito normativo → novo `codigo`). Mutáveis = `ordem` (display) e `ativo` (aposentadoria explícita).
 - **Formato do CSV:** cabeçalho fixo `codigo,area,titulo,descricao,obrigatorio,ordem,ativo,norma_lei,norma_artigo,norma_inciso,norma_paragrafo,norma_alinea`. Se a área jurídica for entregar a lista em Excel/outro layout, um conversor para esse CSV é trabalho de outro slice, não deste.
 - **Ambiente de teste sem PostgreSQL** (herdado da TSD-001 §9): os testes de integração deste slice dependem de banco.
 - **`area` como string livre:** aceita o risco de typo em troca de flexibilidade; mitigado pela allowlist na importação. Migrar para catálogo em tabela, se necessário, é um slice futuro.
@@ -171,8 +171,9 @@ Implemente apenas o escopo desta TSD: modelo Requisito + migration, importador d
 (prisma/seed-data/requisitos.csv), seed do Prisma, RequisitosService.listarAtivos(), CSV
 placeholder e testes. Trabalhe em backend/, na branch backend/tsd-001-fundacao-tecnica.
 NÃO crie endpoint HTTP, NÃO crie a avaliação por análise, NÃO toque no frontend.
-O importador nunca reescreve texto de um codigo existente — divergência de texto aborta a
-transação inteira. codigo ausente do arquivo não é desativado.
+O importador nunca reescreve campos imutáveis (titulo, descricao, norma*, obrigatorio) de um
+codigo existente — qualquer divergência aí aborta a transação inteira; só ordem e ativo mudam.
+codigo ausente do arquivo não é desativado.
 Execute lint, typecheck, test, build e prisma validate e registre a saída real. Rode os
 testes de integração contra PostgreSQL se houver Docker; senão registre como pendência de
 ambiente (não marque como "não se aplica").

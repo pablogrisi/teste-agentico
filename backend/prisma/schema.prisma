@@ -1,8 +1,8 @@
 // Schema Prisma da LicIA Analisadora.
 //
-// TSD-001 (fundação técnica) NÃO define nenhuma tabela de domínio.
-// As entidades `analise`, `requisito` e `avaliacao_requisito` descritas no
-// SDD §8 entram nos ciclos dos respectivos RFs, cada uma na sua TSD.
+// TSD-001 (fundação) não definiu tabela de domínio.
+// TSD-003 (RF-006) adiciona `requisito` — a base fixa de verificação.
+// `analise` e `avaliacao_requisito` (SDD §8) entram nos ciclos dos seus RFs.
 
 generator client {
   provider = "prisma-client-js"
@@ -11,4 +11,38 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+/// Item da base fixa de verificação (RF-006).
+///
+/// Regra de imutabilidade: uma vez publicado, os campos `titulo`, `descricao`,
+/// a referência normativa e `obrigatorio` NÃO mudam. Se a regra normativa
+/// muda, cria-se um novo requisito (novo `codigo`) e o antigo recebe
+/// `ativo = false`. Só `ordem` e `ativo` são operacionais/mutáveis.
+/// Não há coluna de versão: cada parecer referencia o requisito específico
+/// avaliado, o que já serve de snapshot histórico.
+model Requisito {
+  id          String   @id @default(uuid()) @db.Uuid
+  codigo      String   @unique
+  /// Área de verificação. Campo livre (NÃO enum): o vocabulário deve crescer.
+  /// A importação valida contra a allowlist em `src/requisitos/areas.ts`.
+  area        String
+  titulo      String
+  descricao   String
+  obrigatorio Boolean  @default(true)
+  ordem       Int
+  ativo       Boolean  @default(true)
+
+  // Referência normativa estruturada (todos opcionais) — evita parsing de texto.
+  normaLei       String? @map("norma_lei")
+  normaArtigo    String? @map("norma_artigo")
+  normaInciso    String? @map("norma_inciso")
+  normaParagrafo String? @map("norma_paragrafo")
+  normaAlinea    String? @map("norma_alinea")
+
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  @@index([area, ordem])
+  @@map("requisito")
 }

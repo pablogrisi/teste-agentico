@@ -1,0 +1,18 @@
+# BASE DE REQUISITOS — PLACEHOLDER PROVISÓRIO (TSD-003 / RF-006).
+# Conteúdo inventado de forma plausível só para destravar o desenvolvimento.
+# A lista real da área jurídica (P-07) substitui ESTE ARQUIVO, sem mexer no
+# mecanismo de importação. Referências à Lei 14.133/2021.
+# Colunas: codigo,area,titulo,descricao,obrigatorio,ordem,ativo,norma_lei,norma_artigo,norma_inciso,norma_paragrafo,norma_alinea
+codigo,area,titulo,descricao,obrigatorio,ordem,ativo,norma_lei,norma_artigo,norma_inciso,norma_paragrafo,norma_alinea
+CHK-001,CHECKLIST,Autorização da autoridade competente,"O processo contém autorização formal da autoridade competente para a abertura da licitação.",true,10,true,Lei 14.133/2021,72,I,,
+CHK-002,CHECKLIST,Estimativa de despesa,"Consta demonstrativo da estimativa de despesa com a contratação, elaborado conforme pesquisa de preços.",true,20,true,Lei 14.133/2021,72,II,,
+CHK-003,CHECKLIST,Termo de referência ou projeto básico,"O processo contém termo de referência ou projeto básico aprovado pela autoridade competente.",true,30,true,Lei 14.133/2021,6,XXIII,,
+CHK-004,CHECKLIST,Pesquisa de preços,"A pesquisa de preços observa os parâmetros e a cesta de fontes previstos na legislação.",true,40,true,Lei 14.133/2021,23,,,
+CHK-005,CHECKLIST,Disponibilidade orçamentária,"Há indicação dos recursos orçamentários que assegurarão o pagamento das obrigações.",true,50,true,Lei 14.133/2021,150,,,
+CHK-006,CHECKLIST,Parecer jurídico,"O processo foi submetido a análise jurídica e contém parecer sobre a minuta do edital e do contrato.",true,60,true,Lei 14.133/2021,53,,,
+CHK-007,CHECKLIST,Minuta de edital,"A minuta do edital está presente e compatível com o objeto e a modalidade adotada.",true,70,true,Lei 14.133/2021,25,,,
+CHK-008,CHECKLIST,Definição da modalidade e do critério de julgamento,"A modalidade de licitação e o critério de julgamento estão definidos e justificados.",true,80,true,Lei 14.133/2021,28,,,
+TEC-001,TECNICA,Adequação da especificação técnica,"A especificação técnica do objeto é suficiente, clara e não direciona a marca ou fornecedor.",true,10,true,Lei 14.133/2021,7,,1,
+TEC-002,TECNICA,Compatibilidade do quantitativo,"Os quantitativos estimados guardam relação com a demanda registrada e o consumo histórico.",true,20,true,Lei 14.133/2021,6,XXIII,i,
+TEC-003,TECNICA,Habilitação técnica proporcional,"As exigências de qualificação técnica são pertinentes e proporcionais ao objeto, sem restrição indevida à competitividade.",true,30,true,Lei 14.133/2021,67,,,
+TEC-004,TECNICA,Critérios de sustentabilidade,"O termo de referência considera critérios e práticas de sustentabilidade quando aplicáveis ao objeto.",false,40,true,Lei 14.133/2021,11,IV,,
