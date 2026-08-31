@@ -22,6 +22,13 @@ describe('parseListarAnalisesQuery', () => {
     expect(p.status).toEqual(['PENDENTE', 'CONCLUIDA']);
   });
 
+  it('aceita o parâmetro repetido (Express entrega array)', () => {
+    const p = parseListarAnalisesQuery({
+      status: ['PENDENTE', 'CONCLUIDA'],
+    });
+    expect(p.status).toEqual(['PENDENTE', 'CONCLUIDA']);
+  });
+
   it('rejeita status fora de STATUS_ANALISE', () => {
     expect(() =>
       parseListarAnalisesQuery({ status: 'PENDENTE,INVALIDO' }),

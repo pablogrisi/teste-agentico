@@ -18,14 +18,24 @@ const ORDEM: Ordem[] = ['asc', 'desc'];
 const TAMANHO_MAX = 100;
 const TAMANHO_DEFAULT = 20;
 
-/** Query crua do `GET /analises` (tudo string, como chega na URL). */
+/**
+ * Query crua do `GET /analises`. Cada campo chega como string, mas o Express
+ * entrega um array quando o parâmetro é repetido (`?status=A&status=B`) — por
+ * isso o tipo aceita `string | string[]`.
+ */
 export interface ListarAnalisesQueryRaw {
-  q?: string;
-  status?: string;
-  ordenarPor?: string;
-  ordem?: string;
-  pagina?: string;
-  tamanho?: string;
+  q?: string | string[];
+  status?: string | string[];
+  ordenarPor?: string | string[];
+  ordem?: string | string[];
+  pagina?: string | string[];
+  tamanho?: string | string[];
+}
+
+/** Normaliza `string | string[]` para uma string. Para listas, junta com vírgula. */
+function texto(valor: string | string[] | undefined): string | undefined {
+  if (valor === undefined) return undefined;
+  return Array.isArray(valor) ? valor.join(',') : valor;
 }
 
 function inteiro(valor: string | undefined, padrao: number): number | null {
@@ -43,11 +53,13 @@ export function parseListarAnalisesQuery(
 ): ListarAnalisesParams {
   const erros: string[] = [];
 
-  const q = raw.q?.trim() ? raw.q.trim() : undefined;
+  const qRaw = texto(raw.q)?.trim();
+  const q = qRaw ? qRaw : undefined;
 
   let status: StatusAnalise[] | undefined;
-  if (raw.status?.trim()) {
-    const valores = raw.status
+  const statusRaw = texto(raw.status)?.trim();
+  if (statusRaw) {
+    const valores = statusRaw
       .split(',')
       .map((s) => s.trim())
       .filter((s) => s !== '');
@@ -59,22 +71,22 @@ export function parseListarAnalisesQuery(
     }
   }
 
-  const ordenarPorRaw = raw.ordenarPor?.trim() || 'iniciadaEm';
+  const ordenarPorRaw = texto(raw.ordenarPor)?.trim() || 'iniciadaEm';
   if (!ORDENAR_POR.includes(ordenarPorRaw as OrdenarPor)) {
     erros.push(`ordenarPor deve ser um de: ${ORDENAR_POR.join(', ')}`);
   }
 
-  const ordemRaw = raw.ordem?.trim() || 'desc';
+  const ordemRaw = texto(raw.ordem)?.trim() || 'desc';
   if (!ORDEM.includes(ordemRaw as Ordem)) {
     erros.push(`ordem deve ser "asc" ou "desc"`);
   }
 
-  const pagina = inteiro(raw.pagina, 1);
+  const pagina = inteiro(texto(raw.pagina), 1);
   if (pagina === null || pagina < 1) {
     erros.push('pagina deve ser um inteiro >= 1');
   }
 
-  const tamanho = inteiro(raw.tamanho, TAMANHO_DEFAULT);
+  const tamanho = inteiro(texto(raw.tamanho), TAMANHO_DEFAULT);
   if (tamanho === null || tamanho < 1 || tamanho > TAMANHO_MAX) {
     erros.push(`tamanho deve ser um inteiro entre 1 e ${TAMANHO_MAX}`);
   }
