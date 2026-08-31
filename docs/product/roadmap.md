@@ -34,9 +34,9 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | Sequência | ID | Feature (recorte backend) | Prioridade | Status |
 |---|---|---|---|---|
 | 1 | RF-006 | Base fixa de requisitos: modelo + seed persistido | Must | implementada |
-| 2 | RF-001 | Endpoint de criação de análise (NUP, objeto, PDF) | Must | não iniciada |
-| 3 | RF-004 | Recebimento de upload manual de PDF (multipart) | Must | não iniciada |
-| 4 | RF-018 | Persistência do PDF de entrada associada à análise | Must | não iniciada |
+| 2 | RF-001 | Endpoint de criação de análise (NUP, objeto, PDF) | Must | user story em aprovação |
+| 3 | RF-004 | Recebimento de upload manual de PDF (multipart) | Must | com RF-001 |
+| 4 | RF-018 | Persistência do PDF de entrada associada à análise | Must | com RF-001 |
 | 5 | RF-002 | Endpoint de listagem das análises do analista | Must | não iniciada |
 | 6 | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort` | Must | não iniciada |
 | 7 | RF-007 | Gravação da sugestão de status por requisito (3 valores) | Must | não iniciada |
@@ -111,19 +111,50 @@ Recorte deste ciclo (backend): modelar e persistir a base de requisitos e popul�
 ### RF-001 — Criar análise (NUP, objeto/descrição, PDF)
 
 **Frentes:** Backend · Frontend
-**Status (backend):** não iniciada
+**Status (backend):** user story em aprovação
 **Status (frontend):** não iniciada
+
+> Ciclo backend agrupado: **RF-001 + RF-004 + RF-018** = "criar análise com PDF persistido". A User Story e os critérios abaixo cobrem o recorte backend dos três.
+
+**User Story**
+
+Como analista técnico, quero criar uma análise informando o NUP, o objeto/descrição da contratação e enviando o PDF do processo, para que o sistema registre a análise e guarde o documento para a verificação de conformidade.
+
+Recorte backend deste ciclo:
+- `POST /analises` (multipart) — valida a entrada, persiste o PDF e cria o registro da análise sob o analista fixo, em estado inicial `PENDENTE`.
+- `GET /analises/:id` — devolve os dados e o status de uma análise.
+- `GET /analises/:id/pdf` — devolve o PDF de entrada persistido.
+- **Fora**: listagem (RF-002), processamento/worker (RF-005), avaliação de requisitos, referência por página (RF-014), frente frontend.
+
+**Critérios de aceite**
+
+- `POST /analises` só cria a análise quando `nup` e `objeto` estão preenchidos e um PDF válido foi enviado; caso contrário responde `422` com mensagem específica e **não cria nada**.
+- PDF inválido (não é PDF pelo mimetype/magic bytes, ou excede o limite de tamanho, ou está protegido por senha) → `422` com motivo claro.
+- Em sucesso: o PDF é persistido via `ArmazenamentoPdfPort`; a `analise` é criada com `nup`, `objeto`, `analista_id` (do `AnalistaAtualProvider`), `arquivo_pdf_ref`, `status = PENDENTE`, `iniciada_em`; a resposta (`201`/`202`) traz o `id` e o `status`.
+- Se a gravação do PDF falhar, **nenhuma** linha de `analise` é criada (sem registro órfão) e a resposta indica falha de persistência (`502`/`500`).
+- `GET /analises/:id` devolve os campos + status; `404` se não existir.
+- `GET /analises/:id/pdf` devolve exatamente o PDF enviado (`Content-Type: application/pdf`); `404` se a análise ou o arquivo não existir.
+- Testes: unit da validação de entrada e do serviço de criação; integração do fluxo (criar → buscar → baixar PDF) e do rollback quando a persistência do PDF falha.
+
+**Perguntas em aberto (para o usuário antes do Engenheiro)**
+
+1. **"PDF válido"**: basta mimetype `application/pdf` + magic bytes `%PDF-`? Qual o **limite de tamanho** (proposta: 25 MB)? **Recusar PDF protegido por senha** (proposta: sim — não dá pra processar depois)?
+2. **NUP**: validar formato (máscara `NNNNN.NNNNNN/NNNN-NN`) ou aceitar **string livre** no MVP (proposta: string livre, obrigatória, `trim`, até 50 chars; máscara vira questão aberta)?
+3. **Status da análise**: modelar já **todos** os valores do SDD §8 (`PENDENTE`, `PROCESSANDO`, `PRONTA_PARA_REVISAO`, `ERRO_PROCESSAMENTO`, `CONCLUIDA`) como string com allowlist em código (padrão do `area` de RF-006), ou só `PENDENTE` por enquanto? (proposta: todos, como string+allowlist — evita migration depois)
+4. **NUP repetido**: o mesmo analista pode criar várias análises para o mesmo NUP (reanálise), ou o sistema bloqueia/avisa? (proposta: permitir, sem constraint de unicidade)
+
+**TSD associada:** `docs/engineering/specs/004-criar-analise.tsd.md` (a redigir pelo Engenheiro).
 
 ### RF-004 — Upload manual de PDF na criação da análise
 
 **Frentes:** Backend · Frontend
-**Status (backend):** não iniciada
+**Status (backend):** coberto no ciclo de RF-001 (ver seção RF-001)
 **Status (frontend):** não iniciada
 
 ### RF-018 — Persistência do PDF de entrada, associado à análise
 
 **Frentes:** Backend
-**Status:** não iniciada
+**Status:** coberto no ciclo de RF-001 (ver seção RF-001) — persistência via `ArmazenamentoPdfPort` + `analise.arquivo_pdf_ref`; retenção/object storage seguem abertos (P-09, A-05)
 
 ### RF-002 — Listagem das análises do analista
 
