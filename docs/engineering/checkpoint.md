@@ -33,7 +33,11 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 | Spec | Branch | Resultado da validação mecânica |
 |---|---|---|
-| TSD-001 — Fundação técnica do backend | `backend/tsd-001-fundacao-tecnica` | `npm run lint` ✅ · `npm run typecheck` ✅ · `npx prisma validate` ✅ · `npm run test` ✅ (8 testes, 4 suites) · `npm run build` ✅ · `npm run test:e2e` ⛔ não executável nesta máquina (sem Docker/Postgres) — `PrismaClientInitializationError: Can't reach database server at localhost:5432`. Pendência registrada, não é defeito de código (TSD-001 §9). |
+| TSD-001 — Fundação técnica do backend | `backend/tsd-001-fundacao-tecnica` | `npm run lint` ✅ · `npm run typecheck` ✅ · `npx prisma validate` ✅ · `npm run test` ✅ (8 testes, 4 suites) · `npm run build` ✅ · `npm run test:contract` ✅ (vazio) · `npm run test:e2e` ⛔ não executável nesta máquina (sem Docker/Postgres) — `PrismaClientInitializationError: Can't reach database server at localhost:5432`. Pendência registrada, não é defeito de código (TSD-001 §9). |
+
+**Crítico (31/08/2026):** aprovado, com **uma pendência carregada**. Todo o escopo da TSD-001 foi cumprido (raiz do monorepo, projeto NestJS, config com validação de boot, Prisma sem tabelas de domínio, `/health`, 4 módulos de feature vazios, 3 portas com adapter mínimo e teste unitário cada, README + `.env.example`). Nenhum escopo de produto vazou. Único critério de aceite sem evidência: `test:e2e` verde contra Postgres real — deve rodar numa máquina com Docker **antes do merge na `main`**. Observações menores não bloqueantes: leve duplicação de defaults entre `configuration.ts` e `env.validation.ts`; `STATUS_REQUISITO` ainda não usado (seam para RF-007).
+
+**Documentador (31/08/2026):** ciclo da TSD-001 registrado como "implementado, aprovado pelo Crítico, pendente e2e + merge". A branch `backend/tsd-001-fundacao-tecnica` segue recebendo commits. Como RF-006 depende só da base de código (pronta e verificada por unit/build), o ciclo de RF-006 pode abrir em paralelo; o merge da fundação na `main` continua condicionado ao e2e verde.
 
 ## 4. Decisões relevantes
 
@@ -69,11 +73,10 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 ## 7. Próximo passo recomendado
 
-1. Revisar (Crítico) a implementação da TSD-001 na branch `backend/tsd-001-fundacao-tecnica` contra a TSD.
-2. Rodar `cd backend && docker compose up -d db && npm ci && npm run prisma:migrate && npm run test:e2e` numa máquina com Docker, e registrar o resultado.
-3. Aprovado o Crítico e passando o e2e: Documentador fecha o ciclo da TSD-001, merge na `main`.
+1. **Backend, ciclo RF-006 aberto:** Agente PM redigiu Feature + User Story de RF-006 (base fixa de requisitos) no roadmap — aguardando aprovação humana antes do Engenheiro escrever a TSD-002... (backend). *(numeração de TSD: a próxima TSD de backend será 003, já que 002 é a fundação do frontend.)*
+2. Rodar `cd backend && docker compose up -d db && npm ci && npm run prisma:migrate && npm run test:e2e` numa máquina com Docker e registrar o resultado (pendência da TSD-001).
+3. Com e2e verde: merge de `backend/tsd-001-fundacao-tecnica` na `main`.
 4. Vinicius: branch a partir de `main`, implementar a TSD-002 em `frontend/`.
-5. Depois das duas fundações fechadas, a primeira feature real entra no ciclo pelo Agente PM de cada frente (backend por RF-006; frontend por RF-002).
 
 ## 8. Prompt de retomada
 
