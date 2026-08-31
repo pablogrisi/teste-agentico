@@ -3,7 +3,7 @@
 ---
 title: TSD - Base fixa de requisitos (RF-006, backend)
 type: tsd
-status: implementada em branch (backend/tsd-001-fundacao-tecnica) — bateria completa verde, aguardando merge
+status: concluída — mergeada no main (13b111e)
 created: 31/08/2026 // Pablo Grisi (Engenheiro)
 updated: 31/08/2026 // Pablo Grisi
 related:

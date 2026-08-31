@@ -20,6 +20,21 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 31/08/2026 — Merge da fundação backend + RF-006 na `main`; modelo de branch definido
+
+Contexto: usuário questionou se valia fazer merge na `main` ou manter uma branch longa por pessoa até o fim. Decidido: **merge frequente na `main`**, porque os documentos vivos do método (`checkpoint.md`, `roadmap.md`, `audit.md`, `questoes-abertas.md`) são fonte de verdade única e branches longas divergentes os inviabilizam.
+
+Ações:
+- `git push -u origin backend/tsd-001-fundacao-tecnica` (backup/visibilidade).
+- `git checkout main && git merge --ff-only backend/tsd-001-fundacao-tecnica` → fast-forward `0b90f8a..13b111e` (76 arquivos, sem commit de merge, sem conflito).
+- `git push origin main`.
+
+Modelo de branch adotado daqui pra frente: **uma branch curta por ciclo/TSD**, mergeada no `main` quando o Documentador fecha. Frentes backend/frontend em pastas distintas → merges por ciclo quase não conflitam. A branch `backend/tsd-001-fundacao-tecnica` acumulou 3 ciclos (TSD-001 + RF-006 + infra de teste) — foi o sintoma do modelo "uma branch por pessoa"; agora mergeada, não usar mais.
+
+Fechamento (Documentador): TSD-001 e TSD-003 → `concluída`; roadmap RF-006 (backend) → `implementada`; checkpoint §1/§2/§3/§5/§7 atualizados.
+
+Próximo: backend abre ciclo de RF-001+RF-004+RF-018 em `backend/rf-001-criar-analise`; frontend faz a TSD-002 em `frontend/tsd-002-fundacao`, ambas a partir do `main` `13b111e`.
+
 ## 31/08/2026 — Infra de teste: PostgreSQL embutido (resolve pendência de e2e)
 
 Contexto: usuário perguntou se dava pra instalar Docker nesta máquina. Não dá — sem WSL2, sem privilégio de admin, e Docker Desktop mexe em config de sistema/virtualização (fora do que a IA deve fazer). Alternativa implementada para destravar `test:e2e` sem Docker.

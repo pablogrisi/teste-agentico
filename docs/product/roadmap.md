@@ -33,7 +33,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 
 | Sequência | ID | Feature (recorte backend) | Prioridade | Status |
 |---|---|---|---|---|
-| 1 | RF-006 | Base fixa de requisitos: modelo + seed persistido | Must | em validação |
+| 1 | RF-006 | Base fixa de requisitos: modelo + seed persistido | Must | implementada |
 | 2 | RF-001 | Endpoint de criação de análise (NUP, objeto, PDF) | Must | não iniciada |
 | 3 | RF-004 | Recebimento de upload manual de PDF (multipart) | Must | não iniciada |
 | 4 | RF-018 | Persistência do PDF de entrada associada à análise | Must | não iniciada |
@@ -79,7 +79,7 @@ Uma seção por RF. O Agente PM da frente correspondente preenche a User Story d
 ### RF-006 — Base fixa de requisitos
 
 **Frentes:** Backend
-**Status:** em validação (implementado na branch; testes de integração pendentes de Postgres)
+**Status:** implementada (mergeada no `main` `13b111e`)
 
 **User Story**
 
