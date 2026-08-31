@@ -38,7 +38,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 3 | RF-004 | Recebimento de upload manual de PDF (multipart) | Must | implementada com RF-001 |
 | 4 | RF-018 | Persistência do PDF de entrada associada à análise | Must | implementada com RF-001 |
 | 5 | RF-002 | Endpoint de listagem das análises do analista | Must | implementada |
-| 6 | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort` | Must | TSD em aprovação |
+| 6 | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort` | Must | em construção |
 | 7 | RF-007 | Gravação da sugestão de status por requisito (3 valores) | Must | com RF-005 |
 | 8 | RF-009 | Ordenação da resposta priorizando não conformes | Must | não iniciada |
 | 9 | RF-008 | Endpoint de definição do status final do requisito | Must | não iniciada |
@@ -187,7 +187,7 @@ Recorte backend deste ciclo: `GET /analises` — devolve as análises do analist
 ### RF-005 — Processamento do PDF pela capacidade de análise por IA
 
 **Frentes:** Backend
-**Status:** TSD em aprovação
+**Status:** em construção
 
 > Ciclo backend agrupado: **RF-005 + RF-007** = "processar a análise e gerar a sugestão por requisito". User Story e critérios abaixo cobrem os dois.
 
