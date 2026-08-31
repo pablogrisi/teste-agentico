@@ -254,3 +254,28 @@ Opções: sim (total, por status, verificados, obrigatórios pendentes) / não.
 **R4:** Sim.
 
 **Decisão:** Tudo aplicado à TSD-007.
+
+---
+
+## 31/08/2026 — Ciclo RF-008 + RF-011 + RF-017 (revisão de requisito), Agente PM
+
+**P1 — P-03: quando o comentário é obrigatório?**
+Opções: só quando altera a sugestão da IA / em toda alteração / só ao marcar Não conforme / sem obrigatoriedade neste slice.
+**R1:** **Só quando o `statusFinal` fica diferente do `statusSugeridoIa`** (justificar a discordância).
+**Interpretação/decisão:** invariante — uma avaliação cujo `statusFinal ≠ statusSugeridoIa` **precisa ter comentário** (sendo definido agora ou já armazenado). Um PATCH que resulte nesse estado sem comentário → `422`. Fecha o P-03.
+
+**P2 — `verificado` pode ser desmarcado?**
+Opções: sim, alterna livremente / não, uma vez verificado permanece.
+**R2:** **Sim** — pode marcar e desmarcar até a conclusão da análise.
+
+**P3 — formato da rota:**
+Opções: `/analises/:id/requisitos/:requisitoId` (SDD) / `/analises/:id/avaliacoes/:avaliacaoId` / você decide.
+**R3:** Você decide.
+**Decisão da IA:** `PATCH /analises/:id/requisitos/:requisitoId` (SDD §7); o backend resolve a avaliação pelo par (analise, requisito).
+
+**P4 — resposta do PATCH inclui o `resumo`?**
+Opções: sim / só o item.
+**R4:** Você decide.
+**Decisão da IA:** **`{ item, resumo }`** — evita um GET extra pra atualizar contadores.
+
+**Decisão:** Tudo aplicado à TSD-008. P-03 fechado.

@@ -41,7 +41,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 6 | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort` | Must | implementada |
 | 7 | RF-007 | Gravação da sugestão de status por requisito (3 valores) | Must | implementada com RF-005 |
 | 8 | RF-009 | Ordenação da resposta priorizando não conformes | Must | implementada |
-| 9 | RF-008 | Endpoint de definição do status final do requisito | Must | user story em aprovação |
+| 9 | RF-008 | Endpoint de definição do status final do requisito | Must | em construção |
 | 10 | RF-011 | Endpoint de marcação de "verificado" | Must | com RF-008 |
 | 11 | RF-017 | Validação de comentário obrigatório nas ações de revisão | Must | com RF-008 |
 | 12 | RF-014 | Referência de página + entrega do PDF por página | Must | não iniciada |
@@ -264,7 +264,7 @@ Recorte backend deste ciclo: o endpoint de leitura da análise passa a devolver 
 ### RF-008 — Definição do status final de cada requisito
 
 **Frentes:** Backend · Frontend
-**Status (backend):** user story em aprovação
+**Status (backend):** em construção
 **Status (frontend):** não iniciada
 
 > Ciclo backend agrupado: **RF-008 + RF-011 + RF-017** = "revisar um requisito" (um endpoint de PATCH). User Story e critérios abaixo cobrem os três.
@@ -285,12 +285,12 @@ Recorte backend deste ciclo: `PATCH /analises/:id/requisitos/:requisitoId` que a
 - A resposta traz a avaliação atualizada (mesmo formato do item de `GET /analises/:id`) e o `resumo` recalculado.
 - Testes: unit da lógica de atualização (coerção, regra "altera status → verificado", regra de comentário, 409/404) e integração (criar → processar → PATCH → conferir avaliação + resumo).
 
-**Perguntas em aberto (para o usuário antes do Engenheiro)**
+**Decisões do ciclo (respostas do usuário — 31/08/2026)**
 
-1. **P-03 — quando o comentário é obrigatório?** (a) só quando o `statusFinal` fica **diferente** do `statusSugeridoIa` (justificar a discordância da IA); (b) em **toda** alteração de parecer ou verificação; (c) só ao definir `statusFinal = NAO_CONFORME`; (d) **sem obrigatoriedade** neste slice (comentário é campo livre; P-03 decidida depois).
-2. **`verificado` pode ser desmarcado** (voltar a `false`) depois de marcado, ou uma vez verificado permanece até a conclusão?
-3. **Rota:** `PATCH /analises/:id/requisitos/:requisitoId` (por id do requisito, como no SDD §7) ou `/analises/:id/avaliacoes/:avaliacaoId` (por id da avaliação que o `GET /analises/:id` devolve)?
-4. **Resposta do PATCH** inclui o `resumo` recalculado além do item atualizado (proposta: sim, evita um GET extra)?
+1. **P-03 fechado:** comentário obrigatório **quando `statusFinal ≠ statusSugeridoIa`** — invariante: uma avaliação divergente da IA precisa ter comentário (definido agora ou já armazenado); PATCH que resulte nesse estado sem comentário → `422`.
+2. **`verificado` alterna livremente** (true↔false) até a conclusão.
+3. **Rota:** `PATCH /analises/:id/requisitos/:requisitoId` (SDD §7).
+4. **Resposta:** `{ item, resumo }` (resumo recalculado).
 
 **TSD associada:** `docs/engineering/specs/008-revisao-requisito.tsd.md` (a redigir pelo Engenheiro).
 
