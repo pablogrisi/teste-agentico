@@ -20,6 +20,20 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 31/08/2026 — RF-008 + RF-011 + RF-017 / TSD-008: revisão de requisito (backend)
+
+Contexto: usuário mandou "faz o merge e abre o ciclo de RF-008+RF-011+RF-017". TSD-007 mergeada na `main` (`b648908` fecha; `96ff8fb` traz o código). Ciclo na branch `backend/rf-008-revisao-requisito`.
+
+Papéis:
+- **PM**: 4 perguntas — P-03 e "desmarcar verificado" respondidas pelo usuário; rota e resposta "você decide". Decisões: comentário obrigatório **só quando `statusFinal ≠ statusSugeridoIa`** (invariante — R-06); `verificado` alterna livre; rota `/requisitos/:requisitoId`; resposta `{ item, resumo }`. **P-03 fechado** (`questoes-abertas.md` R-06).
+- **Engenheiro**: `docs/engineering/specs/008-revisao-requisito.tsd.md`.
+- **Dev**: refactor `analise-detalhe.ts` (exporta `toItem`, extrai `calcularResumo`); `status-requisito.ts` (+ `isStatusRequisito`); `revisao-requisito.ts` (`validarEResolverPatch` puro); `AnalisesService.revisarRequisito` (404/409/422 + update + resumo recalculado); `PATCH /analises/:id/requisitos/:requisitoId`. +10 unit + 1 integração.
+- **Testes**: `npm run ci` ✅ (75 unit) · `npm run test:e2e` ✅ 28/28.
+- **Crítico**: aprovado, sem desvios. Menores: comentário de avaliação divergente não pode ser apagado (intencional R-06); `resumo` via `findMany`; last-write-wins concorrente.
+- **Documentador**: SDD §7 (contrato de "Revisar requisito"); checkpoint; roadmap RF-008/011/017 → `implementada` (branch); P-03 → R-06.
+
+Estado: ciclo fechado, **branch aguardando sign-off + merge**. Próximo backend: RF-014 (PDF por página).
+
 ## 31/08/2026 — RF-009 / TSD-007: abrir análise (backend)
 
 Contexto: usuário mandou "faz o merge e abre o ciclo de RF-009". TSD-006 mergeada na `main` (`64b2909` fecha; `67ff89f` traz o código). Ciclo na branch `backend/rf-009-abrir-analise`.

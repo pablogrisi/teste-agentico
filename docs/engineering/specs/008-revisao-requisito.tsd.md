@@ -3,7 +3,7 @@
 ---
 title: TSD - Revisão de requisito (RF-008/011/017, backend)
 type: tsd
-status: draft
+status: implementada em branch (backend/rf-008-revisao-requisito) — Crítico aprovou, aguardando merge
 created: 31/08/2026 // Pablo Grisi (Engenheiro)
 updated: 31/08/2026 // Pablo Grisi
 related:

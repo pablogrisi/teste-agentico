@@ -15,7 +15,7 @@ Fundação percorrida (`.ai-dev/bootstrap.md`): PRD e SDD aprovados, `questoes-a
 Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJS, Pablo) e `frontend/` (Next.js, Vinicius), método e docs compartilhados na raiz. Cada frente roda seu próprio ciclo de seis papéis.
 
 - **`main` `96ff8fb`**: TSD-001 + RF-006 + RF-001/004/018 + RF-002 + RF-005/RF-007 + RF-009 integradas.
-- **RF-008 + RF-011 + RF-017 / TSD-008** (revisão de requisito — `PATCH` de `statusFinal`/`verificado`/`comentario`, backend) — **ciclo aberto** na branch `backend/rf-008-revisao-requisito`. PM aguardando decisões.
+- **RF-008 + RF-011 + RF-017 / TSD-008** (revisão de requisito — `PATCH`, backend) — ciclo completo na branch `backend/rf-008-revisao-requisito`: PM → Engenheiro → Dev → Testes → Crítico ✅. Bateria verde. **Aguardando sign-off + merge.**
 - **TSD-002** (`frontend/`) — aprovada; **não implementada**. Por Vinicius, em branch a partir da `main`.
 - Infra de teste: `test:e2e` sobe/derruba um PostgreSQL embutido (`embedded-postgres`) — sem Docker.
 - Integração com o serviço de IA real (`HttpAdapter` da `AnaliseIaPort` + A-02) foi **adiada para o fim do MVP** por decisão do responsável (31/08/2026); até lá o `StubAdapter` sustenta os ciclos.
@@ -23,7 +23,8 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 ## 2. Spec ativa
 
-- Branch `backend/rf-008-revisao-requisito`: ciclo de RF-008 + RF-011 + RF-017 aberto pelo PM; User Story rascunhada, aguardando decisões antes do Engenheiro.
+- Branch `backend/rf-008-revisao-requisito`: TSD-008 implementada, Crítico aprovou, bateria verde. Aguardando merge.
+- Próximo ciclo backend após o merge: RF-014 (referência de página + entrega do PDF por página).
 - Frontend: `docs/engineering/specs/002-fundacao-frontend.tsd.md` aguardando o Vinicius.
 
 ## 3. Specs concluídas
@@ -36,6 +37,7 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 | TSD-005 — Listagem de análises (RF-002, backend) | `GET /analises` com `q` (nup+objeto, insensitive), `status` (multi: vírgula ou repetição), `ordenarPor` (iniciadaEm\|nup), `ordem`, `pagina`/`tamanho` (20, máx 100) → `{ itens, total, pagina, tamanho }`; itens com 6 campos; query inválida → 422. Sem mudança de modelo. | `npm run ci` ✅ (49 unit) · `npm run test:e2e` ✅ 16/16 (+ integração `listagem-analises`: escopo por analista, q, status multi, ordenação, paginação, 422, vazio) · build ✅ · Crítico ✅ · mergeada `main` `57b170f` |
 | TSD-006 — Processamento da análise (RF-005/RF-007, backend) | Modelo `AvaliacaoRequisito` + migration; `ProcessamentoService` (claim atômico, timeout IA, gravação transacional de 1 avaliação/requisito, `PRONTA_PARA_REVISAO`/`ERRO_PROCESSAMENTO`); disparo imediato no `criar` + varredura + `recuperarPresas` no boot sob `PROCESSAMENTO_AUTO`; `POST /analises/:id/reprocessar` (404/409). Sem `@nestjs/schedule` (ESM). | `npm run ci` ✅ (61 unit) · `npm run test:e2e` ✅ 21/21 (+ integração `processamento`: processar, claim atômico, base vazia→erro, reprocessar 200/409/404, recuperar) · build ✅ · Crítico ✅ · mergeada `main` `67ff89f` |
 | TSD-007 — Abrir análise (RF-009, backend) | `GET /analises/:id` passa a devolver `resumo` (contagens por `statusFinal` + verificados + obrigatórios pendentes) e `avaliacoesPorArea` (grupos por área alfabética; dentro, `NAO_CONFORME` primeiro depois `ordem`); item com `norma` estruturada. Sem mudança de modelo; contrato anterior preservado. | `npm run ci` ✅ (65 unit) · `npm run test:e2e` ✅ 24/24 (+ integração `abrir-analise`: processar→abrir→agrupamento/ordem/resumo, não processada→vazio, 404) · build ✅ · Crítico ✅ · mergeada `main` `96ff8fb` |
+| TSD-008 — Revisão de requisito (RF-008/011/017, backend) | `PATCH /analises/:id/requisitos/:requisitoId` (`statusFinal`/`verificado`/`comentario`); alterar `statusFinal` ⇒ `verificado=true`; comentário obrigatório sse resultado `statusFinal ≠ statusSugeridoIa` sem comentário (R-06); `409` fora de `PRONTA_PARA_REVISAO`, `404`, `422`; resposta `{ item, resumo }`. Sem mudança de modelo. | `npm run ci` ✅ (75 unit) · `npm run test:e2e` ✅ 28/28 (+ integração `revisao-requisito`: 422 sem comentário / 200 com / verificado sem comentário / 422 inválido+vazio / 404 / 409) · build ✅ · Crítico ✅ · **branch `backend/rf-008-revisao-requisito`, aguardando merge** |
 
 ### 3.1 Notas de revisão dos ciclos fechados
 
@@ -51,7 +53,9 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 **Crítico — RF-009 / TSD-007 (31/08/2026):** **aprovado**, sem desvios. Todos os critérios com evidência (65 unit + 24 e2e): agrupamento por área alfabética, `NAO_CONFORME` (por `statusFinal`) primeiro depois `ordem`, `resumo` coerente, `norma` estruturada, análise sem avaliações → grupos vazios + resumo zerado, `404`, contrato anterior preservado. Observações menores: payload cresce com a base real (~300 itens — já em §9); o método do controller ainda se chama `buscar`.
 
-**Documentador (31/08/2026):** TSD-001, RF-006, RF-001/004/018, RF-002 e RF-005/RF-007 **fechados e mergeados** (`main` `67ff89f`). Ciclo de RF-009/TSD-007 **fechado, aguardando merge** (branch `backend/rf-009-abrir-analise`). SDD §6/§7/§8/§9 atualizado (`ProcessamentoService`, `avaliacao_requisito`, worker sem `@nestjs/schedule`, payload de `GET /analises/:id`). Roadmap RF-005/RF-007 → `implementada` (mergeada); RF-009 → `implementada` (branch). `questoes-abertas.md`: A-07 aberta. Detalhe em `.ai-dev/audit.md`.
+**Crítico — RF-008/011/017 / TSD-008 (31/08/2026):** **aprovado**, sem desvios. Todos os critérios com evidência (75 unit + 28 e2e): invariante P-03 (comentário obrigatório sse `statusFinal ≠ statusSugeridoIa`), alterar status ⇒ verificado, verificado alterna livre, `409`/`404`/`422`, `{ item, resumo }` com o mesmo formato de item de `GET /analises/:id`. Refactor de `analise-detalhe.ts` (exporta `toItem`, extrai `calcularResumo`) limpo. Menores: uma avaliação divergente da IA não pode ter o comentário apagado (intencional, R-06); `resumo` recalculado com `findMany` da análise; last-write-wins em PATCH concorrente.
+
+**Documentador (31/08/2026):** TSD-001, RF-006, RF-001/004/018, RF-002, RF-005/RF-007 e RF-009 **fechados e mergeados** (`main` `96ff8fb`). Ciclo de RF-008/011/017/TSD-008 **fechado, aguardando merge** (branch `backend/rf-008-revisao-requisito`). SDD §7 ("Revisar requisito" — contrato). Roadmap RF-008/011/017 → `implementada` (branch). `questoes-abertas.md`: **P-03 fechada** (R-06). Detalhe em `.ai-dev/audit.md`.
 
 ## 4. Decisões relevantes
 
@@ -82,13 +86,14 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 - [x] RF-002/TSD-005 mergeada na `main` (`57b170f`).
 - [x] RF-005/RF-007/TSD-006 mergeada na `main` (`67ff89f`).
 - [x] RF-009/TSD-007 mergeada na `main` (`96ff8fb`).
-- [ ] **RF-008 + RF-011 + RF-017 / TSD-008 (revisão de requisito)** — ciclo aberto; PM aguardando decisões.
+- [x] P-03 (quando exigir comentário) fechado — R-06.
+- [ ] **Sign-off + merge da branch `backend/rf-008-revisao-requisito`** (RF-008/011/017/TSD-008, ciclo fechado).
 - [ ] Implementar a TSD-002 (frontend) — aprovada; por Vinicius, em branch a partir da `main`.
 - [ ] Integração com o serviço de IA real (`HttpAdapter` + A-02) — **adiada para o fim do MVP**.
 - [ ] Follow-up: migrar `package.json#prisma` para `prisma.config.ts` antes do Prisma 7.
-- [ ] Questões abertas: P-07 (lista real de requisitos), P-03 (quando exigir comentário — RF-017), P-05 (ausência de página — RF-014), A-05/P-09 (armazenamento do PDF), P-11 (máscara do NUP), A-07 (re-seleção de `PROCESSANDO` preso), A-02 (contrato da IA — para o fim). Ver `docs/product/questoes-abertas.md`.
+- [ ] Questões abertas: P-07 (lista real de requisitos), P-05 (ausência de página — RF-014), A-05/P-09 (armazenamento do PDF), P-11 (máscara do NUP), A-07 (re-seleção de `PROCESSANDO` preso), A-02 (contrato da IA — para o fim). Ver `docs/product/questoes-abertas.md`.
 - [ ] Confirmar se `docs/licia-analisadora-product-discovery.md` está versionado neste repo (citado no PRD).
-- [ ] Limpar branches já mergeadas (`backend/tsd-001-fundacao-tecnica`, `backend/rf-001-criar-analise`, `backend/rf-002-listagem`, `backend/rf-005-processamento`) — local + remota.
+- [ ] Limpar branches já mergeadas (`backend/tsd-001-fundacao-tecnica`, `backend/rf-001-criar-analise`, `backend/rf-002-listagem`, `backend/rf-005-processamento`, `backend/rf-009-abrir-analise`) — local + remota.
 
 ## 6. Riscos / pontos de atenção
 
@@ -99,10 +104,11 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 ## 7. Próximo passo recomendado
 
-1. **Backend (Pablo):** ciclo RF-008 + RF-011 + RF-017 aberto (`backend/rf-008-revisao-requisito`). PM aguarda decisões → Engenheiro (TSD-008) → Dev → Testes → Crítico → Documentador → merge.
-2. **Frontend (Vinicius):** branch `frontend/tsd-002-fundacao` a partir do `main`; implementar a TSD-002.
-3. Cada ciclo mergeia no `main` quando o Documentador fecha.
-4. Restam ~3 ciclos de backend depois de RF-008/011/017: RF-014, RF-012+RF-013+RF-015, RF-016 — mais a integração da IA real no fim.
+1. **Sign-off + merge** de `backend/rf-008-revisao-requisito` (RF-008/011/017/TSD-008) na `main`.
+2. **Backend (Pablo):** próximo ciclo = RF-014 (referência de página + `GET /analises/:id/pdf?pagina=N`). Precisa escolher lib de extração de página de PDF.
+3. **Frontend (Vinicius):** branch `frontend/tsd-002-fundacao` a partir do `main`; implementar a TSD-002.
+4. Cada ciclo mergeia no `main` quando o Documentador fecha.
+5. Restam **3 ciclos** de backend depois de RF-008/011/017: RF-014, RF-012+RF-013+RF-015, RF-016 — mais a integração da IA real no fim.
 
 ## 8. Prompt de retomada
 

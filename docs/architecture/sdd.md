@@ -143,10 +143,14 @@ Não há identidade no MVP: o `AnalistaAtualProvider` devolve sempre o analista 
 
 ### Fluxo - Revisar requisito
 
-1. `PATCH /analises/:id/requisitos/:requisitoId` com `status_final` e/ou `comentario` e/ou `verificado`.
-2. Se `status_final` muda, grava o novo valor e força `verificado = true` (RF-011); atualiza `atualizado_em`.
-3. Comentário obrigatório: validado conforme as ações que P-03 vier a definir (no MVP, exigido ao alterar o status sugerido pela IA — a confirmar).
-4. Responde o requisito atualizado e um resumo de progresso (quantos obrigatórios faltam verificar).
+**Implementado (TSD-008).** `PATCH /analises/:id/requisitos/:requisitoId` com `{ statusFinal?, verificado?, comentario? }` (ao menos um).
+
+1. `404` se a análise ou a avaliação (par análise+requisito) não existir para o analista; `409` se a análise não está `PRONTA_PARA_REVISAO`.
+2. `statusFinal`, quando presente, deve ser um dos 3 valores (`422` senão).
+3. Alterar `statusFinal` força `verificado = true` (RF-011). `verificado` alterna livre quando o status não muda.
+4. **Comentário obrigatório (P-03 = R-06):** se o estado resultante tiver `statusFinal ≠ statusSugeridoIa` e nenhum comentário → `422` sem gravar. Confirmar a sugestão ou só marcar `verificado` não exigem comentário.
+5. `comentario` vazio/só espaços = limpar (`null`) — mas não pode violar a regra 4.
+6. Grava só os campos que mudam; responde `{ item, resumo }` — `item` no mesmo formato do item de `GET /analises/:id`, `resumo` recalculado.
 
 ### Fluxo - Concluir análise
 
