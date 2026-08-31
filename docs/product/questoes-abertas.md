@@ -2,6 +2,8 @@
 
 Índice consolidado de decisões de produto e arquitetura ainda pendentes, hoje possivelmente espalhadas entre PRD, SDD, decision records e checkpoint. Confira aqui antes de assumir que um ponto em aberto já foi resolvido — e mantenha isto sincronizado quando uma questão for fechada.
 
+O histórico das perguntas já feitas ao responsável e das respostas que as fecharam está em `docs/perguntas-e-respostas.md`.
+
 ## Produto
 
 | # | Questão | Onde apareceu | Status |

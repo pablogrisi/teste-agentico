@@ -15,6 +15,7 @@ Leia também:
 - `docs/product/prd.md`
 - `docs/product/roadmap.md`, se existir
 - `docs/product/questoes-abertas.md`, se existir
+- `docs/perguntas-e-respostas.md` — trilha das perguntas feitas ao responsável e das respostas dadas. **Qualquer papel que faça perguntas (PM, Engenheiro, ou pergunta pontual) anexa a rodada aqui ao final**, com data, opções, resposta e decisão resultante.
 
 Use o PRD para entender escopo do MVP, personas, requisitos funcionais, não objetivos e pontos ainda em aberto. Use o roadmap para saber a sequência das features, o status de cada uma, e a User Story já aprovada da feature em ciclo — nunca escreva ou reescreva a User Story de uma feature fora do seu ciclo (ver `.ai-dev/agent-roles.md`, Agente PM). Use `questoes-abertas.md` como índice consolidado de decisões de produto/arquitetura ainda pendentes — confira lá antes de assumir que um ponto em aberto já foi resolvido.
 
