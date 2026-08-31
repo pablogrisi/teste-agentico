@@ -3,7 +3,7 @@
 ---
 title: TSD - Criar análise com PDF persistido (RF-001/RF-004/RF-018, backend)
 type: tsd
-status: implementada em branch (backend/rf-001-criar-analise) — Crítico aprovou, aguardando merge
+status: concluída — mergeada no main (9dd6792)
 created: 31/08/2026 // Pablo Grisi (Engenheiro)
 updated: 31/08/2026 // Pablo Grisi
 related:

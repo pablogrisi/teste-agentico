@@ -34,7 +34,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | Sequência | ID | Feature (recorte backend) | Prioridade | Status |
 |---|---|---|---|---|
 | 1 | RF-006 | Base fixa de requisitos: modelo + seed persistido | Must | implementada |
-| 2 | RF-001 | Endpoint de criação de análise (NUP, objeto, PDF) | Must | implementada (branch, aguardando merge) |
+| 2 | RF-001 | Endpoint de criação de análise (NUP, objeto, PDF) | Must | implementada |
 | 3 | RF-004 | Recebimento de upload manual de PDF (multipart) | Must | implementada com RF-001 |
 | 4 | RF-018 | Persistência do PDF de entrada associada à análise | Must | implementada com RF-001 |
 | 5 | RF-002 | Endpoint de listagem das análises do analista | Must | não iniciada |
@@ -111,7 +111,7 @@ Recorte deste ciclo (backend): modelar e persistir a base de requisitos e popul�
 ### RF-001 — Criar análise (NUP, objeto/descrição, PDF)
 
 **Frentes:** Backend · Frontend
-**Status (backend):** implementada (branch `backend/rf-001-criar-analise`, aguardando merge)
+**Status (backend):** implementada (mergeada no `main` `9dd6792`)
 **Status (frontend):** não iniciada
 
 > Ciclo backend agrupado: **RF-001 + RF-004 + RF-018** = "criar análise com PDF persistido". A User Story e os critérios abaixo cobrem o recorte backend dos três.
