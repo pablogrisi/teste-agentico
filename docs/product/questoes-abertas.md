@@ -30,6 +30,7 @@ O histórico das perguntas já feitas ao responsável e das respostas que as fec
 | A-04 | O relatório PDF final gerado será persistido, ou sempre gerado sob demanda a partir da análise concluída? MVP propõe geração sob demanda. | PRD §12 | aberta — direção parcial no SDD |
 | A-05 | Estratégia definitiva de armazenamento do PDF de entrada: migração de filesystem para object storage (S3/Blob) e criptografia at-rest. MVP usa o mais simples. | PRD §12, RF-018 | aberta — direção parcial no SDD |
 | A-06 | Fila/worker dedicado (ex.: Redis + BullMQ) para o processamento assíncrono, caso o volume cresça. MVP usa processamento em processo com status persistido. | Limitações técnicas (bootstrap) | aberta — direção parcial no SDD |
+| A-07 | Recuperação de análise presa em `PROCESSANDO` sem reinício, e contador de tentativas para não ficar em loop `PROCESSANDO`→`PENDENTE` em falha permanente. Hoje (TSD-006) só o boot recupera; a varredura olha só `PENDENTE`. | Ciclo RF-005 (TSD-006) | aberta |
 
 ## Como usar
 

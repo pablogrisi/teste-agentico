@@ -3,7 +3,7 @@
 ---
 title: TSD - Processamento da análise (RF-005/RF-007, backend)
 type: tsd
-status: draft
+status: implementada em branch (backend/rf-005-processamento) — Crítico aprovou, aguardando merge
 created: 31/08/2026 // Pablo Grisi (Engenheiro)
 updated: 31/08/2026 // Pablo Grisi
 related:
@@ -58,8 +58,8 @@ Implementa o worker em processo que transforma uma análise `PENDENTE` em `PRONT
   - `processarPendentes(): Promise<void>`: guardado por um flag em memória (`emExecucao`) para varreduras sobrepostas não rodarem juntas; busca `analise` `PENDENTE` (ordenado por `iniciadaEm`, `take` limitado) e chama `processarUma` **uma de cada vez**.
   - `recuperarPresas(): Promise<void>`: `updateMany({ where: { status: 'PROCESSANDO' }, data: { status: 'PENDENTE' } })` — para o boot.
   - Agendamento (só quando `PROCESSAMENTO_AUTO === true`):
-    - `@Interval(PROCESSAMENTO_INTERVALO_MS)` → `processarPendentes()` (via `@nestjs/schedule`).
-    - `onApplicationBootstrap()` → `recuperarPresas()` e depois `processarPendentes()`.
+    - `onApplicationBootstrap()` → `recuperarPresas()`, `processarPendentes()`, e um `setInterval(PROCESSAMENTO_INTERVALO_MS)` guardado no serviço; `onModuleDestroy()` faz `clearInterval`.
+    - **Implementação:** `setInterval` próprio, **não** `@nestjs/schedule` — o pacote é ESM-only e quebra o `ts-jest` (CJS) do projeto, e o uso seria só bookkeeping de intervalo.
 - **Disparo imediato:** `AnalisesModule` importa `ProcessamentoModule`; `AnalisesService.criar`, após o `create`, faz `void this.processamento.processarUma(analise.id)` (fire-and-forget) **somente se `PROCESSAMENTO_AUTO === true`**. Não altera o `201`/`status: PENDENTE` da resposta.
 - **`POST /analises/:id/reprocessar`** no `AnalisesController` → `AnalisesService.reprocessar(id)`:
   - `buscarPorId(id)` (`404` se não existir para o analista atual).
@@ -67,7 +67,7 @@ Implementa o worker em processo que transforma uma análise `PENDENTE` em `PRONT
   - `analise.update({ status: 'PENDENTE', motivoErro: null })`; se `PROCESSAMENTO_AUTO`, dispara `void processarUma(id)`.
   - devolve a análise (status `PENDENTE`).
 - **Config nova**: `IA_TIMEOUT_MS` (default `120000`), `PROCESSAMENTO_INTERVALO_MS` (default `5000`), `PROCESSAMENTO_AUTO` (`true`|`false`, default `true`) — em `env.validation.ts` + `configuration.ts`. `setup-e2e-env.ts` fixa `PROCESSAMENTO_AUTO=false`.
-- **Dep nova**: `@nestjs/schedule` (+ `ScheduleModule.forRoot()` no `AppModule`).
+- **Dep nova**: nenhuma (a intenção era `@nestjs/schedule`, descartado — ver acima).
 - **Testes** (ver §7).
 
 ### Fora do escopo
@@ -90,8 +90,8 @@ Implementa o worker em processo que transforma uma análise `PENDENTE` em `PRONT
 ## 5. Impacto esperado
 
 - **Produto:** o fluxo passa a produzir pareceres sugeridos — a análise fica revisável (com a saída do stub por enquanto).
-- **Arquitetura:** 3ª tabela de domínio; primeiro processamento assíncrono real (SDD §4); primeiro uso de `@nestjs/schedule`. Confirma a máquina de status de `analise`.
-- **Implementação:** `src/processamento/**`, `src/analises/` (trigger + reprocessar), config, `@nestjs/schedule`.
+- **Arquitetura:** 3ª tabela de domínio; primeiro processamento assíncrono real (SDD §4). Confirma a máquina de status de `analise`.
+- **Implementação:** `src/processamento/**`, `src/analises/` (trigger + reprocessar), config nova.
 - **Testes:** integração exercita o worker ponta a ponta com o `StubAdapter`.
 - **Documentação:** SDD §7/§8 (`avaliacao_requisito` implementada; fluxo de processamento); checkpoint, audit, roadmap (RF-005/RF-007).
 - **Operação:** varредura de 5 s rodando em produção; variáveis novas.

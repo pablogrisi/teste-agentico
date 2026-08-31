@@ -20,6 +20,20 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 31/08/2026 — RF-005 + RF-007 / TSD-006: processamento da análise (backend)
+
+Contexto: usuário mandou "faz o merge e abre o ciclo de RF-005+RF-007". RF-002/TSD-005 mergeada na `main` (`ce30442` fecha; `57b170f` traz o código). Ciclo na branch `backend/rf-005-processamento`.
+
+Papéis:
+- **PM**: agrupou RF-005+RF-007. 4 perguntas, todas "você decide" → decisões da IA: disparo imediato + varredura 5s + recuperação no boot (sob `PROCESSAMENTO_AUTO`); `POST /analises/:id/reprocessar`; `IA_TIMEOUT_MS=120000`; base vazia → `ERRO_PROCESSAMENTO`. Registrado em `perguntas-e-respostas.md`.
+- **Engenheiro**: `docs/engineering/specs/006-processamento-analise.tsd.md`.
+- **Dev**: model `AvaliacaoRequisito` + migration `20260901010000` (FK cascade/restrict, `@@unique`); `ProcessamentoService` (claim atômico via `updateMany` count, `comTimeout`, gravação transacional de 1 avaliação/requisito com default `NAO_SE_APLICA`, `PRONTA_PARA_REVISAO`/`ERRO_PROCESSAMENTO`, `processarPendentes` single-flight, `recuperarPresas`, `disparar`); `AnalisesService.criar` dispara; `reprocessar` + `POST /analises/:id/reprocessar`. Config `IA_TIMEOUT_MS`/`PROCESSAMENTO_INTERVALO_MS`/`PROCESSAMENTO_AUTO`. **`@nestjs/schedule` descartado** (ESM-only, quebra o ts-jest CJS) → `setInterval` próprio + `onModuleDestroy`.
+- **Testes**: `npm run ci` ✅ (**61 unit**) · `npm run test:e2e` ✅ **21/21** (+ integração `processamento`: processar, claim atômico não duplica, base vazia→erro, reprocessar 200/409/404, `recuperarPresas`).
+- **Crítico**: aprovado. Desvio do `@nestjs/schedule` justificado. Menores: falha na transação da etapa 6 deixa `PROCESSANDO` até o boot (varredura só olha `PENDENTE`) → nova questão **A-07**; `comTimeout` não cancela a chamada subjacente.
+- **Documentador**: SDD §6/§7/§8/§9; checkpoint; roadmap RF-005/RF-007 → `implementada` (branch); `questoes-abertas.md` A-07.
+
+Estado: ciclo fechado, **branch aguardando sign-off + merge**. Próximo backend: RF-009 (abrir análise — leitura das avaliações agrupadas/ordenadas).
+
 ## 31/08/2026 — RF-002 / TSD-005: listagem de análises (backend)
 
 Contexto: usuário mandou "segue pro próximo passo". Antes de abrir RF-002, a branch `backend/rf-001-criar-analise` (TSD-004) foi empurrada e mergeada na `main` por fast-forward (`6c7e983..9dd6792`). Ciclo de RF-002 na branch `backend/rf-002-listagem` (a partir do `main`).
