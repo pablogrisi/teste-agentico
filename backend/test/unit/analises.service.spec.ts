@@ -13,6 +13,8 @@ function build(over: {
   create?: jest.Mock;
   findFirst?: jest.Mock;
   ler?: jest.Mock;
+  findMany?: jest.Mock;
+  count?: jest.Mock;
 }) {
   const validacao = {
     validar: jest.fn().mockReturnValue(over.validarErros ?? []),
@@ -25,13 +27,18 @@ function build(over: {
     ler: over.ler ?? jest.fn().mockResolvedValue(PDF),
     lerPagina: jest.fn(),
   };
+  const findMany = over.findMany ?? jest.fn().mockResolvedValue([]);
+  const count = over.count ?? jest.fn().mockResolvedValue(0);
   const prisma = {
     analise: {
       create:
         over.create ??
         jest.fn().mockResolvedValue({ id: 'a1', status: 'PENDENTE' }),
       findFirst: over.findFirst ?? jest.fn(),
+      findMany,
+      count,
     },
+    $transaction: (ops: unknown[]) => Promise.all(ops),
   };
   const service = new AnalisesService(
     prisma as never,
@@ -39,7 +46,7 @@ function build(over: {
     analistaAtual as never,
     armazenamentoPdf as never,
   );
-  return { service, validacao, armazenamentoPdf, prisma };
+  return { service, validacao, armazenamentoPdf, prisma, findMany, count };
 }
 
 const entrada = {
@@ -122,6 +129,71 @@ describe('AnalisesService.buscarPorId / lerPdf', () => {
     });
     await expect(service.lerPdf('a1')).rejects.toBeInstanceOf(
       NotFoundException,
+    );
+  });
+});
+
+describe('AnalisesService.listar', () => {
+  const params = {
+    ordenarPor: 'iniciadaEm' as const,
+    ordem: 'desc' as const,
+    pagina: 1,
+    tamanho: 20,
+  };
+
+  it('monta where só com analistaId quando não há q nem status', async () => {
+    const { service, findMany, count } = build({
+      findMany: jest.fn().mockResolvedValue([{ id: 'a1' }]),
+      count: jest.fn().mockResolvedValue(1),
+    });
+    const r = await service.listar(params);
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { analistaId: 'analista-mvp' },
+        orderBy: { iniciadaEm: 'desc' },
+        skip: 0,
+        take: 20,
+      }),
+    );
+    expect(count).toHaveBeenCalledWith({
+      where: { analistaId: 'analista-mvp' },
+    });
+    expect(r).toEqual({
+      itens: [{ id: 'a1' }],
+      total: 1,
+      pagina: 1,
+      tamanho: 20,
+    });
+  });
+
+  it('inclui OR de q (nup/objeto) e status in quando informados', async () => {
+    const { service, findMany } = build({});
+    await service.listar({ ...params, q: 'edital', status: ['PENDENTE'] });
+
+    const where = findMany.mock.calls[0][0].where;
+    expect(where.analistaId).toBe('analista-mvp');
+    expect(where.OR).toEqual([
+      { nup: { contains: 'edital', mode: 'insensitive' } },
+      { objeto: { contains: 'edital', mode: 'insensitive' } },
+    ]);
+    expect(where.status).toEqual({ in: ['PENDENTE'] });
+  });
+
+  it('traduz pagina/tamanho em skip/take e ordena pelo campo pedido', async () => {
+    const { service, findMany } = build({});
+    await service.listar({
+      ordenarPor: 'nup',
+      ordem: 'asc',
+      pagina: 3,
+      tamanho: 10,
+    });
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { nup: 'asc' },
+        skip: 20,
+        take: 10,
+      }),
     );
   });
 });

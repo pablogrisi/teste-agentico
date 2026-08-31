@@ -5,12 +5,17 @@ import {
   HttpCode,
   Param,
   Post,
+  Query,
   StreamableFile,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AnalisesService } from './analises.service';
+import {
+  ListarAnalisesQueryRaw,
+  parseListarAnalisesQuery,
+} from './listar-analises.query';
 
 // Teto rígido do multer; o limite real (configurável) é checado na validação,
 // que devolve 422 com mensagem clara para arquivos entre o limite e este teto.
@@ -47,6 +52,11 @@ export class AnalisesController {
       status: analise.status,
       iniciadaEm: analise.iniciadaEm,
     };
+  }
+
+  @Get()
+  async listar(@Query() query: ListarAnalisesQueryRaw) {
+    return this.analises.listar(parseListarAnalisesQuery(query));
   }
 
   @Get(':id')

@@ -17,6 +17,29 @@ import {
   EntradaAnalise,
   ValidacaoAnaliseService,
 } from './validacao-analise.service';
+import { ListarAnalisesParams } from './listar-analises.query';
+
+/** Campos de uma análise numa listagem (RF-002). */
+export type AnaliseResumo = Pick<
+  Analise,
+  'id' | 'nup' | 'objeto' | 'status' | 'iniciadaEm' | 'concluidaEm'
+>;
+
+export interface PaginaAnalises {
+  itens: AnaliseResumo[];
+  total: number;
+  pagina: number;
+  tamanho: number;
+}
+
+const CAMPOS_RESUMO = {
+  id: true,
+  nup: true,
+  objeto: true,
+  status: true,
+  iniciadaEm: true,
+  concluidaEm: true,
+} as const;
 
 @Injectable()
 export class AnalisesService {
@@ -70,6 +93,37 @@ export class AnalisesService {
       );
       throw erro;
     }
+  }
+
+  async listar(params: ListarAnalisesParams): Promise<PaginaAnalises> {
+    const { analistaId } = this.analistaAtual.getAnalistaAtual();
+    const { q, status, ordenarPor, ordem, pagina, tamanho } = params;
+
+    const where = {
+      analistaId,
+      ...(q
+        ? {
+            OR: [
+              { nup: { contains: q, mode: 'insensitive' as const } },
+              { objeto: { contains: q, mode: 'insensitive' as const } },
+            ],
+          }
+        : {}),
+      ...(status && status.length > 0 ? { status: { in: status } } : {}),
+    };
+
+    const [itens, total] = await this.prisma.$transaction([
+      this.prisma.analise.findMany({
+        where,
+        orderBy: { [ordenarPor]: ordem },
+        skip: (pagina - 1) * tamanho,
+        take: tamanho,
+        select: CAMPOS_RESUMO,
+      }),
+      this.prisma.analise.count({ where }),
+    ]);
+
+    return { itens, total, pagina, tamanho };
   }
 
   async buscarPorId(id: string): Promise<Analise> {
