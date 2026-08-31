@@ -34,7 +34,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | Sequência | ID | Feature (recorte backend) | Prioridade | Status |
 |---|---|---|---|---|
 | 1 | RF-006 | Base fixa de requisitos: modelo + seed persistido | Must | implementada |
-| 2 | RF-001 | Endpoint de criação de análise (NUP, objeto, PDF) | Must | user story em aprovação |
+| 2 | RF-001 | Endpoint de criação de análise (NUP, objeto, PDF) | Must | TSD aprovada |
 | 3 | RF-004 | Recebimento de upload manual de PDF (multipart) | Must | com RF-001 |
 | 4 | RF-018 | Persistência do PDF de entrada associada à análise | Must | com RF-001 |
 | 5 | RF-002 | Endpoint de listagem das análises do analista | Must | não iniciada |
@@ -111,7 +111,7 @@ Recorte deste ciclo (backend): modelar e persistir a base de requisitos e popul�
 ### RF-001 — Criar análise (NUP, objeto/descrição, PDF)
 
 **Frentes:** Backend · Frontend
-**Status (backend):** user story em aprovação
+**Status (backend):** TSD aprovada
 **Status (frontend):** não iniciada
 
 > Ciclo backend agrupado: **RF-001 + RF-004 + RF-018** = "criar análise com PDF persistido". A User Story e os critérios abaixo cobrem o recorte backend dos três.
@@ -136,12 +136,12 @@ Recorte backend deste ciclo:
 - `GET /analises/:id/pdf` devolve exatamente o PDF enviado (`Content-Type: application/pdf`); `404` se a análise ou o arquivo não existir.
 - Testes: unit da validação de entrada e do serviço de criação; integração do fluxo (criar → buscar → baixar PDF) e do rollback quando a persistência do PDF falha.
 
-**Perguntas em aberto (para o usuário antes do Engenheiro)**
+**Decisões do ciclo (respostas do usuário, 31/08/2026)**
 
-1. **"PDF válido"**: basta mimetype `application/pdf` + magic bytes `%PDF-`? Qual o **limite de tamanho** (proposta: 25 MB)? **Recusar PDF protegido por senha** (proposta: sim — não dá pra processar depois)?
-2. **NUP**: validar formato (máscara `NNNNN.NNNNNN/NNNN-NN`) ou aceitar **string livre** no MVP (proposta: string livre, obrigatória, `trim`, até 50 chars; máscara vira questão aberta)?
-3. **Status da análise**: modelar já **todos** os valores do SDD §8 (`PENDENTE`, `PROCESSANDO`, `PRONTA_PARA_REVISAO`, `ERRO_PROCESSAMENTO`, `CONCLUIDA`) como string com allowlist em código (padrão do `area` de RF-006), ou só `PENDENTE` por enquanto? (proposta: todos, como string+allowlist — evita migration depois)
-4. **NUP repetido**: o mesmo analista pode criar várias análises para o mesmo NUP (reanálise), ou o sistema bloqueia/avisa? (proposta: permitir, sem constraint de unicidade)
+1. **"PDF válido"**: mimetype `application/pdf` + magic bytes `%PDF-`; limite de tamanho **25 MB** (ajustável por `ANALISE_PDF_TAMANHO_MAX_MB`); **recusa PDF protegido por senha** (heurística: presença de `/Encrypt` no conteúdo).
+2. **NUP**: **string livre** no MVP (obrigatória, `trim`, até 60 chars). Validação de máscara é questão aberta futura.
+3. **Status da análise**: todos os valores do SDD §8 como **string + allowlist** em `src/analises/status-analise.ts` (padrão do `area` de RF-006). Neste slice só `PENDENTE` é atribuído.
+4. **NUP repetido**: **permitido** — sem constraint de unicidade. Reanálise é caso legítimo.
 
 **TSD associada:** `docs/engineering/specs/004-criar-analise.tsd.md` (a redigir pelo Engenheiro).
 
