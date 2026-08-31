@@ -209,3 +209,24 @@ Opções: offset/limit (`pagina` + `tamanho`) / sem paginação.
 **Decisão da IA:** **offset/limit** — `pagina` (1-based, default 1), `tamanho` (default 20, máx 100). Resposta: `{ itens, total, pagina, tamanho }`.
 
 **Decisão:** P-06 fechado; tudo aplicado à TSD-005.
+
+---
+
+## 31/08/2026 — Ciclo RF-005 + RF-007 (worker de processamento), Agente PM
+
+**P1 — como o worker pega as análises:**
+Opções: disparo imediato + varredura 5s / só varredura 5s / você decide.
+**R1:** Você decide.
+**Decisão da IA:** **disparo imediato** (agenda o processamento logo após `POST /analises`) **+ varredura periódica** (default 5s, `PROCESSAMENTO_INTERVALO_MS`) como rede de segurança **+ recuperação no boot** (`PROCESSANDO` preso volta a `PENDENTE`). Flag `PROCESSAMENTO_AUTO` (default `true`) desliga o agendamento automático nos testes.
+
+**P2 — endpoint de reprocessar:**
+Opções: incluir `POST /analises/:id/reprocessar` agora / deixar pra depois.
+**R2:** Você decide.
+**Decisão da IA:** **incluir** `POST /analises/:id/reprocessar` — `ERRO_PROCESSAMENTO` → `PENDENTE` (`404` se não existir, `409` se não estiver em erro), e dispara o processamento na hora.
+
+**P3 — timeout da IA e base de requisitos vazia:**
+Opções: 120s + base vazia → ERRO / 120s + base vazia → PRONTA com 0 avaliações / você decide.
+**R3:** Você decide.
+**Decisão da IA:** timeout **120s** (`IA_TIMEOUT_MS`, configurável); base de requisitos ativos vazia no momento do processamento → **`ERRO_PROCESSAMENTO`** com motivo "base de requisitos vazia" (PRD §9 trata base indisponível como erro).
+
+**Decisão:** Tudo aplicado à TSD-006.

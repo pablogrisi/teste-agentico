@@ -38,7 +38,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 3 | RF-004 | Recebimento de upload manual de PDF (multipart) | Must | implementada com RF-001 |
 | 4 | RF-018 | Persistência do PDF de entrada associada à análise | Must | implementada com RF-001 |
 | 5 | RF-002 | Endpoint de listagem das análises do analista | Must | implementada |
-| 6 | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort` | Must | user story em aprovação |
+| 6 | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort` | Must | TSD em aprovação |
 | 7 | RF-007 | Gravação da sugestão de status por requisito (3 valores) | Must | com RF-005 |
 | 8 | RF-009 | Ordenação da resposta priorizando não conformes | Must | não iniciada |
 | 9 | RF-008 | Endpoint de definição do status final do requisito | Must | não iniciada |
@@ -187,7 +187,7 @@ Recorte backend deste ciclo: `GET /analises` — devolve as análises do analist
 ### RF-005 — Processamento do PDF pela capacidade de análise por IA
 
 **Frentes:** Backend
-**Status:** user story em aprovação
+**Status:** TSD em aprovação
 
 > Ciclo backend agrupado: **RF-005 + RF-007** = "processar a análise e gerar a sugestão por requisito". User Story e critérios abaixo cobrem os dois.
 
@@ -211,12 +211,12 @@ Recorte backend deste ciclo:
 - Reinício do serviço com uma análise presa em `PROCESSANDO` → ela volta a ser processada.
 - Testes: unit do serviço de processamento (claim, sucesso, erro→rollback, base vazia) com `AnaliseIaPort`/prisma mockados; integração (criar via `POST /analises` → aguardar → `avaliacao_requisito` populada e `status = PRONTA_PARA_REVISAO`) contra Postgres embutido + `StubAdapter`.
 
-**Perguntas em aberto (para o usuário antes do Engenheiro)**
+**Decisões do ciclo (respostas do usuário "você decide" — 31/08/2026)**
 
-1. **Disparo do worker:** só varredura periódica (a cada N s), ou também disparo imediato logo após `POST /analises` (feedback mais rápido) + varredura como rede de segurança? Qual intervalo da varredura (proposta: 5 s)?
-2. **Reprocessar erro:** incluir `POST /analises/:id/reprocessar` (`ERRO_PROCESSAMENTO` → `PENDENTE`) já neste ciclo, ou deixar para depois (por ora, só via banco)?
-3. **Timeout da chamada à `AnaliseIaPort`:** qual valor (proposta: 120 s, configurável por `IA_TIMEOUT_MS`)?
-4. **Base de requisitos vazia** no momento do processamento: `ERRO_PROCESSAMENTO` com motivo "base de requisitos vazia" (proposta), ou `PRONTA_PARA_REVISAO` com zero avaliações?
+1. **Disparo:** imediato após `POST /analises` + varredura periódica (`PROCESSAMENTO_INTERVALO_MS`, default 5 s) + recuperação no boot (`PROCESSANDO` preso → `PENDENTE`). Flag `PROCESSAMENTO_AUTO` (default `true`) desliga o agendamento nos testes.
+2. **Reprocessar:** `POST /analises/:id/reprocessar` incluído — `ERRO_PROCESSAMENTO` → `PENDENTE` (`404`/`409`), dispara na hora.
+3. **Timeout:** `IA_TIMEOUT_MS` (default 120 000).
+4. **Base vazia:** 0 requisitos ativos → `ERRO_PROCESSAMENTO` com motivo "base de requisitos vazia".
 
 **TSD associada:** `docs/engineering/specs/006-processamento-analise.tsd.md` (a redigir pelo Engenheiro).
 
