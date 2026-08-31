@@ -61,16 +61,7 @@ export class AnalisesController {
 
   @Get(':id')
   async buscar(@Param('id') id: string) {
-    const a = await this.analises.buscarPorId(id);
-    return {
-      id: a.id,
-      nup: a.nup,
-      objeto: a.objeto,
-      status: a.status,
-      motivoErro: a.motivoErro,
-      iniciadaEm: a.iniciadaEm,
-      concluidaEm: a.concluidaEm,
-    };
+    return this.analises.abrir(id);
   }
 
   @Post(':id/reprocessar')

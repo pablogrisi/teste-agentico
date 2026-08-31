@@ -20,6 +20,7 @@ import {
   ValidacaoAnaliseService,
 } from './validacao-analise.service';
 import { ListarAnalisesParams } from './listar-analises.query';
+import { AnaliseDetalhe, montarAnaliseDetalhe } from './analise-detalhe';
 
 /** Campos de uma análise numa listagem (RF-002). */
 export type AnaliseResumo = Pick<
@@ -158,6 +159,16 @@ export class AnalisesService {
       throw new NotFoundException(`Análise ${id} não encontrada`);
     }
     return analise;
+  }
+
+  /** Leitura completa da análise para a tela de revisão (RF-009). */
+  async abrir(id: string): Promise<AnaliseDetalhe> {
+    const analise = await this.buscarPorId(id);
+    const avaliacoes = await this.prisma.avaliacaoRequisito.findMany({
+      where: { analiseId: id },
+      include: { requisito: true },
+    });
+    return montarAnaliseDetalhe(analise, avaliacoes);
   }
 
   async lerPdf(id: string): Promise<{ bytes: Buffer; nomeArquivo: string }> {
