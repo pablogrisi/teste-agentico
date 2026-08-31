@@ -3,7 +3,7 @@
 ---
 title: TSD - Listagem de análises (RF-002, backend)
 type: tsd
-status: implementada em branch (backend/rf-002-listagem) — Crítico aprovou (feedback aplicado), aguardando merge
+status: concluída — mergeada no main (57b170f)
 created: 31/08/2026 // Pablo Grisi (Engenheiro)
 updated: 31/08/2026 // Pablo Grisi
 related:
