@@ -230,3 +230,27 @@ Opções: 120s + base vazia → ERRO / 120s + base vazia → PRONTA com 0 avalia
 **Decisão da IA:** timeout **120s** (`IA_TIMEOUT_MS`, configurável); base de requisitos ativos vazia no momento do processamento → **`ERRO_PROCESSAMENTO`** com motivo "base de requisitos vazia" (PRD §9 trata base indisponível como erro).
 
 **Decisão:** Tudo aplicado à TSD-006.
+
+---
+
+## 31/08/2026 — Ciclo RF-009 (abrir análise), Agente PM
+
+**P1 — formato do endpoint:**
+Opções: enriquecer `GET /analises/:id` / `GET /analises/:id/avaliacoes` separado / você decide.
+**R1:** Você decide.
+**Decisão da IA:** **enriquecer** o `GET /analises/:id` — passa a incluir `avaliacoesPorArea` + `resumo` além dos campos atuais (adição de campos, compatível).
+
+**P2 — agrupamento no payload:**
+Opções: agrupado por área no backend / lista plana ordenada / você decide.
+**R2:** Você decide.
+**Decisão da IA:** **agrupado por área** — `avaliacoesPorArea: [{ area, itens: [...] }]`, áreas em ordem alfabética, cada grupo ordenado com não conformes primeiro depois `ordem`.
+
+**P3 — base da priorização "não conformes primeiro":**
+Opções: `statusFinal` / `statusSugeridoIa`.
+**R3:** `statusFinal` (parecer atual — a ordem reflete o estado da revisão).
+
+**P4 — resumo de contagens no payload:**
+Opções: sim (total, por status, verificados, obrigatórios pendentes) / não.
+**R4:** Sim.
+
+**Decisão:** Tudo aplicado à TSD-007.

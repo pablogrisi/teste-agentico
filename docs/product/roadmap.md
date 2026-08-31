@@ -40,7 +40,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 5 | RF-002 | Endpoint de listagem das análises do analista | Must | implementada |
 | 6 | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort` | Must | implementada |
 | 7 | RF-007 | Gravação da sugestão de status por requisito (3 valores) | Must | implementada com RF-005 |
-| 8 | RF-009 | Ordenação da resposta priorizando não conformes | Must | user story em aprovação |
+| 8 | RF-009 | Ordenação da resposta priorizando não conformes | Must | em construção |
 | 9 | RF-008 | Endpoint de definição do status final do requisito | Must | não iniciada |
 | 10 | RF-011 | Endpoint de marcação de "verificado" | Must | não iniciada |
 | 11 | RF-017 | Validação de comentário obrigatório nas ações de revisão | Must | não iniciada |
@@ -229,7 +229,7 @@ Recorte backend deste ciclo:
 ### RF-009 — Abertura da análise priorizando requisitos não conformes
 
 **Frentes:** Backend · Frontend
-**Status (backend):** user story em aprovação
+**Status (backend):** em construção
 **Status (frontend):** não iniciada
 
 **User Story**
@@ -247,12 +247,12 @@ Recorte backend deste ciclo: o endpoint de leitura da análise passa a devolver 
 - `404` se a análise não existir para o analista atual.
 - Testes: unit da montagem/ordenação/resumo; integração (criar → processar → abrir → conferir agrupamento, ordenação e contagens).
 
-**Perguntas em aberto (para o usuário antes do Engenheiro)**
+**Decisões do ciclo (respostas do usuário — 31/08/2026)**
 
-1. **Formato do endpoint:** enriquecer o `GET /analises/:id` atual (uma chamada só, passa a incluir `avaliacoes` + `resumo`), ou criar um `GET /analises/:id/avaliacoes` separado?
-2. **Agrupamento no backend:** devolver já agrupado por área (`{ ..., avaliacoesPorArea: [{ area, itens: [...] }] }`), ou lista plana ordenada com `area` em cada item e o frontend agrupa?
-3. **Base da priorização "não conformes primeiro":** ordenar por `statusFinal` (parecer atual, muda quando o analista edita) ou por `statusSugeridoIa` (o que a IA sugeriu, fixo)?
-4. **Resumo de contagens** no payload (total, `conforme`/`naoConforme`/`naoSeAplica`, `verificados`, `obrigatoriosPendentes`)?
+1. **Enriquecer o `GET /analises/:id`** — uma chamada, passa a incluir `avaliacoesPorArea` + `resumo`.
+2. **Agrupado por área no backend**: `avaliacoesPorArea: [{ area, itens: [...] }]`, áreas em ordem alfabética, cada grupo com não conformes primeiro depois `ordem`.
+3. Priorização por **`statusFinal`** (parecer atual).
+4. **Resumo** incluído: `total`, `conforme`, `naoConforme`, `naoSeAplica`, `verificados`, `obrigatoriosPendentes`.
 
 **TSD associada:** `docs/engineering/specs/007-abrir-analise.tsd.md` (a redigir pelo Engenheiro).
 
