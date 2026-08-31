@@ -179,3 +179,33 @@ Opções: permitir (reanálise é legítima) / bloquear ou avisar.
 **R4:** Permitir — sem constraint de unicidade.
 
 **Decisão:** Tudo aplicado à TSD-004.
+
+---
+
+## 31/08/2026 — Integração com o serviço de IA
+
+**P (do usuário):** "No final disso [dos ciclos de backend], vou conseguir abrir o produto localmente, enviar um PDF de licitação e visualizar a análise da IA?"
+**R (da IA):** O fluxo mecânico ponta a ponta sim (com os 7 ciclos de backend + a frente frontend). Mas a "análise da IA" seria a saída do `StubAdapter` (determinística, não lê o PDF) — para IA de verdade falta o `HttpAdapter` da `AnaliseIaPort` + o A-02, ou construir a chamada ao LLM aqui (fora do escopo como formulado). E os requisitos seriam o placeholder até P-07.
+**R (do usuário):** "Vamos deixar essa parte de integração com o serviço de IA pro final."
+**Decisão:** Integração com o serviço de IA real (`HttpAdapter` + A-02) adiada para o fim do MVP. Registrado no checkpoint §1/§5/§6.
+
+---
+
+## 31/08/2026 — Ciclo RF-002 (listagem de análises), Agente PM (P-06)
+
+**P1 — escopo da listagem no MVP:**
+Opções: contrato completo (busca + filtro status + ordenação + paginação) / mínimo (traz todas, data desc) / você decide.
+**R1:** Você decide.
+**Decisão da IA:** **contrato completo**. `GET /analises` com `q` (busca textual em `nup` + `objeto`, contém, sem distinção de maiúsculas), `status` (multi-seleção), `ordenarPor` (`iniciadaEm` | `nup`, default `iniciadaEm`), `ordem` (`asc` | `desc`, default `desc`), `pagina` + `tamanho`.
+
+**P2 — campos por linha:**
+Opções: `id, nup, objeto, status, iniciadaEm, concluidaEm` / + contagem de requisitos e de não conformes.
+**R2:** Você decide.
+**Decisão da IA:** `id, nup, objeto, status, iniciadaEm, concluidaEm`. Sem contagens (dependem de RF-007; entram depois).
+
+**P3 — paginação:**
+Opções: offset/limit (`pagina` + `tamanho`) / sem paginação.
+**R3:** Você decide.
+**Decisão da IA:** **offset/limit** — `pagina` (1-based, default 1), `tamanho` (default 20, máx 100). Resposta: `{ itens, total, pagina, tamanho }`.
+
+**Decisão:** P-06 fechado; tudo aplicado à TSD-005.

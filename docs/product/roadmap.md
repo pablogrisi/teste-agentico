@@ -37,7 +37,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 2 | RF-001 | Endpoint de criação de análise (NUP, objeto, PDF) | Must | implementada |
 | 3 | RF-004 | Recebimento de upload manual de PDF (multipart) | Must | implementada com RF-001 |
 | 4 | RF-018 | Persistência do PDF de entrada associada à análise | Must | implementada com RF-001 |
-| 5 | RF-002 | Endpoint de listagem das análises do analista | Must | user story em aprovação |
+| 5 | RF-002 | Endpoint de listagem das análises do analista | Must | em construção |
 | 6 | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort` | Must | não iniciada |
 | 7 | RF-007 | Gravação da sugestão de status por requisito (3 valores) | Must | não iniciada |
 | 8 | RF-009 | Ordenação da resposta priorizando não conformes | Must | não iniciada |
@@ -159,7 +159,7 @@ Recorte backend deste ciclo:
 ### RF-002 — Listagem das análises do analista
 
 **Frentes:** Backend · Frontend
-**Status (backend):** user story em aprovação
+**Status (backend):** em construção
 **Status (frontend):** não iniciada
 
 **User Story**
@@ -176,11 +176,11 @@ Recorte backend deste ciclo: `GET /analises` — devolve as análises do analist
 - Estado vazio: quando o analista não tem análises, a resposta é uma lista vazia (o texto de orientação é da frente frontend).
 - Testes: unit do serviço de listagem (montagem do filtro/ordenação); integração (criar N análises → listar → conferir filtro, ordenação e paginação).
 
-**Perguntas em aberto (P-06 — para o usuário antes do Engenheiro)**
+**Decisões do ciclo (P-06 fechado, respostas do usuário "você decide" — 31/08/2026)**
 
-1. Escopo da listagem no MVP: contrato completo (busca textual + filtro por status + ordenação + paginação) ou mínimo (traz todas do analista, ordenadas por data desc, sem mais nada)?
-2. Campos por linha: `id`, `nup`, `objeto`, `status`, `iniciadaEm`, `concluidaEm` bastam? Ou incluir também contagem de requisitos / de não conformes (isso depende de RF-007 existir — antes disso viria nulo/ausente)?
-3. Se houver paginação: offset/limit (`pagina` + `tamanho`, default 20, máx 100)?
+1. **Contrato completo.** `GET /analises` com: `q` (busca em `nup` + `objeto`, contém, case-insensitive), `status` (multi-seleção), `ordenarPor` (`iniciadaEm` default | `nup`), `ordem` (`asc` | `desc` default), `pagina` (1-based, default 1) + `tamanho` (default 20, máx 100).
+2. **Campos por linha:** `id`, `nup`, `objeto`, `status`, `iniciadaEm`, `concluidaEm`. Sem contagens de requisitos (dependem de RF-007).
+3. **Resposta:** `{ itens: [...], total, pagina, tamanho }`.
 
 **TSD associada:** `docs/engineering/specs/005-listagem-analises.tsd.md` (a redigir pelo Engenheiro).
 
