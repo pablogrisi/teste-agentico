@@ -3,7 +3,7 @@
 ---
 title: TSD - Base fixa de requisitos (RF-006, backend)
 type: tsd
-status: draft
+status: implementada em branch (backend/tsd-001-fundacao-tecnica) — em validação
 created: 31/08/2026 // Pablo Grisi (Engenheiro)
 updated: 31/08/2026 // Pablo Grisi
 related:

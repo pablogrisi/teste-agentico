@@ -20,6 +20,22 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 31/08/2026 — RF-006 / TSD-003: base fixa de requisitos (backend)
+
+Contexto: pós-TSD-001, usuário pediu "siga com o processo" e commits na branch de backend. Ciclo completo de RF-006 (recorte backend) na branch `backend/tsd-001-fundacao-tecnica`.
+
+Papéis:
+- **PM**: confirmou RF-006 como início; rascunhou User Story + critérios no roadmap; 5 perguntas ao usuário. Respostas aplicadas: seed via importador de arquivo externo (não lista em código); `norma_referencia` estruturada; sem coluna de versão (imutabilidade + `ativo=false`); `area` como campo flexível, não enum; sem endpoint HTTP neste slice. `obrigatorio` decidido imutável (efeito normativo).
+- **Engenheiro**: `docs/engineering/specs/003-base-fixa-requisitos.tsd.md` (aprovada pelo usuário).
+- **Dev**: modelo Prisma `Requisito` + migration `20260831010000_base_fixa_requisitos`; `src/requisitos/` (areas allowlist, importador `parse`/`validar`/`importarRequisitos` transacional, `ImportadorRequisitosService`, `RequisitosService.listarAtivos()`); `prisma/seed.ts` + `seed-data/requisitos.csv` (placeholder 12 itens); dep `csv-parse`; `test:e2e` passou a cobrir `test/integration/`. 4 specs unit novas.
+- **Testes (mecânico)**: `lint` ✅ · `typecheck` ✅ · `prisma validate` ✅ · `test` ✅ 23/23 (8 suites) · `build` ✅ · `test:e2e` ⛔ (health + integração) — sem Docker/Postgres nesta máquina (`Can't reach database server at localhost:5432`).
+- **Crítico**: aprovado; todos os critérios da TSD-003 atendidos no código e nos unitários; pendência = rodar os testes de integração contra Postgres. Observações menores: aviso de deprecação `package.json#prisma`; `ImportadorRequisitosService` sem consumidor ainda.
+- **Documentador**: checkpoint §1/§3.1/§4/§7, SDD §8 (linha `requisito`), roadmap (RF-006 backend → `em validação`), `questoes-abertas.md` (A-03 fechada).
+
+Decisões: ver linhas novas no checkpoint §4. Nada de merge na `main` até a bateria com Postgres passar.
+
+Pendências: `docker compose up -d db && npm run prisma:migrate && npm run seed && npm run test:e2e`; depois fechar TSD-001 + RF-006 e mergear; abrir próximo ciclo backend (RF-001+RF-004+RF-018).
+
 ## 31/08/2026 — TSD-001: implementação da fundação técnica do backend
 
 Contexto: TSD-001 aprovada. Usuário pediu para implementar o backend numa branch separada.
