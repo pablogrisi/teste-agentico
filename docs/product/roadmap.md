@@ -37,7 +37,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 2 | RF-001 | Endpoint de criação de análise (NUP, objeto, PDF) | Must | implementada |
 | 3 | RF-004 | Recebimento de upload manual de PDF (multipart) | Must | implementada com RF-001 |
 | 4 | RF-018 | Persistência do PDF de entrada associada à análise | Must | implementada com RF-001 |
-| 5 | RF-002 | Endpoint de listagem das análises do analista | Must | não iniciada |
+| 5 | RF-002 | Endpoint de listagem das análises do analista | Must | user story em aprovação |
 | 6 | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort` | Must | não iniciada |
 | 7 | RF-007 | Gravação da sugestão de status por requisito (3 valores) | Must | não iniciada |
 | 8 | RF-009 | Ordenação da resposta priorizando não conformes | Must | não iniciada |
@@ -159,8 +159,30 @@ Recorte backend deste ciclo:
 ### RF-002 — Listagem das análises do analista
 
 **Frentes:** Backend · Frontend
-**Status (backend):** não iniciada
+**Status (backend):** user story em aprovação
 **Status (frontend):** não iniciada
+
+**User Story**
+
+Como analista técnico, quero ver a lista das análises que criei, com identificação suficiente e o status de cada uma, para reabrir a que eu precisar e acompanhar o andamento.
+
+Recorte backend deste ciclo: `GET /analises` — devolve as análises do analista atual, com busca/filtro/ordenação/paginação a definir (P-06). Sem alteração no modelo `Analise`. Sem a tela (frente frontend).
+
+**Critérios de aceite**
+
+- `GET /analises` devolve apenas as análises do analista atual (query já filtra por `analista_id`).
+- Cada item traz identificação suficiente para reabrir a análise e mostrar seu estado (o conjunto exato de campos sai de P-06).
+- Busca, filtro por status, ordenação e paginação conforme o contrato aprovado em P-06.
+- Estado vazio: quando o analista não tem análises, a resposta é uma lista vazia (o texto de orientação é da frente frontend).
+- Testes: unit do serviço de listagem (montagem do filtro/ordenação); integração (criar N análises → listar → conferir filtro, ordenação e paginação).
+
+**Perguntas em aberto (P-06 — para o usuário antes do Engenheiro)**
+
+1. Escopo da listagem no MVP: contrato completo (busca textual + filtro por status + ordenação + paginação) ou mínimo (traz todas do analista, ordenadas por data desc, sem mais nada)?
+2. Campos por linha: `id`, `nup`, `objeto`, `status`, `iniciadaEm`, `concluidaEm` bastam? Ou incluir também contagem de requisitos / de não conformes (isso depende de RF-007 existir — antes disso viria nulo/ausente)?
+3. Se houver paginação: offset/limit (`pagina` + `tamanho`, default 20, máx 100)?
+
+**TSD associada:** `docs/engineering/specs/005-listagem-analises.tsd.md` (a redigir pelo Engenheiro).
 
 ### RF-005 — Processamento do PDF pela capacidade de análise por IA
 
