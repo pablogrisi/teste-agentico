@@ -20,6 +20,27 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 31/08/2026 — Infra de teste: PostgreSQL embutido (resolve pendência de e2e)
+
+Contexto: usuário perguntou se dava pra instalar Docker nesta máquina. Não dá — sem WSL2, sem privilégio de admin, e Docker Desktop mexe em config de sistema/virtualização (fora do que a IA deve fazer). Alternativa implementada para destravar `test:e2e` sem Docker.
+
+Alterações (`backend/`):
+- dep dev `embedded-postgres` (só publica betas — `18.4.0-beta.17`; aceito por ser infra de teste, com teardown blindado).
+- `test/embedded-postgres.globalSetup.ts`: sobe um PostgreSQL self-contained numa porta dedicada (54329), aplica `prisma migrate deploy`, grava um handle em `os.tmpdir()`. `E2E_EXTERNAL_DB=true` + `DATABASE_URL` pula o embutido (CI com serviço de Postgres).
+- `test/embedded-postgres.globalTeardown.ts`: mata o processo pelo `postmaster.pid` (hard kill cross-platform — `taskkill /F /T` no Windows, `SIGKILL` no resto), com `pg.stop()` como fallback; limpa o tmp dir com retries. Nunca trava, nunca falha a run.
+- `test/embedded-postgres.d.ts`: tipos mínimos (pacote é ESM-only sem campo `types`; `moduleResolution: node` clássico não acha os `.d.ts`).
+- `test/jest-e2e.json`: `globalSetup`/`globalTeardown` + `testTimeout` 30s. `test:e2e` roda com `--forceExit`.
+- `setup-e2e-env.ts`: `DATABASE_URL` sai daqui (quem define é o globalSetup).
+- `prisma/migrations/20260831010000_base_fixa_requisitos/migration.sql`: removida uma linha `warn ...` do Prisma que tinha vazado no arquivo pelo `>` de stdout na autoria (causava `syntax error at or near "warn"` no `migrate deploy`).
+
+Validação (Windows, sem Docker):
+- `npm run ci` ✅ (lint, typecheck, prisma validate, `test` 23/23, build)
+- `npm run test:e2e` ✅ 5/5 (`health.e2e-spec` + `requisitos-importador.integration-spec`), rodado 2× seguidas (idempotência de porta/dir), sem processos ou tmp dirs órfãos.
+
+Efeito: a pendência de ambiente carregada por TSD-001 e TSD-003 está **resolvida**. Ambas passam a bateria completa; falta só o sign-off humano e o merge na `main`. Docs atualizadas: `quality-gates.md`, `context-map.md`, `backend/README.md`, checkpoint, TSD-001 §9, TSD-003 §7.1/§9.
+
+Follow-up aberto: migrar `package.json#prisma` para `prisma.config.ts` antes do Prisma 7 (hoje só um warning).
+
 ## 31/08/2026 — RF-006 / TSD-003: base fixa de requisitos (backend)
 
 Contexto: pós-TSD-001, usuário pediu "siga com o processo" e commits na branch de backend. Ciclo completo de RF-006 (recorte backend) na branch `backend/tsd-001-fundacao-tecnica`.

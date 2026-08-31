@@ -14,16 +14,16 @@ Fundação percorrida (`.ai-dev/bootstrap.md`): PRD e SDD aprovados, `questoes-a
 
 Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJS, Pablo) e `frontend/` (Next.js, Vinicius), método e docs compartilhados na raiz. Cada frente roda seu próprio ciclo de seis papéis.
 
-- **TSD-001** (`backend/`) — implementada na branch `backend/tsd-001-fundacao-tecnica`. Crítico aprovou. Pendente: `test:e2e` com Postgres.
-- **RF-006 / TSD-003** (base fixa de requisitos, backend) — ciclo completo na mesma branch: PM → Engenheiro → Dev → Testes → Crítico aprovou. Pendente: testes de integração com Postgres. Roadmap: `em validação`.
+- **TSD-001** (`backend/`) — implementada na branch `backend/tsd-001-fundacao-tecnica`. **Toda a bateria passa, incluindo `test:e2e`** (PostgreSQL embutido, sem Docker). Crítico aprovou. Pronta para merge na `main` após sign-off humano.
+- **RF-006 / TSD-003** (base fixa de requisitos, backend) — ciclo completo na mesma branch: PM → Engenheiro → Dev → Testes → Crítico aprovou. Testes de integração (importador) **passando** contra o Postgres embutido. Pronta para fechar como `implementada`.
 - **TSD-002** (`frontend/`) — aprovada; **não implementada**. Por Vinicius, em branch a partir da `main`.
-- **Nenhum merge na `main`** até a bateria com Postgres rodar verde.
+- Infra de teste: `test:e2e` sobe/derruba um PostgreSQL embutido (`embedded-postgres`) — sem dependência de Docker para a bateria de testes.
 
 ## 2. Spec ativa
 
-- Spec ativa: `docs/engineering/specs/001-fundacao-tecnica.tsd.md` (backend) — implementada na branch `backend/tsd-001-fundacao-tecnica`, em validação.
-- Spec candidata aguardando implementação: `docs/engineering/specs/002-fundacao-frontend.tsd.md` (frontend).
-- Última spec concluída: nenhuma
+- Branch `backend/tsd-001-fundacao-tecnica`: TSD-001 (fundação) e TSD-003 (RF-006) implementadas e com a bateria completa verde (`npm run ci` + `npm run test:e2e`, sem Docker). Aguardando sign-off humano + merge na `main`.
+- Spec candidata aguardando implementação: `docs/engineering/specs/002-fundacao-frontend.tsd.md` (frontend, por Vinicius).
+- Última spec concluída: nenhuma (fechamento formal de TSD-001/TSD-003 depende do merge).
 
 ## 3. Specs concluídas
 
@@ -33,16 +33,16 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 ## 3.1 Specs em validação
 
-| Spec | Branch | Resultado da validação mecânica |
+| Spec | Branch | Resultado da validação mecânica (31/08/2026, Windows, sem Docker) |
 |---|---|---|
-| TSD-001 — Fundação técnica do backend | `backend/tsd-001-fundacao-tecnica` | `npm run lint` ✅ · `npm run typecheck` ✅ · `npx prisma validate` ✅ · `npm run test` ✅ (8 testes, 4 suites) · `npm run build` ✅ · `npm run test:contract` ✅ (vazio) · `npm run test:e2e` ⛔ não executável nesta máquina (sem Docker/Postgres) — `PrismaClientInitializationError: Can't reach database server at localhost:5432`. Pendência registrada, não é defeito de código (TSD-001 §9). |
-| TSD-003 — Base fixa de requisitos (RF-006, backend) | `backend/tsd-001-fundacao-tecnica` | `npm run lint` ✅ · `npm run typecheck` ✅ · `npx prisma validate` ✅ · `npm run test` ✅ (**23** testes, 8 suites) · `npm run build` ✅ · `npm run test:e2e` ⛔ (health e2e + `requisitos-importador.integration-spec`) — mesmo bloqueio de Postgres. Testes de integração escritos, não executados. |
+| TSD-001 — Fundação técnica do backend | `backend/tsd-001-fundacao-tecnica` | `npm run ci` ✅ (lint · typecheck · prisma validate · **test 23/23** · build) · `npm run test:contract` ✅ (vazio) · **`npm run test:e2e` ✅ 5/5** (health e2e + integração), PostgreSQL embutido, sem processos/tmp órfãos. |
+| TSD-003 — Base fixa de requisitos (RF-006, backend) | `backend/tsd-001-fundacao-tecnica` | Coberto pela mesma bateria acima. `requisitos-importador.integration-spec` ✅ (idempotência, rollback transacional em conflito de campo imutável, ordenação de `listarAtivos`). |
 
-**Crítico — TSD-001 (31/08/2026):** aprovado, com **uma pendência carregada**. Escopo cumprido, sem vazamento de escopo de produto. Único critério sem evidência: `test:e2e` verde contra Postgres real, antes do merge na `main`. Observações menores: leve duplicação de defaults entre `configuration.ts` e `env.validation.ts`; `STATUS_REQUISITO` ainda não usado (seam para RF-007).
+**Crítico — TSD-001 (31/08/2026):** **aprovado**. Escopo cumprido, sem vazamento de escopo de produto. Toda a bateria passa, incluindo `test:e2e` (a pendência de ambiente foi resolvida com PostgreSQL embutido). Observações menores não bloqueantes: leve duplicação de defaults entre `configuration.ts` e `env.validation.ts`; `STATUS_REQUISITO` ainda não usado (seam para RF-007); `package.json#prisma` gera aviso de deprecação (migrar para `prisma.config.ts` em algum momento antes do Prisma 7).
 
-**Crítico — RF-006 / TSD-003 (31/08/2026):** aprovado, mesma pendência de ambiente. Todos os critérios de aceite da TSD-003 atendidos no código e nos testes unitários (23/23): modelo + migration, `area` como string com allowlist (não enum), importador de CSV com imutabilidade de `titulo`/`descricao`/`norma*`/`obrigatorio` e abort transacional, `RequisitosService.listarAtivos()`, CSV placeholder (12 itens), sem endpoint HTTP, sem outra tabela. Os testes de integração (idempotência, rollback, ordenação) exigem Postgres e ficam pendentes de execução. Observações menores: `package.json#prisma` gera aviso de deprecação (Prisma 7 pedirá `prisma.config.ts` — follow-up); `ImportadorRequisitosService` ainda sem consumidor (seam intencional; o seed usa a função pura); `test/jest-e2e.json` passou a cobrir `test/integration/` (correção alinhada ao `quality-gates.md`).
+**Crítico — RF-006 / TSD-003 (31/08/2026):** **aprovado**. Todos os critérios de aceite da TSD-003 atendidos, com evidência: modelo + migration, `area` como string com allowlist (não enum), importador de CSV com imutabilidade de `titulo`/`descricao`/`norma*`/`obrigatorio` e abort transacional, `RequisitosService.listarAtivos()`, CSV placeholder (12 itens), sem endpoint HTTP, sem outra tabela. Testes de integração (idempotência, rollback transacional, ordenação) **executados e verdes** contra Postgres embutido. Observações menores: `package.json#prisma` gera aviso de deprecação (follow-up: `prisma.config.ts`); `ImportadorRequisitosService` ainda sem consumidor (seam intencional; o seed usa a função pura); `test/jest-e2e.json` passou a cobrir `test/integration/` (correção alinhada ao `quality-gates.md`); `migration.sql` teve uma linha de warning do Prisma removida (tinha vazado pelo redirect de stdout na autoria).
 
-**Documentador (31/08/2026):** TSD-001 e RF-006/TSD-003 implementados na branch `backend/tsd-001-fundacao-tecnica`, aprovados pelo Crítico, **pendentes da bateria `test:e2e` contra Postgres**. Nenhum merge na `main` até isso rodar verde. SDD §8 atualizado (linha `requisito`). `questoes-abertas.md`: A-03 fechada, P-04/P-07 anotadas com a direção do ciclo.
+**Documentador (31/08/2026):** TSD-001 e RF-006/TSD-003 implementados e **totalmente validados** (bateria completa verde, sem Docker) na branch `backend/tsd-001-fundacao-tecnica`, aprovados pelo Crítico. Falta só o sign-off humano e o merge na `main`. SDD §8 atualizado (linha `requisito`); `quality-gates.md`/`context-map.md`/`backend/README.md` atualizados (Postgres embutido no `test:e2e`); `questoes-abertas.md` A-03 fechada.
 
 ## 4. Decisões relevantes
 
@@ -61,14 +61,16 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 | Frontend: Next.js + Vitest + RTL; camada de dados atrás de seam, fixtures até haver contrato por RF | TSD-002 |
 | RF-006: base de requisitos por importador de arquivo externo (CSV), não lista em código | `roadmap.md` RF-006; TSD-003 |
 | RF-006: `area` é campo livre com allowlist (não enum); `norma_referencia` estruturada; sem coluna de versão (imutabilidade + `ativo=false`); `titulo`/`descricao`/`norma*`/`obrigatorio` imutáveis, `ordem`/`ativo` mutáveis | TSD-003; `questoes-abertas.md` A-03 |
+| Testes de integração/e2e rodam com PostgreSQL embutido (`embedded-postgres`), sem Docker; `E2E_EXTERNAL_DB` para banco externo na CI | `backend/test/embedded-postgres.globalSetup.ts`; `quality-gates.md` |
 
 ## 5. Pendências
 
-- [ ] TSD-001: rodar `npm run test:e2e` numa máquina com Docker/Postgres e registrar o resultado (gap conhecido — TSD-001 §9).
-- [ ] TSD-001: revisão do Crítico contra a TSD; se aprovada, Documentador fecha o ciclo e o merge de `backend/tsd-001-fundacao-tecnica` na `main`.
+- [x] `test:e2e` verde (TSD-001 health + TSD-003 integração) — resolvido com PostgreSQL embutido, sem Docker.
+- [ ] Sign-off humano de TSD-001 + RF-006 e **merge de `backend/tsd-001-fundacao-tecnica` na `main`**.
+- [ ] Push da branch de backend para o GitHub (quando o usuário autorizar).
 - [ ] Implementar a TSD-002 (frontend) — aprovada; por Vinicius, em branch a partir da `main`.
-- [x] Subir a fundação (bootstrap) no GitHub para o handoff com o Vinicius — feito (commit na `main`).
-- [ ] Questões abertas de arquitetura que afetam as primeiras features: A-02 (contrato da IA), A-03/P-07 (base de requisitos), A-05/P-09 (armazenamento do PDF). Ver `docs/product/questoes-abertas.md`.
+- [ ] Follow-up: migrar `package.json#prisma` para `prisma.config.ts` antes do Prisma 7 (só um aviso hoje).
+- [ ] Questões abertas de arquitetura que afetam as próximas features: A-02 (contrato da IA), P-07 (lista real de requisitos), A-05/P-09 (armazenamento do PDF). Ver `docs/product/questoes-abertas.md`.
 - [ ] Confirmar se `docs/licia-analisadora-product-discovery.md` está versionado neste repo (citado no PRD).
 
 ## 6. Riscos / pontos de atenção
@@ -80,8 +82,8 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 ## 7. Próximo passo recomendado
 
-1. **Rodar a bateria com Postgres** numa máquina com Docker: `cd backend && docker compose up -d db && npm ci && npm run prisma:migrate && npm run seed && npm run test:e2e`. Cobre a pendência da TSD-001 (health e2e) **e** da TSD-003 (integração do importador). Registrar o resultado no checkpoint/audit.
-2. Com a bateria verde: fechar formalmente TSD-001 e RF-006 (Documentador marca RF-006 como `implementada` no roadmap) e mergear `backend/tsd-001-fundacao-tecnica` na `main`.
+1. **Sign-off humano** de TSD-001 + RF-006 (bateria completa já verde: `npm run ci` + `npm run test:e2e`, sem Docker). Marcar RF-006 como `implementada` no roadmap.
+2. Push da branch `backend/tsd-001-fundacao-tecnica` e merge na `main`.
 3. **Próximo ciclo backend:** RF-001 + RF-004 + RF-018 (criar análise com PDF persistido) — Agente PM abre.
 4. Vinicius: branch a partir de `main`, implementar a TSD-002 em `frontend/`.
 

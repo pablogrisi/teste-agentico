@@ -3,7 +3,7 @@
 ---
 title: TSD - Fundação técnica do serviço LicIA Analisadora
 type: tsd
-status: implementada em branch (backend/tsd-001-fundacao-tecnica) — em validação
+status: implementada em branch (backend/tsd-001-fundacao-tecnica) — bateria completa verde, aguardando merge
 created: 31/08/2026 // Pablo Grisi
 updated: 31/08/2026 // Pablo Grisi
 related:
@@ -136,7 +136,7 @@ npm run build
 ## 9. Riscos e decisões abertas
 
 - **Local do código:** decidido — serviço backend em `backend/` (monorepo; `frontend/` é a outra frente, TSD-002). Sem gerenciador de workspace nesta slice.
-- **`test:e2e` no CI** depende de ter um PostgreSQL no runner; se não houver de imediato, rodar e2e só localmente e registrar a lacuna (não marcar como "não se aplica").
+- **`test:e2e`** — resolvido na entrega com PostgreSQL **embutido** (`embedded-postgres`), sem Docker: `test/embedded-postgres.globalSetup.ts` sobe e `globalTeardown` derruba. `E2E_EXTERNAL_DB=true` + `DATABASE_URL` aponta para um banco externo (CI). Bateria verde em 31/08/2026 (Windows, sem Docker).
 - **Versão do Node / gerenciador de pacotes** (npm vs. pnpm): assumir Node LTS 20+ e npm salvo indicação contrária; fixar com `.nvmrc` / `engines`. A escolha deve ser a mesma nas duas frentes — alinhar com a TSD-002.
 - **Contrato de API para o frontend:** não é escopo desta slice. Cada RF de backend define seu contrato REST na TSD do RF; a TSD-002 e os ciclos de frontend consomem. Até lá, o frontend trabalha com fixtures.
 - Não fecha nenhuma questão de `questoes-abertas.md`; apenas cria os seams para A-02, A-05 e P-10 serem endereçados sem retrabalho estrutural.

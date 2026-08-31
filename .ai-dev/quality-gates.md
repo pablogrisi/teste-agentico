@@ -9,7 +9,7 @@ O Agente Engenheiro declara, por TSD (seção 7.1 de `.ai-dev/templates/technica
 | Tipo | O que prova | O que NÃO prova | Comando/local neste projeto |
 |---|---|---|---|
 | Unitário | Lógica isolada está correta, com dependências mockadas. | Que os módulos reais realmente conversam entre si, ou que uma dependência externa real se comporta como o mock assume. | Jest (`npm run test`) — serviços de domínio com portas mockadas. Local: `test/unit/` ou `*.spec.ts` ao lado do código. |
-| Integração | Módulos/camadas reais funcionam juntos (ex.: aplicação real contra banco de teste). | Que um serviço externo que seu time não controla continua compatível. | Jest + Supertest contra a app NestJS real e um PostgreSQL de teste (Docker ou Testcontainers). Usa o `StubAdapter` da `AnaliseIaPort`. Comando: `npm run test:e2e`. Local: `test/integration/`. |
+| Integração | Módulos/camadas reais funcionam juntos (ex.: aplicação real contra banco de teste). | Que um serviço externo que seu time não controla continua compatível. | Jest + Supertest contra a app NestJS real e um **PostgreSQL embutido** (`embedded-postgres`, sem Docker — o `globalSetup` sobe e o `globalTeardown` derruba). Usa o `StubAdapter` da `AnaliseIaPort`. Comando: `npm run test:e2e`. Local: `test/integration/` e `test/e2e/`. Para usar banco externo (CI): `E2E_EXTERNAL_DB=true` + `DATABASE_URL`. |
 | Contrato | O formato de entrada/saída entre dois serviços que não sobem juntos no mesmo teste continua compatível. | Que o serviço remoto se comporta corretamente além do formato — só a forma, não o conteúdo. | Teste de contrato da `AnaliseIaPort` (e, quando A-02 fechar, do serviço de IA real). Comando: `npm run test:contract`. Local: `test/contract/`. |
 | Smoke/validação manual contra dependência externa real | Que a integração funciona de fato contra o sistema real (custo, latência, comportamento real da API). | Não substitui os outros três — é caro/lento demais para rodar toda hora, então não cobre regressão contínua. | Roteiro manual documentado na TSD: uma análise real ponta a ponta contra a **capacidade de IA real**, quando disponível. Sem comando automatizado; registrar evidência no relatório de sessão. |
 
@@ -44,7 +44,7 @@ npx prisma migrate deploy   # aplica migrations no banco alvo
 npx prisma validate         # valida o schema.prisma
 ```
 
-Proporcionalidade: mudança só de domínio isolado pode exigir apenas `lint` + `typecheck` + `test`; mudança que toca API, banco ou portas exige também `test:e2e` (e `test:contract` quando a porta muda). Esses comandos passam a existir com a **TSD-001**.
+Proporcionalidade: mudança só de domínio isolado pode exigir apenas `lint` + `typecheck` + `test`; mudança que toca API, banco ou portas exige também `test:e2e` (e `test:contract` quando a porta muda). Esses comandos passam a existir com a **TSD-001**. `test:e2e` **não exige Docker** — usa PostgreSQL embutido.
 
 ### Frontend (`frontend/`) — Next.js + TypeScript
 

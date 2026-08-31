@@ -48,7 +48,7 @@ Leia também:
 ## Quando a demanda afetar testes
 
 - `.ai-dev/quality-gates.md` — comandos reais por frente e o que cada tipo de teste prova/não prova neste projeto.
-- **Backend** (`backend/`): runner **Jest** (`jest.config.ts` / seção `jest` no `package.json`), config e2e separada (`test/jest-e2e.json`), **Supertest** para a API real, PostgreSQL de teste (Docker Compose ou Testcontainers). Passa a existir com a TSD-001.
+- **Backend** (`backend/`): runner **Jest** (seção `jest` no `package.json` para unit; `test/jest-e2e.json` para e2e/integração), **Supertest** para a API real. `test:e2e` sobe um **PostgreSQL embutido** via `test/embedded-postgres.globalSetup.ts` (sem Docker); `E2E_EXTERNAL_DB=true` + `DATABASE_URL` usa um banco externo. Passa a existir com a TSD-001; a integração real do importador (RF-006) roda desde a TSD-003.
 - **Frontend** (`frontend/`): **Vitest + React Testing Library + jsdom** para teste de componente; slices de interface exigem também screenshots antes/depois vs. referência visual (`.ai-dev/visual-reference-workflow.md`). Passa a existir com a TSD-002.
 - Dependência externa cara/instável: a capacidade de análise por IA. Todo teste automatizado do backend usa o `StubAdapter` da `AnaliseIaPort`; o comportamento real só via smoke manual. O frontend trabalha com fixtures atrás da camada de dados até os contratos por RF existirem.
 

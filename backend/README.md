@@ -7,7 +7,7 @@ Stack: NestJS 11 · TypeScript · Prisma · PostgreSQL. Ver [`docs/architecture/
 ## Pré-requisitos
 
 - Node.js 20+ (ver [`../.nvmrc`](../.nvmrc))
-- Docker (para o PostgreSQL local via `docker compose`)
+- Docker **opcional** — só para rodar o serviço localmente (`docker compose up -d db`). Os testes (`npm run test:e2e`) **não** precisam de Docker: usam um PostgreSQL embutido.
 
 ## Rodando localmente
 
@@ -31,14 +31,16 @@ npm run start:dev
 | `npm run lint` | ESLint + Prettier |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run test` | Jest — testes unitários (`test/unit/`) |
-| `npm run test:e2e` | Jest + Supertest contra a app real + PostgreSQL (`test/e2e/`) |
+| `npm run test:e2e` | Jest + Supertest contra a app real + integração; sobe um PostgreSQL embutido (`test/e2e/`, `test/integration/`) |
 | `npm run test:contract` | Testes de contrato das portas (`test/contract/`, vazio na fundação) |
 | `npm run test:cov` | Cobertura (Jest) |
 | `npm run prisma:validate` | Valida `prisma/schema.prisma` |
 | `npm run prisma:migrate` | `prisma migrate deploy` |
+| `npm run seed` | Importa `prisma/seed-data/requisitos.csv` para a base |
+| `npm run seed:file -- <arquivo>` | Importa outro CSV de requisitos |
 | `npm run ci` | `lint` → `typecheck` → `prisma:validate` → `test` → `build` |
 
-`npm run test:e2e` exige o PostgreSQL do `docker compose` no ar.
+`npm run test:e2e` **não precisa de Docker**: `test/embedded-postgres.globalSetup.ts` baixa/sobe um PostgreSQL self-contained e o derruba ao final. Para apontar para um banco externo (ex.: serviço de Postgres da CI): `E2E_EXTERNAL_DB=true` e `DATABASE_URL=...`.
 
 ## Variáveis de ambiente
 

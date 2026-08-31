@@ -3,7 +3,7 @@
 ---
 title: TSD - Base fixa de requisitos (RF-006, backend)
 type: tsd
-status: implementada em branch (backend/tsd-001-fundacao-tecnica) — em validação
+status: implementada em branch (backend/tsd-001-fundacao-tecnica) — bateria completa verde, aguardando merge
 created: 31/08/2026 // Pablo Grisi (Engenheiro)
 updated: 31/08/2026 // Pablo Grisi
 related:
@@ -115,7 +115,7 @@ Cria a primeira tabela de domínio do backend — `requisito` — e o mecanismo 
 | Contrato | Não | Não há serviço externo nem contrato entre serviços neste slice. |
 | Smoke/validação manual contra dependência externa real | Não | Sem dependência externa real. |
 
-Pendência de ambiente: os testes de integração exigem PostgreSQL (mesmo gap da TSD-001 §9). Se o ambiente do Dev não tiver Docker, os unitários + `migrate diff` + build rodam, e os de integração ficam registrados como pendência a rodar numa máquina com banco — não podem ser marcados como "não se aplica".
+Ambiente: os testes de integração usam o **PostgreSQL embutido** configurado pela TSD-001 (`test/embedded-postgres.globalSetup.ts`) — rodam via `npm run test:e2e` sem Docker. Executados e verdes em 31/08/2026.
 
 ### 7.2 Comandos previstos
 
@@ -149,7 +149,7 @@ npm run seed                # popula o placeholder (requer PostgreSQL)
 
 - **Split imutável × mutável (decidido):** imutáveis pelo importador = `titulo`, `descricao`, `norma*` e `obrigatorio` (bloquear ou não a conclusão é efeito normativo → novo `codigo`). Mutáveis = `ordem` (display) e `ativo` (aposentadoria explícita).
 - **Formato do CSV:** cabeçalho fixo `codigo,area,titulo,descricao,obrigatorio,ordem,ativo,norma_lei,norma_artigo,norma_inciso,norma_paragrafo,norma_alinea`. Se a área jurídica for entregar a lista em Excel/outro layout, um conversor para esse CSV é trabalho de outro slice, não deste.
-- **Ambiente de teste sem PostgreSQL** (herdado da TSD-001 §9): os testes de integração deste slice dependem de banco.
+- **Ambiente de teste**: resolvido — PostgreSQL embutido (TSD-001), `npm run test:e2e` roda os testes de integração sem Docker.
 - **`area` como string livre:** aceita o risco de typo em troca de flexibilidade; mitigado pela allowlist na importação. Migrar para catálogo em tabela, se necessário, é um slice futuro.
 - Não altera nenhuma decisão do SDD além de relaxar o enum de `area` (§8) — o Documentador ajusta o SDD no fechamento.
 
