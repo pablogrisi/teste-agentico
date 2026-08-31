@@ -1,9 +1,3 @@
-warn The configuration property `package.json#prisma` is deprecated and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., `prisma.config.ts`).
-For more information, see: https://pris.ly/prisma-config
-
--- CreateSchema
-CREATE SCHEMA IF NOT EXISTS "public";
-
 -- CreateTable
 CREATE TABLE "requisito" (
     "id" UUID NOT NULL,
@@ -30,4 +24,3 @@ CREATE UNIQUE INDEX "requisito_codigo_key" ON "requisito"("codigo");
 
 -- CreateIndex
 CREATE INDEX "requisito_area_ordem_idx" ON "requisito"("area", "ordem");
-

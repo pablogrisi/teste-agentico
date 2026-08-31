@@ -4,6 +4,9 @@
   "testEnvironment": "node",
   "testRegex": "(e2e/.*\\.e2e-spec|integration/.*\\.integration-spec)\\.ts$",
   "setupFiles": ["<rootDir>/setup-e2e-env.ts"],
+  "globalSetup": "<rootDir>/embedded-postgres.globalSetup.ts",
+  "globalTeardown": "<rootDir>/embedded-postgres.globalTeardown.ts",
+  "testTimeout": 30000,
   "transform": {
     "^.+\\.(t|j)s$": ["ts-jest", { "tsconfig": "<rootDir>/../tsconfig.json" }]
   }
