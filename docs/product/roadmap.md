@@ -40,7 +40,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 5 | RF-002 | Endpoint de listagem das análises do analista | Must | implementada |
 | 6 | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort` | Must | implementada |
 | 7 | RF-007 | Gravação da sugestão de status por requisito (3 valores) | Must | implementada com RF-005 |
-| 8 | RF-009 | Ordenação da resposta priorizando não conformes | Must | não iniciada |
+| 8 | RF-009 | Ordenação da resposta priorizando não conformes | Must | user story em aprovação |
 | 9 | RF-008 | Endpoint de definição do status final do requisito | Must | não iniciada |
 | 10 | RF-011 | Endpoint de marcação de "verificado" | Must | não iniciada |
 | 11 | RF-017 | Validação de comentário obrigatório nas ações de revisão | Must | não iniciada |
@@ -229,8 +229,32 @@ Recorte backend deste ciclo:
 ### RF-009 — Abertura da análise priorizando requisitos não conformes
 
 **Frentes:** Backend · Frontend
-**Status (backend):** não iniciada
+**Status (backend):** user story em aprovação
 **Status (frontend):** não iniciada
+
+**User Story**
+
+Como analista técnico, quero abrir uma análise e ver os requisitos avaliados — com os não conformes em primeiro plano e um resumo do estado — para começar a revisão pelo que mais importa.
+
+Recorte backend deste ciclo: o endpoint de leitura da análise passa a devolver as avaliações (avaliação + dados do requisito), agrupadas por área e ordenadas priorizando não conformes, mais um resumo de contagens. Sem edição de parecer (RF-008/011/017), sem tela (frontend), sem entrega do PDF por página (RF-014).
+
+**Critérios de aceite**
+
+- Abrir uma análise `PRONTA_PARA_REVISAO` devolve, além dos campos atuais, a lista das avaliações — cada item com: `id` (da avaliação), `requisitoId`, `codigo`, `area`, `titulo`, `descricao`, `obrigatorio`, `ordem`, referência normativa, `statusSugeridoIa`, `statusFinal`, `verificado`, `comentario`, `paginaReferencia`.
+- As avaliações vêm agrupadas por área; dentro de cada área, os não conformes primeiro, depois pela `ordem` do requisito.
+- Vem também um resumo de contagens (total, por status, verificados, obrigatórios ainda não verificados).
+- Análise `PENDENTE`/`PROCESSANDO` → lista vazia + o status (o frontend mostra "processando"). `ERRO_PROCESSAMENTO` → lista vazia + `motivoErro`.
+- `404` se a análise não existir para o analista atual.
+- Testes: unit da montagem/ordenação/resumo; integração (criar → processar → abrir → conferir agrupamento, ordenação e contagens).
+
+**Perguntas em aberto (para o usuário antes do Engenheiro)**
+
+1. **Formato do endpoint:** enriquecer o `GET /analises/:id` atual (uma chamada só, passa a incluir `avaliacoes` + `resumo`), ou criar um `GET /analises/:id/avaliacoes` separado?
+2. **Agrupamento no backend:** devolver já agrupado por área (`{ ..., avaliacoesPorArea: [{ area, itens: [...] }] }`), ou lista plana ordenada com `area` em cada item e o frontend agrupa?
+3. **Base da priorização "não conformes primeiro":** ordenar por `statusFinal` (parecer atual, muda quando o analista edita) ou por `statusSugeridoIa` (o que a IA sugeriu, fixo)?
+4. **Resumo de contagens** no payload (total, `conforme`/`naoConforme`/`naoSeAplica`, `verificados`, `obrigatoriosPendentes`)?
+
+**TSD associada:** `docs/engineering/specs/007-abrir-analise.tsd.md` (a redigir pelo Engenheiro).
 
 ### RF-010 — Navegação livre entre seções e abas da análise
 
