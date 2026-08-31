@@ -1,0 +1,3 @@
+# Testes de contrato das portas (ex.: AnaliseIaPort) contra o adapter real.
+# Vazio na fundação — o primeiro entra quando a AnaliseIaPort ganhar HttpAdapter
+# (questoes-abertas.md A-02). O script `test:contract` roda com --passWithNoTests.

@@ -1,0 +1,6 @@
+-- Migração inicial da fundação técnica (TSD-001).
+--
+-- Intencionalmente sem tabelas de domínio: `analise`, `requisito` e
+-- `avaliacao_requisito` (SDD §8) entram nos ciclos dos RFs correspondentes.
+-- Esta migração existe apenas para inicializar o histórico do Prisma Migrate
+-- num banco limpo.

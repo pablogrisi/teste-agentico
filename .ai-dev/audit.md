@@ -20,6 +20,32 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 31/08/2026 — TSD-001: implementação da fundação técnica do backend
+
+Contexto: TSD-001 aprovada. Usuário pediu para implementar o backend numa branch separada.
+
+Branch: `backend/tsd-001-fundacao-tecnica` (a partir da `main`).
+
+Alterações:
+- Raiz: `.gitignore`, `.gitattributes` (LF), `.nvmrc` (20), `README.md` reescrito para o projeto (duas frentes); README do método movido para `.ai-dev/README.md` (via `git mv`).
+- `backend/`: projeto NestJS 11 + TypeScript (strict). `package.json` com scripts `lint`/`typecheck`/`test`/`test:e2e`/`test:contract`/`build`/`ci` e `prisma:*`. ESLint flat (`eslint.config.mjs`) + Prettier. `tsconfig(.build).json`, `nest-cli.json`.
+- Prisma: `schema.prisma` (datasource postgres, generator client, **sem tabelas de domínio**), migration inicial vazia + `migration_lock.toml`. `docker-compose.yml` com Postgres 16.
+- `src/`: `ConfigModule` global com `validateEnv` (falha no boot se faltar env obrigatória); `PrismaModule`/`PrismaService` (connect no boot, `healthCheck` = `SELECT 1`); `CoreModule` com as portas `AnaliseIaPort` e `ArmazenamentoPdfPort` (interfaces + tokens), adapters `AnaliseIaStubAdapter` (determinístico) e `ArmazenamentoPdfFilesystemAdapter`, e `AnalistaAtualProvider` (analista fixo por config); `HealthModule` (`GET /health` → 200 com `{status, db, timestamp}`); módulos de feature vazios `Analises/Requisitos/Processamento/Relatorio`. `main.ts` com `enableShutdownHooks`.
+- `test/`: `test/unit/` com 4 specs (health service, stub adapter, filesystem adapter, analista atual provider — 8 testes); `test/e2e/health.e2e-spec.ts` (Supertest); `test/integration/` e `test/contract/` vazios (`.gitkeep`); configs `jest-e2e.json` e `jest-contract.json`.
+
+Validações (rodadas de `backend/`):
+- `npm run lint` ✅ (após `--fix` de formatação Prettier)
+- `npm run typecheck` ✅
+- `npx prisma validate` ✅ · `npx prisma generate` ✅ (client v6.19.3)
+- `npm run test` ✅ — 8 testes, 4 suites
+- `npm run build` ✅
+- `npm run test:contract` ✅ (sem testes, `--passWithNoTests`)
+- `npm run test:e2e` ⛔ **não executável nesta máquina** — sem Docker/Postgres: `PrismaClientInitializationError: Can't reach database server at localhost:5432`. Não é defeito de código; TSD-001 §9 previu esse gap. Pendência aberta: rodar com Docker.
+
+Decisões: código do serviço em `backend/` (fecha a questão de local do código); sem gerenciador de workspace no monorepo (cada pacote isolado); `AnaliseIaPort` com `IA_ADAPTER=http` falhando explicitamente até existir adapter real (A-02).
+
+Pendências: e2e com Postgres; revisão do Crítico; merge da branch na `main` após fechamento do ciclo.
+
 ## 31/08/2026 — Fundação: bootstrap do método para LicIA Analisadora
 
 Contexto: repositório continha o Método Agentico v2 + um exemplo preenchido (PRD LicIA + protótipo visual) e nenhum `docs/engineering/checkpoint.md`. Usuário pediu para começar o projeto; confirmado que o projeto é a própria LicIA Analisadora. Seguido o roteiro de `.ai-dev/bootstrap.md`.

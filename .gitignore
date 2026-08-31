@@ -1,0 +1,34 @@
+# Dependências
+node_modules/
+
+# Builds
+dist/
+build/
+.next/
+out/
+
+# Testes / cobertura
+coverage/
+*.lcov
+
+# Prisma
+backend/prisma/*.db
+
+# Ambiente
+.env
+.env.local
+.env.*.local
+
+# Artefatos de armazenamento local do backend (PDFs de entrada em dev)
+backend/var/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operacional / editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.tsbuildinfo

@@ -1,0 +1,2 @@
+# Testes de integração (módulos/camadas reais contra o PostgreSQL de teste).
+# Vazio na fundação — o primeiro entra com a primeira feature que toca banco/API.

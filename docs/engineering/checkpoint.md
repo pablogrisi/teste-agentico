@@ -10,16 +10,17 @@ updated: 31/08/2026 // Pablo Grisi
 
 ## 1. Estado atual
 
-Fundação em andamento. O roteiro de `.ai-dev/bootstrap.md` foi percorrido: PRD revisado e aprovado, SDD aprovado, `questoes-abertas.md`, glossário, `quality-gates.md` e `context-map.md` preenchidos, decision record 001 (NestJS) registrado. **Nenhuma feature de produto implementada e nenhum código escrito ainda.**
+Fundação percorrida (`.ai-dev/bootstrap.md`): PRD e SDD aprovados, `questoes-abertas.md`, glossário, `quality-gates.md` e `context-map.md` preenchidos, decision record 001 (NestJS) registrado.
 
-O projeto foi organizado em **duas frentes paralelas dentro de um monorepo**: `backend/` (NestJS, Pablo) e `frontend/` (Next.js, Vinicius), com método e docs compartilhados na raiz. Cada frente roda seu próprio ciclo de seis papéis. Duas TSDs de fundação, independentes:
+Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJS, Pablo) e `frontend/` (Next.js, Vinicius), método e docs compartilhados na raiz. Cada frente roda seu próprio ciclo de seis papéis.
 
-- **TSD-001** (`backend/`) — aprovada; **não implementada** (decisão do usuário nesta sessão).
-- **TSD-002** (`frontend/`) — aprovada; **não implementada**. Implementação por Vinicius numa branch a partir da `main`.
+- **TSD-001** (`backend/`) — **implementada na branch `backend/tsd-001-fundacao-tecnica`**; validação mecânica rodada (lint/typecheck/prisma validate/unit/build ✅; `test:e2e` bloqueado por falta de Docker/Postgres nesta máquina). Aguardando revisão do Crítico + validação e2e com Postgres antes de fechar o ciclo e mergear.
+- **TSD-002** (`frontend/`) — aprovada; **não implementada**. Por Vinicius, em branch a partir da `main`.
 
 ## 2. Spec ativa
 
-- Specs candidatas (fundação, independentes, ambas aprovadas e não iniciadas): `docs/engineering/specs/001-fundacao-tecnica.tsd.md` (backend) e `docs/engineering/specs/002-fundacao-frontend.tsd.md` (frontend).
+- Spec ativa: `docs/engineering/specs/001-fundacao-tecnica.tsd.md` (backend) — implementada na branch `backend/tsd-001-fundacao-tecnica`, em validação.
+- Spec candidata aguardando implementação: `docs/engineering/specs/002-fundacao-frontend.tsd.md` (frontend).
 - Última spec concluída: nenhuma
 
 ## 3. Specs concluídas
@@ -27,6 +28,12 @@ O projeto foi organizado em **duas frentes paralelas dentro de um monorepo**: `b
 | Spec | Resultado | Validação |
 |---|---|---|
 | — | — | — |
+
+## 3.1 Specs em validação
+
+| Spec | Branch | Resultado da validação mecânica |
+|---|---|---|
+| TSD-001 — Fundação técnica do backend | `backend/tsd-001-fundacao-tecnica` | `npm run lint` ✅ · `npm run typecheck` ✅ · `npx prisma validate` ✅ · `npm run test` ✅ (8 testes, 4 suites) · `npm run build` ✅ · `npm run test:e2e` ⛔ não executável nesta máquina (sem Docker/Postgres) — `PrismaClientInitializationError: Can't reach database server at localhost:5432`. Pendência registrada, não é defeito de código (TSD-001 §9). |
 
 ## 4. Decisões relevantes
 
@@ -46,9 +53,10 @@ O projeto foi organizado em **duas frentes paralelas dentro de um monorepo**: `b
 
 ## 5. Pendências
 
-- [ ] Implementar a TSD-001 (backend) — aprovada; o usuário pediu para não implementar nesta sessão de fundação.
+- [ ] TSD-001: rodar `npm run test:e2e` numa máquina com Docker/Postgres e registrar o resultado (gap conhecido — TSD-001 §9).
+- [ ] TSD-001: revisão do Crítico contra a TSD; se aprovada, Documentador fecha o ciclo e o merge de `backend/tsd-001-fundacao-tecnica` na `main`.
 - [ ] Implementar a TSD-002 (frontend) — aprovada; por Vinicius, em branch a partir da `main`.
-- [x] Subir a fundação no GitHub para o handoff com o Vinicius — feito ao final desta sessão.
+- [x] Subir a fundação (bootstrap) no GitHub para o handoff com o Vinicius — feito (commit na `main`).
 - [ ] Questões abertas de arquitetura que afetam as primeiras features: A-02 (contrato da IA), A-03/P-07 (base de requisitos), A-05/P-09 (armazenamento do PDF). Ver `docs/product/questoes-abertas.md`.
 - [ ] Confirmar se `docs/licia-analisadora-product-discovery.md` está versionado neste repo (citado no PRD).
 
@@ -61,10 +69,11 @@ O projeto foi organizado em **duas frentes paralelas dentro de um monorepo**: `b
 
 ## 7. Próximo passo recomendado
 
-1. Aprovar a TSD-002.
-2. Commit da fundação e push para o GitHub (branch `main`), para o Vinicius partir dela.
-3. Pablo: implementar a TSD-001 em `backend/`. Vinicius: branch a partir de `main`, implementar a TSD-002 em `frontend/`.
-4. Após as duas fundações mergeadas e fechadas, a primeira feature real do roadmap entra no ciclo pelo Agente PM de cada frente (backend começa por RF-006; frontend por RF-002).
+1. Revisar (Crítico) a implementação da TSD-001 na branch `backend/tsd-001-fundacao-tecnica` contra a TSD.
+2. Rodar `cd backend && docker compose up -d db && npm ci && npm run prisma:migrate && npm run test:e2e` numa máquina com Docker, e registrar o resultado.
+3. Aprovado o Crítico e passando o e2e: Documentador fecha o ciclo da TSD-001, merge na `main`.
+4. Vinicius: branch a partir de `main`, implementar a TSD-002 em `frontend/`.
+5. Depois das duas fundações fechadas, a primeira feature real entra no ciclo pelo Agente PM de cada frente (backend por RF-006; frontend por RF-002).
 
 ## 8. Prompt de retomada
 

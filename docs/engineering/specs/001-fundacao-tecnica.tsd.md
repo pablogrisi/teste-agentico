@@ -3,7 +3,7 @@
 ---
 title: TSD - Fundação técnica do serviço LicIA Analisadora
 type: tsd
-status: aprovada — não implementada
+status: implementada em branch (backend/tsd-001-fundacao-tecnica) — em validação
 created: 31/08/2026 // Pablo Grisi
 updated: 31/08/2026 // Pablo Grisi
 related:

@@ -1,0 +1,23 @@
+# PostgreSQL local para desenvolvimento e testes (TSD-001).
+# Uso: docker compose up -d db
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: licia-analisadora-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: licia
+      POSTGRES_PASSWORD: licia
+      POSTGRES_DB: licia
+    ports:
+      - '5432:5432'
+    volumes:
+      - licia-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U licia -d licia']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  licia-db-data:
