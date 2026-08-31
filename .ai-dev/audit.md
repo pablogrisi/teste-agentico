@@ -20,6 +20,20 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 31/08/2026 — RF-009 / TSD-007: abrir análise (backend)
+
+Contexto: usuário mandou "faz o merge e abre o ciclo de RF-009". TSD-006 mergeada na `main` (`64b2909` fecha; `67ff89f` traz o código). Ciclo na branch `backend/rf-009-abrir-analise`.
+
+Papéis:
+- **PM**: 4 perguntas — statusFinal e resumo escolhidos pelo usuário; formato do endpoint e agrupamento "você decide" → IA: enriquecer `GET /analises/:id`, agrupado por área no backend. Registrado em `perguntas-e-respostas.md`.
+- **Engenheiro**: `docs/engineering/specs/007-abrir-analise.tsd.md`.
+- **Dev**: `src/analises/analise-detalhe.ts` (`montarAnaliseDetalhe` pura — agrupa por área alfabética, `NAO_CONFORME` por `statusFinal` primeiro depois `ordem`, `norma` estruturada, `resumo`); `AnalisesService.abrir` (buscarPorId + `findMany` com `include: requisito`); `GET /analises/:id` passa a devolver o `AnaliseDetalhe`. Contrato anterior preservado. +4 unit + 1 integração.
+- **Testes**: `npm run ci` ✅ (65 unit) · `npm run test:e2e` ✅ 24/24.
+- **Crítico**: aprovado, sem desvios. Menores: payload cresce com a base real (§9); método do controller ainda `buscar`.
+- **Documentador**: SDD §7 item 2 (payload de `GET /analises/:id`); checkpoint; roadmap RF-009 → `implementada` (branch).
+
+Estado: ciclo fechado, **branch aguardando sign-off + merge**. Próximo backend: RF-008 + RF-011 + RF-017 (revisão de requisito).
+
 ## 31/08/2026 — RF-005 + RF-007 / TSD-006: processamento da análise (backend)
 
 Contexto: usuário mandou "faz o merge e abre o ciclo de RF-005+RF-007". RF-002/TSD-005 mergeada na `main` (`ce30442` fecha; `57b170f` traz o código). Ciclo na branch `backend/rf-005-processamento`.

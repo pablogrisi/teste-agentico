@@ -3,7 +3,7 @@
 ---
 title: TSD - Abrir análise (RF-009, backend)
 type: tsd
-status: draft
+status: implementada em branch (backend/rf-009-abrir-analise) — Crítico aprovou, aguardando merge
 created: 31/08/2026 // Pablo Grisi (Engenheiro)
 updated: 31/08/2026 // Pablo Grisi
 related:
