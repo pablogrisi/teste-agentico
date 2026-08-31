@@ -3,7 +3,7 @@
 ---
 title: TSD - Processamento da análise (RF-005/RF-007, backend)
 type: tsd
-status: implementada em branch (backend/rf-005-processamento) — Crítico aprovou, aguardando merge
+status: concluída — mergeada no main (67ff89f)
 created: 31/08/2026 // Pablo Grisi (Engenheiro)
 updated: 31/08/2026 // Pablo Grisi
 related:
