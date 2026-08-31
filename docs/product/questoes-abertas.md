@@ -9,10 +9,10 @@
 | P-01 | Qual é o valor formal da análise concluída (apoio interno, recomendação operacional, outro enquadramento)? | PRD §12 | aberta |
 | P-02 | O modelo mínimo de auditoria do MVP (responsável, início, conclusão, status final por requisito) é suficiente, ou será necessário histórico detalhado de alterações humanas? | PRD §12, RF-013 | aberta |
 | P-03 | Em quais ações de revisão o comentário obrigatório deve ser exigido: confirmação da sugestão da IA, alteração de status, verificação de item técnico, ou todas? | PRD §12, RF-017 | aberta |
-| P-04 | Qual é a semântica definitiva de Checklist e Técnica? Até nova validação, permanecem áreas separadas e obrigatórias. | PRD §8, §12 | aberta |
+| P-04 | Qual é a semântica definitiva de Checklist e Técnica (tem status? é observação? é pass/fail)? Até nova validação, permanecem áreas separadas e obrigatórias. | PRD §8, §12 | aberta — modelagem: mesma tabela, `area` como campo flexível (não enum fixo), decidido no ciclo de RF-006 |
 | P-05 | Em quais situações a ausência de referência de página é válida, e o analista poderá corrigir as páginas sugeridas pela IA? | PRD §12, RF-014 | aberta |
 | P-06 | Quais campos, filtros, colunas, direções de ordenação e regras de busca serão suportados na listagem do MVP? | PRD §8, §12 | aberta |
-| P-07 | Quais requisitos entram no primeiro subconjunto da base fixa no MVP? | PRD §11, §12 | aberta |
+| P-07 | Quais requisitos entram no primeiro subconjunto da base fixa no MVP (lista real, da área jurídica)? | PRD §11, §12 | aberta — MVP entra com seed-placeholder (8–12 itens) via importador de arquivo externo; trocar o arquivo quando a lista real chegar (ciclo RF-006) |
 | P-08 | Quais métricas serão usadas para medir impacto e produtividade da solução? | PRD §12 | aberta |
 | P-09 | Por quanto tempo o PDF de entrada persistido deve ficar disponível (política de retenção/expiração)? | PRD §12, RF-018 | aberta — direção parcial: ver A-05 |
 | P-10 | Quando e como entra identidade real (login/token do serviço de identidade), múltiplos analistas e a separação de acesso por analista (RF-003)? O MVP roda com analista único fixo. | Sessão de bootstrap; PRD RF-003 | aberta |
@@ -23,7 +23,7 @@
 |---|---|---|---|
 | A-01 | Formato exato do token/header de identidade do serviço de identidade do ecossistema (nome do header, claims, validação). Só relevante quando P-10 for endereçada — fora do MVP. | SDD (fundação), sessão de bootstrap | aberta — pós-MVP |
 | A-02 | Contrato exato da capacidade de análise assistida por IA: campos de entrada/saída, autenticação, timeout, política de retry, e se o projeto **aciona** um serviço externo ou **consome** um resultado já produzido. | PRD §11, SDD (fundação) | aberta |
-| A-03 | Estrutura definitiva da base fixa de requisitos (campos, agrupamento, versionamento da base). Estrutura mínima proposta no SDD. | PRD §11, §12 | aberta — direção parcial no SDD |
+| A-03 | Estrutura definitiva da base fixa de requisitos. | PRD §11, §12 | direção fechada no ciclo de RF-006: `codigo` único, `area` (campo flexível), `titulo`, `descricao`, `obrigatorio`, `ordem`, `ativo`, referência normativa **estruturada** (lei/artigo/inciso/parágrafo/alínea). Sem versão explícita — imutabilidade + novo requisito + `ativo=false`. Sem campos especulativos (subgrupo/severidade/orientação). Resta o conteúdo real (P-07). |
 | A-04 | O relatório PDF final gerado será persistido, ou sempre gerado sob demanda a partir da análise concluída? MVP propõe geração sob demanda. | PRD §12 | aberta — direção parcial no SDD |
 | A-05 | Estratégia definitiva de armazenamento do PDF de entrada: migração de filesystem para object storage (S3/Blob) e criptografia at-rest. MVP usa o mais simples. | PRD §12, RF-018 | aberta — direção parcial no SDD |
 | A-06 | Fila/worker dedicado (ex.: Redis + BullMQ) para o processamento assíncrono, caso o volume cresça. MVP usa processamento em processo com status persistido. | Limitações técnicas (bootstrap) | aberta — direção parcial no SDD |

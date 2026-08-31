@@ -33,7 +33,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 
 | Sequência | ID | Feature (recorte backend) | Prioridade | Status |
 |---|---|---|---|---|
-| 1 | RF-006 | Base fixa de requisitos: modelo + seed persistido | Must | user story em aprovação |
+| 1 | RF-006 | Base fixa de requisitos: modelo + seed persistido | Must | user story aprovada |
 | 2 | RF-001 | Endpoint de criação de análise (NUP, objeto, PDF) | Must | não iniciada |
 | 3 | RF-004 | Recebimento de upload manual de PDF (multipart) | Must | não iniciada |
 | 4 | RF-018 | Persistência do PDF de entrada associada à análise | Must | não iniciada |
@@ -79,32 +79,34 @@ Uma seção por RF. O Agente PM da frente correspondente preenche a User Story d
 ### RF-006 — Base fixa de requisitos
 
 **Frentes:** Backend
-**Status:** user story em aprovação
+**Status:** user story aprovada
 
 **User Story**
 
 Como analista técnico, quero que toda análise seja avaliada contra o mesmo conjunto fixo de requisitos normativos, jurídicos e técnicos, persistido pelo sistema, para que a verificação de conformidade seja consistente e comparável entre análises e entre analistas.
 
-Recorte deste ciclo (backend): modelar e persistir a base de requisitos e populá-la por um seed versionado no repositório. Não inclui a avaliação de requisitos por análise (RF-007+), nem a tela (frente frontend).
+Recorte deste ciclo (backend): modelar e persistir a base de requisitos e populá-la por um importador de arquivo externo. Não inclui a avaliação de requisitos por análise (RF-007+), nem a tela (frente frontend), nem endpoint público.
 
 **Critérios de aceite**
 
 - Existe uma tabela de requisitos persistida, criada por migration Prisma.
-- Cada requisito tem, no mínimo: `codigo` (estável, legível), `area` (`CHECKLIST` | `TECNICA`), `titulo`, `descricao`, `norma_referencia`, `obrigatorio` (bool), `ordem` (para exibição), `ativo` (bool).
-- Um seed versionado no repositório popula a base num banco limpo; rodar o seed novamente é idempotente (não duplica — estratégia definida na TSD).
-- O sistema consegue ler a lista de requisitos ativos, ordenados por `area` e `ordem` (a exposição via endpoint é decidida nas perguntas abertas abaixo).
-- Substituir/atualizar a base é feito por nova migration + ajuste de seed, sem quebrar o histórico do Prisma Migrate.
-- Testes: unitário do serviço de leitura da base; integração do seed + leitura contra o PostgreSQL de teste.
+- Cada requisito tem, no mínimo: `codigo` (estável, legível, único), `area`, `titulo`, `descricao`, `obrigatorio` (bool), `ordem` (para exibição), `ativo` (bool), e a referência normativa **estruturada** (campos separados: lei, artigo, inciso, parágrafo, alínea — todos opcionais). Sem campos especulativos (subgrupo, severidade, texto de orientação) — entram depois se um caso real pedir.
+- `area` **não** é um enum travado de dois valores — é um campo flexível (string com convenção documentada ou catálogo à parte, a definir na TSD), porque o vocabulário deve crescer.
+- A base é populada por um **importador de arquivo externo** (ex.: CSV em `prisma/seed-data/`), não por lista digitada em código/JSON. Trocar a base real depois = trocar o arquivo de entrada, sem reescrever o mecanismo. Motivação: caso conhecido de ~12 requisitos estimados virarem 300+ quando a lista jurídica real chegou.
+- Regra de imutabilidade: um requisito publicado tem texto imutável. Mudança normativa → **novo** requisito + o antigo vira `ativo = false`. O importador **nunca reescreve** o texto de um requisito existente (mesmo `codigo`): trata divergência de texto como erro/aviso, não como update silencioso. Isso, somado a cada parecer referenciar o requisito específico avaliado, já dá o snapshot histórico — sem coluna de versão.
+- Importar num banco limpo popula a base; reimportar o mesmo arquivo é idempotente (não duplica, não reescreve texto).
+- O sistema consegue ler a lista de requisitos ativos, ordenados por `area` e `ordem`, por um serviço interno testável. **Sem endpoint HTTP** neste slice (entra no RF-007, quando a tela definir o que consome).
+- Testes: unitário do parser/importador (idempotência, rejeição de reescrita de texto, arquivo malformado) e do serviço de leitura; integração do importador + leitura contra o PostgreSQL de teste.
 
-**Perguntas em aberto (para o usuário responder antes do Engenheiro)**
+**Decisões do ciclo (respostas às perguntas do PM, 31/08/2026)**
 
-1. **Conteúdo do 1º subconjunto (P-07):** já existe a lista real dos requisitos do MVP, ou o slice entra com um seed-placeholder pequeno e representativo (ex.: 8–12 itens entre Checklist e Técnica), a ser substituído quando a lista real existir?
-2. **Estrutura (A-03):** os campos acima bastam, ou já se sabe de campos necessários — p.ex. subgrupo/agrupamento dentro da área (o protótipo mostra "DADOS GERAIS" como subtítulo), severidade/peso, texto de orientação, vínculo com artigo/inciso específico da norma?
-3. **Versionamento da base:** o MVP precisa registrar qual versão da base foi usada em cada análise, ou basta uma única base ativa (as análises guardam o resultado avaliado na época, via snapshot em `avaliacao_requisito`)?
-4. **Área Técnica (P-04):** para este slice, requisitos de Técnica entram na mesma tabela com `area = TECNICA` e as mesmas colunas, e a diferença de comportamento fica para os slices de revisão. Confirma, ou a área Técnica deve ser modelada separada desde já?
-5. **Endpoint de leitura:** incluir já um `GET /requisitos` (base ativa) neste slice, para o frontend construir contra dados reais, ou deixar só modelo + seed e o endpoint entra com RF-007?
+1. P-07 — seed-placeholder (8–12 itens Checklist + Técnica) **agora**, mas via importador de arquivo externo desde já. Ver `questoes-abertas.md` P-07.
+2. A-03 — `norma_referencia` estruturada (lei/artigo/inciso/parágrafo/alínea); sem campos especulativos. Ver `questoes-abertas.md` A-03.
+3. Versionamento — sem coluna de versão; imutabilidade + novo requisito + `ativo=false`; snapshot via referência do parecer ao requisito.
+4. P-04 — mesma tabela para todas as áreas; `area` como campo flexível, não enum fixo de 2 valores.
+5. Endpoint — fora deste slice; leitura só interna.
 
-**TSD associada:** a definir pelo Agente Engenheiro após aprovação da User Story (próxima TSD de backend = `docs/engineering/specs/003-*`).
+**TSD associada:** `docs/engineering/specs/003-base-fixa-requisitos.tsd.md` (a ser redigida pelo Agente Engenheiro).
 
 ### RF-001 — Criar análise (NUP, objeto/descrição, PDF)
 
