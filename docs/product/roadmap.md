@@ -59,7 +59,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 2 | RF-001 | Modal "Nova análise" (NUP, objeto) + validação | Must | implementada (branch `frontend/rf-001-nova-analise`) |
 | 3 | RF-004 | Campo de upload de PDF no modal + estados de erro | Must | implementada com RF-001 (branch `frontend/rf-001-nova-analise`) |
 | 4 | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre | Must | implementada (branch `frontend/rf-010-tela-analise`) |
-| 5 | RF-007 | Exibição dos requisitos com status sugerido pela IA | Must | user story em aprovação (branch `frontend/rf-007-status-ia`) |
+| 5 | RF-007 | Exibição dos requisitos com status sugerido pela IA | Must | implementada (branch `frontend/rf-007-status-ia`) |
 | 6 | RF-009 | Visão inicial priorizando não conformes + filtros por status | Must | não iniciada |
 | 7 | RF-008 | Modal de alteração de status final ("parecer") | Must | não iniciada |
 | 8 | RF-011 | Controle de "marcar como verificado" | Must | não iniciada |
@@ -251,7 +251,7 @@ Recorte backend deste ciclo:
 
 **Frentes:** Backend · Frontend
 **Status (backend):** coberto no ciclo de RF-005 (ver seção RF-005)
-**Status (frontend):** user story em aprovação — branch `frontend/rf-007-status-ia`
+**Status (frontend):** implementada na branch `frontend/rf-007-status-ia` — Crítico aprovou, aguardando merge
 
 **User Story (frontend)**
 

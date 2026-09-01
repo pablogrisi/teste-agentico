@@ -3,7 +3,7 @@
 ---
 title: TSD - Status sugerido pela IA na tela de análise (RF-007, frontend)
 type: tsd
-status: em aprovação
+status: implementada na branch frontend/rf-007-status-ia — Crítico aprovou
 created: 01/09/2026 // Vinicius
 updated: 01/09/2026 // Vinicius
 related:
@@ -131,13 +131,13 @@ npm run ci
 
 ## 8. Critérios de aceite
 
-- [ ] Todo `RequisitoItem` exibe o `statusSugeridoIa` de forma identificável como sugestão da IA (PRD RF-007).
-- [ ] Quando `statusFinal === statusSugeridoIa` (situação atual), o badge é marcado como sugestão da IA e **não** há chip secundário nem realce de divergência.
-- [ ] Quando `statusFinal !== statusSugeridoIa`, aparece o chip "IA: <sugestão>" ao lado do parecer atual e o item ganha realce de divergência; expandido mostra "Sugestão da IA: X" e "Parecer atual: Y".
-- [ ] `PainelRevisao` mostra a legenda "os status são sugestões da IA…" quando há itens; não mostra no estado processando/erro/sem itens.
-- [ ] Nenhuma chamada nova ao backend; nenhum campo/tipo novo; `AnaliseDetalhe` inalterado.
-- [ ] `npm run ci` verde: `eslint .` + prettier, `tsc --noEmit`, testes, `next build`.
-- [ ] §10 revisada; screenshots dos dois casos comparados com o protótipo — `frontend/docs/visual-reference/rf-007/`.
+- [x] Todo `RequisitoItem` exibe o `statusSugeridoIa` de forma identificável como sugestão da IA (PRD RF-007).
+- [x] Quando `statusFinal === statusSugeridoIa` (situação atual), o badge é marcado como sugestão da IA e **não** há chip secundário nem realce de divergência.
+- [x] Quando `statusFinal !== statusSugeridoIa`, aparece o chip "IA: <sugestão>" ao lado do parecer atual e o item ganha realce de divergência; expandido mostra "Sugestão da IA: X" e "Parecer atual: Y".
+- [x] `PainelRevisao` mostra a legenda "os status são sugestões da IA…" quando há itens; não mostra no estado processando/erro/sem itens.
+- [x] Nenhuma chamada nova ao backend; nenhum campo/tipo novo; `AnaliseDetalhe` inalterado.
+- [x] `npm run ci` verde: `eslint .` + prettier, `tsc --noEmit`, testes, `next build`.
+- [x] §10 revisada; screenshots dos dois casos comparados com o protótipo — `frontend/docs/visual-reference/rf-007/`.
 
 ## 9. Riscos e decisões abertas
 

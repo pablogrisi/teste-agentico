@@ -20,6 +20,22 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 01/09/2026 — RF-007 / TSD-014: status sugerido pela IA na tela de análise (frontend)
+
+Contexto: 4º ciclo de RF do frontend, na branch `frontend/rf-007-status-ia` (a partir da `main` — RF-010 já mergeada em `28c9e8c`). O usuário reforçou: seguir o **fluxo completo dos 6 papéis, incluindo o Crítico**, em toda implementação (os ciclos anteriores de frontend pularam o Crítico). A partir daqui o subagente `critico` roda antes de fechar cada RF. TSD-014 é a próxima livre na numeração compartilhada (backend 009/010; frontend 011/012/013/014).
+
+Papéis:
+- **PM**: User Story do recorte frontend de RF-007 no `roadmap.md` — exibir `statusSugeridoIa` no `RequisitoItem` do RF-010, distinguir sugestão da IA do parecer atual, realçar divergência. Sem mudança de contrato (o payload já traz os dois campos). **Apresentada e parada.**
+- **Engenheiro**: `docs/engineering/specs/014-status-ia-frontend.tsd.md` — slice puramente de apresentação; `divergeDaIa`; caminho "diverge" implementado agora (só ocorre com RF-008) e testado via fixture; §10 (REF-07 — protótipo não distingue os dois status: divergência registrada). **Apresentada e parada.** Usuário validou: "faça igual ao protótipo, melhore onde achar melhor" + "siga o fluxo dos meus agentes".
+- **Dev**: `analise-detalhe.ts` → `divergeDaIa(item)` (puro, `Pick<AvaliacaoItem,...>`); `StatusIaResumo.tsx` novo (bloco "Sugestão da IA / Parecer atual — alterado na revisão"); `RequisitoItem.tsx` → marca "IA" (parecer = sugestão) ou chip âmbar "IA: <sugestão>" + classe `divergente` (realce âmbar do card) quando diverge, e `StatusIaResumo` no topo do expandido; `PainelRevisao.tsx` → legenda "os status abaixo são sugestões da IA…" acima da lista (some no estado processando/erro/sem itens); `fixtures-analise-detalhe.ts` → item `av-6` passou a divergir (`statusSugeridoIa=NAO_CONFORME`, `statusFinal=CONFORME`, `verificado=true`, comentário) para o caso ser exercitável e realista.
+- **Testes (mecânico)**: `npm run ci` ✅ — `eslint .` + prettier, `tsc --noEmit`, **vitest 111 → 113/113 (16 arquivos)**, `next build`. Novos: `divergeDaIa` (2), `requisito-item` RF-007 (marca/chip/badge principal/expandido igual/expandido diverge — 5), `painel-revisao` legenda (com itens / PROCESSANDO / ERRO_PROCESSAMENTO). Percalço: comentário/legenda com Prettier resolvido no `--write`.
+- **Crítico** (subagente `critico`): **APROVADO**, sem bloqueantes. Não-bloqueantes: fixture `av-6` carregou `verificado`+`comentario` além do descrito na TSD §9 (coerente com R-06 — anotado); realce âmbar só com evidência visual; legenda visível com aba ativa vazia. Ajustes aplicados após o Crítico: asserção de ausência da legenda em `ERRO_PROCESSAMENTO` e do badge principal seguir `statusFinal` na divergência.
+- **Documentador**: TSD-014 (status + §8), `roadmap.md` (RF-007 frontend → implementada), checkpoint §1/§2/§3.1/§5/§7, este arquivo, `frontend/README.md`.
+
+Evidência visual: `frontend/docs/visual-reference/rf-007/` — `parecer-igual-sugestao.png`, `parecer-diverge-da-ia.png`, `prototipo-painel.png` + `README.md`.
+
+Estado: ciclo fechado com Crítico ✅, `npm run ci` verde, **branch aguardando push + merge na `main`**. Próximo frontend: RF-009 (visão inicial priorizando não conformes + filtros por status). Follow-up: o caminho "diverge da IA" só terá caso real com RF-008.
+
 ## 01/09/2026 — RF-010 / TSD-013: tela de análise — abas Checklist/Técnica (frontend)
 
 Contexto: 3º ciclo de RF do frontend, na branch `frontend/rf-010-tela-analise` (a partir da `main` `9887dca`). Numeração: backend tinha tomado TSD-009 (RF-014) e TSD-010 (RF-012/013/015); frontend seguiu com 011 (RF-002), 012 (RF-001/004) e agora **013** (RF-010).

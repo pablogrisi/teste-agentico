@@ -5,10 +5,12 @@ monorepo; a frente `backend/` (NestJS) roda isolada. Método e docs de produto/a
 vivem na raiz.
 
 > **Estado:** fundação (TSD-002) + **RF-002** (listagem, TSD-011) + **RF-001/RF-004** (modal
-> "Nova análise", TSD-012) + **RF-010** (tela de análise, TSD-013). `/` lista as análises e
-> abre o modal de criação; `/analise/[id]` mostra o cabeçalho + as abas Checklist/Técnica
-> (navegação livre) com os requisitos avaliados em acordeão **somente leitura** (filtros,
-> edição de parecer, verificado interativo e visor de PDF entram em RF-009/008/011/014).
+> "Nova análise", TSD-012) + **RF-010** (tela de análise, TSD-013) + **RF-007** (status
+> sugerido pela IA, TSD-014). `/` lista as análises e abre o modal de criação;
+> `/analise/[id]` mostra cabeçalho + abas Checklist/Técnica (navegação livre) com os
+> requisitos em acordeão **somente leitura**, cada um indicando o status **sugerido pela IA**
+> e a divergência quando o parecer atual difere. Filtros, edição de parecer, verificado
+> interativo e visor de PDF entram em RF-009/008/011/014.
 
 ## Pré-requisitos
 
