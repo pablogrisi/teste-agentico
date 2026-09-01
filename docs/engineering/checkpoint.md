@@ -15,7 +15,7 @@ Fundação percorrida (`.ai-dev/bootstrap.md`): PRD e SDD aprovados, `questoes-a
 Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJS, Pablo) e `frontend/` (Next.js, Vinicius), método e docs compartilhados na raiz. Cada frente roda seu próprio ciclo de seis papéis.
 
 - **`main` `56f83bd`** (push feito): backend fechado até RF-012/RF-013/RF-015 (conclusão da análise) — mergeado. Falta RF-016 (relatório) + integração da IA real.
-- **RF-016 / TSD-011** (relatório PDF final, backend) — **ciclo aberto** na branch `backend/rf-016-relatorio`. PM apresentou a User Story — aguardando validação humana.
+- **RF-016 / TSD-011** (relatório PDF final, backend) — **ciclo aberto** na branch `backend/rf-016-relatorio`. User Story validada (01/09/2026). Engenheiro redigiu `docs/engineering/specs/011-relatorio-pdf.tsd.md` — **aguardando aprovação humana da TSD antes do Dev.**
 - **TSD-002** (`frontend/`) — aprovada; **não implementada**. Por Vinicius, em branch a partir da `main`.
 - Infra de teste: `test:e2e` sobe/derruba um PostgreSQL embutido (`embedded-postgres`) — sem Docker.
 - Integração com o serviço de IA real (`HttpAdapter` da `AnaliseIaPort` + A-02) foi **adiada para o fim do MVP** por decisão do responsável (31/08/2026); até lá o `StubAdapter` sustenta os ciclos.
@@ -23,7 +23,7 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 ## 2. Spec ativa
 
-- Branch `backend/rf-016-relatorio`: ciclo **RF-016** (relatório PDF final) aberto pelo PM. `GET /analises/:id/relatorio` → `application/pdf` sob demanda (`pdfkit`, sem persistir); `409` se não `CONCLUIDA`. **User Story rascunhada — aguardando validação humana antes do Engenheiro.**
+- Branch `backend/rf-016-relatorio`: ciclo **RF-016** (relatório PDF final). User Story validada; decisões: `pdfkit`, entrega `inline`, conteúdo = mínimo do PRD + resumo + norma + página (sem comentário). Engenheiro redigiu a TSD-011 — **aguardando aprovação humana antes do Dev.**
 - Os pontos de aprovação PM→Engenheiro e Engenheiro→Dev são paradas explícitas (ver observação no §7).
 - Frontend: `docs/engineering/specs/002-fundacao-frontend.tsd.md` aguardando o Vinicius.
 

@@ -172,8 +172,11 @@ Não há identidade no MVP: o `AnalistaAtualProvider` devolve sempre o analista 
 
 ### Fluxo - Relatório PDF
 
-1. `GET /analises/:id/relatorio`.
-2. Se `status != CONCLUIDA` → 409. Caso contrário, `pdfkit` compõe o relatório (identificação, responsável, datas, status final por requisito) e devolve `application/pdf`. Não persiste (A-04).
+**Implementado (TSD-011).** `GET /analises/:id/relatorio`. RF-016.
+
+1. `404` se a análise não existe para o analista atual.
+2. `409` se `status != CONCLUIDA`.
+3. Caso contrário, `pdfkit` compõe o relatório a partir de `montarAnaliseDetalhe`: título, NUP, objeto, responsável (`analistaNome` + `analistaId`), data/hora de início e de conclusão, resumo de contagens, e — por área (alfabética), dentro por `requisito.ordem` — `codigo`, `titulo`, norma estruturada formatada, referência de página (quando houver) e `statusFinal` (rótulo pt-BR). Devolve `application/pdf` com `Content-Disposition: inline`. **Não persiste** (A-04). Comentário do analista fica fora deste slice.
 
 ## 8. Dados e contratos
 
