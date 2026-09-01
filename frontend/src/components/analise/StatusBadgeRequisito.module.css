@@ -1,0 +1,25 @@
+.badge {
+  display: inline-block;
+  flex-shrink: 0;
+  padding: var(--spacing-2) var(--spacing-8);
+  border-radius: var(--radius-full);
+  font-size: var(--text-caption-size);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-16);
+  white-space: nowrap;
+}
+
+.sucesso {
+  background: var(--color-success-subtle);
+  color: var(--color-success-text);
+}
+
+.erro {
+  background: var(--color-error-subtle);
+  color: var(--color-error-text);
+}
+
+.neutro {
+  background: var(--color-bg-hover);
+  color: var(--color-text-secondary);
+}

@@ -55,12 +55,12 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 
 | Sequência | ID | Feature (recorte frontend) | Prioridade | Status |
 |---|---|---|---|---|
-| 1 | RF-002 | Tela de listagem de análises + estado vazio | Must | não iniciada |
-| 2 | RF-001 | Modal "Nova análise" (NUP, objeto) + validação | Must | não iniciada |
-| 3 | RF-004 | Campo de upload de PDF no modal + estados de erro | Must | não iniciada |
-| 4 | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre | Must | não iniciada |
-| 5 | RF-007 | Exibição dos requisitos com status sugerido pela IA | Must | não iniciada |
-| 6 | RF-009 | Visão inicial priorizando não conformes + filtros por status | Must | não iniciada |
+| 1 | RF-002 | Tela de listagem de análises + estado vazio | Must | implementada (branch `frontend/rf-002-listagem`) |
+| 2 | RF-001 | Modal "Nova análise" (NUP, objeto) + validação | Must | implementada (branch `frontend/rf-001-nova-analise`) |
+| 3 | RF-004 | Campo de upload de PDF no modal + estados de erro | Must | implementada com RF-001 (branch `frontend/rf-001-nova-analise`) |
+| 4 | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre | Must | implementada (branch `frontend/rf-010-tela-analise`) |
+| 5 | RF-007 | Exibição dos requisitos com status sugerido pela IA | Must | implementada (branch `frontend/rf-007-status-ia`) |
+| 6 | RF-009 | Visão inicial priorizando não conformes + filtros por status | Must | implementada — Crítico ✅ (branch `frontend/rf-009-filtros`) |
 | 7 | RF-008 | Modal de alteração de status final ("parecer") | Must | não iniciada |
 | 8 | RF-011 | Controle de "marcar como verificado" | Must | não iniciada |
 | 9 | RF-017 | Campo de comentário obrigatório nas ações de revisão | Must | não iniciada |
@@ -112,7 +112,7 @@ Recorte deste ciclo (backend): modelar e persistir a base de requisitos e popul�
 
 **Frentes:** Backend · Frontend
 **Status (backend):** implementada (mergeada no `main` `9dd6792`)
-**Status (frontend):** não iniciada
+**Status (frontend):** implementada na branch `frontend/rf-001-nova-analise` (ciclo agrupado RF-001 + RF-004) — aguardando revisão + merge
 
 > Ciclo backend agrupado: **RF-001 + RF-004 + RF-018** = "criar análise com PDF persistido". A User Story e os critérios abaixo cobrem o recorte backend dos três.
 
@@ -143,13 +143,26 @@ Recorte backend deste ciclo:
 3. **Status da análise**: todos os valores do SDD §8 como **string + allowlist** em `src/analises/status-analise.ts` (padrão do `area` de RF-006). Neste slice só `PENDENTE` é atribuído.
 4. **NUP repetido**: **permitido** — sem constraint de unicidade. Reanálise é caso legítimo.
 
-**TSD associada:** `docs/engineering/specs/004-criar-analise.tsd.md` (a redigir pelo Engenheiro).
+**TSD associada (backend):** `docs/engineering/specs/004-criar-analise.tsd.md`.
+
+**Recorte frontend deste ciclo (RF-001 + RF-004 frontend):**
+
+Como analista técnico, quero criar uma análise por um modal — informando NUP e objeto da contratação e anexando o PDF do processo (clique ou arrastar-e-soltar) — com validação clara antes do envio e mensagens de erro que não me façam reescrever tudo, para registrar a análise e ser levado à tela dela.
+
+- Botão "Nova análise" (hoje desabilitado) abre o modal `NovaAnaliseModal`: campos NUP (obrigatório, ≤ 60), Objeto (obrigatório, ≤ 2000), Arquivo (PDF, ≤ 25 MB — igual ao backend).
+- Validação client-side: campos obrigatórios; arquivo `application/pdf` e dentro do limite; "Confirmar" desabilitado até válido; erros por campo.
+- Envio via seam de dados (`AnalisesGateway.criarAnalise`, multipart `POST /analises` no `HttpAnalisesGateway`). Sucesso → fecha o modal e navega para `/analise/[id]`.
+- Estados de erro (PRD §9): PDF inválido (antes do envio, na área do arquivo); erro no upload / persistência (banner no modal, **dados preservados**, permite reenviar); indisponibilidade.
+- **Fora:** validação de magic bytes / `/Encrypt` no cliente (o backend é a autoridade e devolve 422); máscara de NUP; visor de PDF; qualquer coisa pós-criação além de navegar para a análise.
+- **Divergências protótipo × PRD** (na TSD): limite exibido **25 MB** (protótipo dizia 50 MB); campo `objeto`/`arquivo` (não `subject`/`file`); sem a simulação de "Processando documento…" (o `POST` responde `201` na hora, análise nasce `PENDENTE`).
+
+**TSD associada (frontend):** `docs/engineering/specs/012-nova-analise-frontend.tsd.md`.
 
 ### RF-004 — Upload manual de PDF na criação da análise
 
 **Frentes:** Backend · Frontend
 **Status (backend):** coberto no ciclo de RF-001 (ver seção RF-001)
-**Status (frontend):** não iniciada
+**Status (frontend):** implementada na branch `frontend/rf-001-nova-analise` (com RF-001) — aguardando revisão + merge
 
 ### RF-018 — Persistência do PDF de entrada, associado à análise
 
@@ -160,13 +173,27 @@ Recorte backend deste ciclo:
 
 **Frentes:** Backend · Frontend
 **Status (backend):** implementada (mergeada no `main` `57b170f`)
-**Status (frontend):** não iniciada
+**Status (frontend):** implementada na branch `frontend/rf-002-listagem` — aguardando revisão + merge
 
 **User Story**
 
 Como analista técnico, quero ver a lista das análises que criei, com identificação suficiente e o status de cada uma, para reabrir a que eu precisar e acompanhar o andamento.
 
 Recorte backend deste ciclo: `GET /analises` — devolve as análises do analista atual, com busca/filtro/ordenação/paginação a definir (P-06). Sem alteração no modelo `Analise`. Sem a tela (frente frontend).
+
+**Recorte frontend deste ciclo (RF-002 frontend):**
+
+Como analista técnico, quero abrir a tela inicial e ver, numa tabela, as análises que criei — com NUP, objeto, status e data de início —, podendo buscar por NUP/objeto, filtrar por status, ordenar e paginar, para localizar e reabrir rapidamente a análise que preciso; e quando eu ainda não tiver análises, quero uma tela que me oriente a criar a primeira.
+
+- `/` deixa de ser casca: tabela + busca (`q`) + filtro por status (multi) + ordenação (`iniciadaEm`/`nup`) + paginação, tudo refletido na URL. Linha leva a `/analise/[id]`.
+- Estados: vazio "sem análises" (orienta a criar) e "sem resultado" (limpar busca/filtros); carregando; erro com "tentar novamente" (PRD §9).
+- Consome o contrato `GET /analises` (TSD-005) pelo seam de dados: `HttpAnalisesGateway` + teste de contrato; `getAnalisesGateway()` usa HTTP quando `NEXT_PUBLIC_API_BASE_URL` estiver definida, senão fixtures.
+- **Fora:** criação de análise (RF-001, frontend); tela de análise (RF-010+); painel de filtros consolidado; seletor de tamanho de página na UI; contagens de requisitos por linha (RF-007).
+- **Divergências protótipo × PRD** (na TSD): coluna "Status" adicionada e "Adicionado por" removida (analista único); filtro por status como chips inline em vez do modal "Filtros"; "Nova análise" desabilitado.
+
+**Follow-up incluído neste ciclo:** migração de `next lint` → `eslint .` (ESLint CLI + flat config), scripts do `package.json` adaptados.
+
+**TSD associada (frontend):** `docs/engineering/specs/011-listagem-analises-frontend.tsd.md`.
 
 **Critérios de aceite**
 
@@ -224,17 +251,53 @@ Recorte backend deste ciclo:
 
 **Frentes:** Backend · Frontend
 **Status (backend):** coberto no ciclo de RF-005 (ver seção RF-005)
-**Status (frontend):** não iniciada
+**Status (frontend):** implementada na branch `frontend/rf-007-status-ia` — Crítico aprovou, aguardando merge
+
+**User Story (frontend)**
+
+Como analista técnico, quero ver, em cada requisito da tela de análise, qual foi o status **sugerido pela IA** (Conforme / Não conforme / Não se aplica) e distinguir claramente quando o parecer atual difere dessa sugestão, para saber o que a IA propôs e o que já foi alterado na revisão.
+
+Recorte deste ciclo (frontend): o `RequisitoItem` (criado em RF-010) passa a exibir `statusSugeridoIa`, além do `statusFinal` que já mostra. O backend já entrega os dois campos no `GET /analises/:id` — não há mudança de contrato.
+
+- **Recolhido:** quando `statusSugeridoIa === statusFinal` (situação atual, antes de qualquer edição — RF-008), o badge mostra que aquele status **é uma sugestão da IA** (marca/rótulo discreto). Quando diferem, aparece também um indicador secundário "IA sugeriu: X" ao lado do parecer atual.
+- **Expandido:** linha explícita "Sugestão da IA: <status>"; quando `statusFinal` difere, linha "Parecer atual: <status>" e um realce de divergência.
+- Uma nota curta no topo da lista deixando claro que os status são sugestões da IA até a revisão do analista.
+- **Fora do escopo:** editar o parecer / alterar `statusFinal` (RF-008); marcar verificado (RF-011); comentário (RF-017); filtros (RF-009). Nenhuma chamada nova ao backend — só apresentação do dado que já vem no payload.
+
+**Critério de aceite (PRD RF-007):** todo requisito exibido na tela de análise apresenta exatamente um status sugerido pela IA, dentre os três valores permitidos, visualmente identificável como sugestão da IA.
+
+**Contrato consumido:** `GET /analises/:id` (`avaliacoesPorArea[].itens[].statusSugeridoIa` + `.statusFinal`) — já implementado (backend TSD-006/007). Sem mudança.
+
+**TSD associada (frontend):** `docs/engineering/specs/014-status-ia-frontend.tsd.md`.
 
 ### RF-009 — Abertura da análise priorizando requisitos não conformes
 
 **Frentes:** Backend · Frontend
 **Status (backend):** implementada (mergeada no `main` `96ff8fb`)
-**Status (frontend):** não iniciada
+**Status (frontend):** implementada — Crítico ✅ (01/09/2026), branch `frontend/rf-009-filtros`; `npm run ci` verde (129 testes). Aguardando push + merge.
 
 **User Story**
 
 Como analista técnico, quero abrir uma análise e ver os requisitos avaliados — com os não conformes em primeiro plano e um resumo do estado — para começar a revisão pelo que mais importa.
+
+**User Story (frontend — RF-009)**
+
+Como analista técnico, quero que a tela de análise já abra mostrando primeiro os requisitos **não conformes** e ter chips para filtrar a lista por status (Não conforme / Conforme / Não se aplica / Todos), para começar a revisão pelo que mais importa e navegar rápido entre os grupos.
+
+Recorte deste ciclo (frontend), em cima do painel do RF-010:
+
+- **Chips de filtro por status** no `PainelRevisao` (adiados do RF-010): 4 opções, colorindo quando ativas (padrão do protótipo). O filtro é por `statusFinal` (parecer atual — a IA só sugere, o humano decide) e vale para a aba corrente; trocar de aba mantém o filtro.
+- **Visão inicial:** o filtro abre em **"Não conforme"**.
+- **Filtro persistido na URL** (`?requisitos=<slug>`): sobrevive a recarregar a página e ao polling; compartilhável por link. (Decisão validada pelo usuário — 01/09/2026.)
+- **Estado "nenhum não conforme"** (PRD §9): quando o filtro "Não conforme" está ativo e a aba não tem itens nesse status, mostrar mensagem clara + atalho "Ver todos" (troca o filtro para "Todos").
+- Grupos de área sem itens no filtro atual **continuam visíveis** com uma linha de placeholder; a contagem do cabeçalho reflete os itens visíveis. (Decisão validada pelo usuário — diverge do protótipo, que oculta.)
+- **Fora do escopo:** ordenação alternativa / reordenar (o backend já entrega não conformes primeiro); busca textual dentro da análise; filtro por "verificado/pendente" (pode virar refinamento); edição de parecer (RF-008), verificado interativo (RF-011), comentário (RF-017), visor de PDF (RF-014), conclusão (RF-012).
+
+**Critério de aceite (PRD RF-009 + §9):** ao abrir a análise, a primeira visão destaca/filtra os não conformes; quando não houver nenhum, isso é informado claramente e o acesso aos demais requisitos é fácil.
+
+**Contrato consumido:** `GET /analises/:id` — sem mudança (o backend já ordena não conformes primeiro e manda o `resumo`; TSD-007).
+
+**TSD associada (frontend):** `docs/engineering/specs/015-filtros-status-frontend.tsd.md`.
 
 Recorte backend deste ciclo: o endpoint de leitura da análise passa a devolver as avaliações (avaliação + dados do requisito), agrupadas por área e ordenadas priorizando não conformes, mais um resumo de contagens. Sem edição de parecer (RF-008/011/017), sem tela (frontend), sem entrega do PDF por página (RF-014).
 
@@ -259,7 +322,35 @@ Recorte backend deste ciclo: o endpoint de leitura da análise passa a devolver 
 ### RF-010 — Navegação livre entre seções e abas da análise
 
 **Frentes:** Frontend (backend entrega os requisitos agrupados por área)
-**Status:** não iniciada
+**Status (frontend):** implementada na branch `frontend/rf-010-tela-analise` — validada, aguardando merge
+
+**User Story (frontend)**
+
+Como analista técnico, quero abrir uma análise e ver os requisitos avaliados organizados nas abas **Checklist** e **Técnica**, podendo alternar livremente entre elas (sem ordem obrigatória de revisão) e expandir cada requisito para ler o detalhe, para começar a revisão pela parte que eu quiser.
+
+Recorte deste ciclo (frontend):
+
+- `/analise/[id]` deixa de ser casca: carrega `GET /analises/:id` pelo seam de dados (`AnalisesGateway.abrirAnalise(id)`), com estados de carregando / erro / não encontrada (404).
+- Cabeçalho da análise: NUP, objeto, badge de status; quando `PENDENTE`/`PROCESSANDO`, mostra "processando" em vez da lista; `ERRO_PROCESSAMENTO` mostra o `motivoErro`.
+- Frame de dois painéis (do TSD-002): à esquerda o **espaço do visor de PDF** (segue placeholder — o visor real é RF-014); à direita o **painel de revisão**.
+- Painel de revisão: **abas Checklist / Técnica** (derivadas de `avaliacoesPorArea` pelo prefixo da `area`), **navegação livre** entre elas; Legislação/Outros aparecem desabilitadas (indisponíveis no MVP).
+- Dentro da aba: lista dos requisitos **agrupada por área**, na ordem que o backend já entrega (não conformes primeiro, depois `ordem`); cada requisito é um item em acordeão — recolhido: título + badge do `statusFinal`; expandido: descrição, norma (lei/artigo/…), comentário (se houver), referência de página (texto, ainda não clicável).
+- Barra de progresso a partir do `resumo` (verificados / total).
+
+**Fora do escopo (entram nos próximos ciclos):**
+
+- Filtros por status (chips) + "visão inicial priorizando não conformes" na UI → **RF-009**.
+- Destaque do status **sugerido pela IA** vs. final → **RF-007**.
+- Controle interativo de "marcar como verificado" → **RF-011**.
+- Modal de alteração do parecer (`statusFinal`) → **RF-008**.
+- Campo/obrigatoriedade de comentário na revisão → **RF-017**.
+- Visor de PDF real + referência de página clicável (`#page=N`) → **RF-014**.
+- Modal de conclusão + botão global → **RF-012**.
+- Semântica definitiva da aba Técnica (P-04): neste ciclo os itens de Técnica são renderizados como os de Checklist (com badge de `statusFinal`, que o backend entrega para todo requisito ativo). Divergência do protótipo (que trata Técnica como "observações" neutras) registrada na TSD.
+
+**Contrato consumido:** `GET /analises/:id` (backend TSD-004 + TSD-007 + TSD-009 + TSD-010) — SDD §7, fluxo "Abrir análise".
+
+**TSD associada (frontend):** `docs/engineering/specs/013-tela-analise-frontend.tsd.md`.
 
 ### RF-008 — Definição do status final de cada requisito
 
@@ -407,7 +498,7 @@ Recorte backend deste ciclo:
 ### RF-016 — Relatório PDF final da análise concluída
 
 **Frentes:** Backend · Frontend
-**Status (backend):** implementada (ciclo fechado na branch `backend/rf-016-relatorio`, aguardando merge na `main`)
+**Status (backend):** implementada (mergeada na `main`)
 **Status (frontend):** não iniciada
 
 **User Story** — *validada em 01/09/2026*

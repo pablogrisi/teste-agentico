@@ -5,7 +5,7 @@ title: Engineering Checkpoint - LicIA Analisadora
 type: checkpoint
 status: ativo
 created: 31/08/2026 // Pablo Grisi
-updated: 31/08/2026 // Pablo Grisi
+updated: 01/09/2026 // Vinicius Andrade (RF-009 frontend / TSD-015)
 ---
 
 ## 1. Estado atual
@@ -14,18 +14,22 @@ Fundação percorrida (`.ai-dev/bootstrap.md`): PRD e SDD aprovados, `questoes-a
 
 Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJS, Pablo) e `frontend/` (Next.js, Vinicius), método e docs compartilhados na raiz. Cada frente roda seu próprio ciclo de seis papéis.
 
-- **`main` `56f83bd`** (push feito): backend até RF-012/RF-013/RF-015 (conclusão) mergeado.
-- **RF-016 / TSD-011** (relatório PDF final, backend) — **ciclo fechado** na branch `backend/rf-016-relatorio` (6 papéis, gates cumpridos). `npm run ci` ✅ (106 unit) · `test:e2e` ✅ 39/39. **Aguardando merge + push.** Com isso, **o backend de features do MVP fica completo** — resta só a integração da IA real (A-02).
-- **TSD-002** (`frontend/`) — aprovada; **não implementada**. Por Vinicius, em branch a partir da `main`.
+- **`main`**: TSD-001 + RF-006 + RF-001/004/018 + RF-002 + RF-005/RF-007 + RF-009 + RF-008/011/017 + **RF-014/TSD-009** + **RF-012/RF-013/RF-015/TSD-010** + **RF-016/TSD-011** integradas (backend — **features do MVP completas**, só falta a IA real / A-02). **Frontend TSD-002 + RF-002/TSD-011 + RF-001+RF-004/TSD-012 + RF-010/TSD-013 + RF-007/TSD-014 + RF-009/TSD-015** mergeados na sequência (ver abaixo).
+- **RF-016 / TSD-011** (relatório PDF final, backend) — ciclo fechado, 6 papéis, gates cumpridos: `npm run ci` ✅ (106 unit) · `test:e2e` ✅ 39/39 · Crítico ✅. **Mergeado neste commit** (integração com a linha do frontend).
+- **Frontend (`frontend/`) — TSD-002 + RF-002/TSD-011 + RF-001+RF-004/TSD-012 mergeados na `main`** (01/09/2026). App Next.js 15: `/` listagem real (tabela + busca/filtro/ordenação/paginação na URL + estados vazio/carregando/erro) e modal "Nova análise" (NUP/objeto/upload de PDF, validação client-side, `POST /analises` multipart). Camada de dados atrás de seam (`getAnalisesGateway` — fixtures ou `HttpAnalisesGateway` por `NEXT_PUBLIC_API_BASE_URL`); testes de contrato de `GET /analises` e `POST /analises`.
+- **Frontend — RF-010 / TSD-013 (tela de análise)** mergeada na `main` (`28c9e8c`). `/analise/[id]` deixa de ser casca: `AnalisesGateway.abrirAnalise` (`GET /analises/:id`, contrato TSD-007) + `AnaliseHeader` + `PainelRevisao` (abas Checklist/Técnica com navegação livre, progresso do `resumo`, lista de requisitos por área em acordeão **somente leitura**) + `AutoRefreshAnalise` (polling enquanto `PENDENTE`/`PROCESSANDO`) + `not-found.tsx`. Decisões validadas: Técnica **fiel ao backend** (badge de status; diverge do protótipo — P-04), checkbox de "verificado" desabilitado (RF-011).
+- **Frontend — RF-007 / TSD-014 (status sugerido pela IA)** mergeada na `main` (`cbe9f5b`; branch `frontend/rf-007-status-ia` empurrada). Slice de apresentação sobre o `RequisitoItem`: marca "IA" quando `statusFinal === statusSugeridoIa`; chip "IA: <sugestão>" + realce âmbar + bloco "Sugestão da IA / Parecer atual" quando diverge; legenda no topo da lista. Helper `divergeDaIa`. Sem mudança de contrato/tipo. O caminho "diverge" só ocorre de verdade com RF-008 — testado via fixture forjada (`fixtures-analise-detalhe.ts`, item `av-6`).
+- **Frontend — RF-009 / TSD-015 (filtros por status + visão inicial priorizando não conformes)** mergeada na `main` (branch `frontend/rf-009-filtros`, 01/09/2026); **Crítico aprovou**; `npm run ci` verde (**129 testes / 18 arquivos**). Slice de apresentação sobre o `PainelRevisao`: chips **Não conforme (padrão) / Conforme / Não se aplica / Todos** (adiados do RF-010), filtro por `statusFinal`, compartilhado entre abas e **espelhado na URL** (`?requisitos=<slug>`, omitido no padrão); grupos sem itens no filtro seguem visíveis com placeholder; estado "nenhum não conforme" (PRD §9) + atalho "Ver todos os requisitos". `filtro-requisito.ts` puro (`filtrarPorStatus`/`parseFiltroRequisito`/`filtroParaSlug`). Fixture id "7" sem não conformes (andaime) para exercitar o §9. Sem mudança de contrato/tipo.
+- Ciclos de frontend rodam o ciclo completo de seis papéis (PM→Engenheiro→Dev→Testes→**Crítico**→Documentador); a User Story e a TSD são validadas pelo responsável antes de implementar, e o `critico` roda como passo próprio a partir do RF-007.
 - Infra de teste: `test:e2e` sobe/derruba um PostgreSQL embutido (`embedded-postgres`) — sem Docker.
 - Integração com o serviço de IA real (`HttpAdapter` da `AnaliseIaPort` + A-02) foi **adiada para o fim do MVP** por decisão do responsável (31/08/2026); até lá o `StubAdapter` sustenta os ciclos.
 - **Modelo de branch:** uma branch curta por ciclo/TSD, merge na `main` quando o Documentador fecha.
 
 ## 2. Spec ativa
 
-- **Nenhuma spec de backend ativa.** Ciclo RF-016 / TSD-011 fechado na branch `backend/rf-016-relatorio`, aguardando merge + push. Depois disso o backend só precisa da **integração da IA real** (`HttpAdapter` da `AnaliseIaPort` + A-02) para fechar o MVP.
-- Os pontos de aprovação PM→Engenheiro e Engenheiro→Dev são paradas explícitas (ver observação no §7).
-- Frontend: `docs/engineering/specs/002-fundacao-frontend.tsd.md` aguardando o Vinicius.
+- **Nenhuma spec de backend ativa.** RF-016 / TSD-011 (relatório PDF) mergeada — **as features de backend do MVP estão completas**. Único item de backend restante: a **integração da IA real** (`HttpAdapter` da `AnaliseIaPort` + fechar A-02).
+- **Frontend: RF-009 / TSD-015 mergeada na `main`.** Próximo ciclo de frontend: **RF-008** (modal de alteração de status final / "parecer") — PM apresenta a User Story + TSD para validação antes de implementar.
+- Os pontos de aprovação PM→Engenheiro e Engenheiro→Dev são paradas explícitas (ver observação no §7). No frontend, o responsável valida a User Story e a TSD antes de qualquer implementação de RF, e cada RF concluído é mergeado e empurrado incrementalmente.
 
 ## 3. Specs concluídas
 
@@ -43,6 +47,10 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 | TSD-011 — Relatório PDF final (RF-016, backend) | `GET /analises/:id/relatorio` → `application/pdf` `inline`, sob demanda com `pdfkit`, **não persiste** (A-04). `409` se `!= CONCLUIDA`; `404`. `RelatorioModule` novo (consome `AnalisesService`); `montarModeloRelatorio` puro (itens por `ordem`, `formatarNorma`) + `renderRelatorioPdf`. Conteúdo: NUP, objeto, responsável, datas, resumo, e por requisito `codigo`/`titulo`/norma/página/`statusFinal`. Sem migration. | `npm run ci` ✅ (106 unit) · `npm run test:e2e` ✅ 39/39 (+ integração `relatorio-pdf`: `200 application/pdf inline` + `%PDF-` / `409` antes de concluir / `404`) · build ✅ · Crítico ✅ · **branch `backend/rf-016-relatorio`, aguardando merge** |
 
 ### 3.1 Notas de revisão dos ciclos fechados
+
+**Crítico — RF-009 / TSD-015 (frontend, 01/09/2026):** **APROVADO**, sem bloqueantes. Aderente ao escopo §3 e às decisões da slice validadas pelo usuário (§9): filtro persistido na URL, grupos vazios visíveis com placeholder, 3 chips + "Todos", filtro por `statusFinal` compartilhado entre abas, estado "nenhum não conforme" + atalho (PRD §9). Os 11 itens de aceite da §8 com evidência em código **e** teste de comportamento; `next build` renderiza a rota como ƒ dynamic (par searchParams↔URL fora do mock); nenhuma chamada nova ao backend, contrato inalterado. Ajustes aplicados após o Crítico: **removido `contarPorFiltro`** (sem consumidor real — a contagem sai de `contarItens(gruposFiltrados)`); `painel-revisao.test` passou a asserir a ausência do grupo de chips em `PROCESSANDO` e que o badge do cabeçalho de grupo reflete os itens visíveis (129 testes). Não-bloqueantes anotados: a **legenda "sugestões da IA" agora só aparece quando há itens visíveis** (decisão de implementação, não estava na §3); a leitura de `?requisitos=` é só na montagem — back/forward do browser não re-sincroniza os chips (fora do escopo, limitação conhecida); contraste do chip "Não se aplica" ativo usa `--color-border-strong` (token do protótipo) — confirmar AA num momento oportuno; a fixture id "7" sem não conformes é andaime (arquivo já rotulado "substituído pela API real").
+
+**Crítico — RF-007 / TSD-014 (frontend, 01/09/2026):** **APROVADO**, sem bloqueantes. Os 7 critérios de aceite da §8 com evidência no código; testes exercitam comportamento real (`divergeDaIa`, marca "IA" × chip, bloco expandido, legenda com/sem itens e em erro); sem vazamento de escopo de RF-008/009/011/017; divergência do protótipo justificada (protótipo mostra um só status por item; PRD RF-007 + glossário vencem). Não-bloqueantes: a fixture `av-6` que passou a divergir também ganhou `verificado=true` + `comentario` (coerente com o invariante R-06 do backend; anotado aqui); o "realce âmbar" de divergência tem evidência só visual (screenshot), não unitária — aceitável em slice de apresentação; legenda aparece mesmo com a aba ativa vazia (inofensivo). Ajustes aplicados no ciclo após o Crítico: asserção da ausência de legenda em `ERRO_PROCESSAMENTO` e do badge principal seguir o `statusFinal` na divergência (113 testes).
 
 **Crítico — TSD-001 (31/08/2026):** **aprovado**. Escopo cumprido, sem vazamento de escopo de produto. Toda a bateria passa, incluindo `test:e2e` (a pendência de ambiente foi resolvida com PostgreSQL embutido). Observações menores não bloqueantes: leve duplicação de defaults entre `configuration.ts` e `env.validation.ts`; `STATUS_REQUISITO` ainda não usado (seam para RF-007); `package.json#prisma` gera aviso de deprecação (migrar para `prisma.config.ts` em algum momento antes do Prisma 7).
 
@@ -104,12 +112,18 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 - [x] P-03 (quando exigir comentário) fechado — R-06.
 - [x] RF-008/011/017/TSD-008 mergeada na `main` (`ad2e8cd`).
 - [x] RF-014/TSD-009 mergeada na `main` (`19f308b`, push feito).
-- [x] RF-012/013/015/TSD-010 mergeada na `main` (`56f83bd`, push feito).
-- [x] RF-016/TSD-011 — ciclo fechado na branch `backend/rf-016-relatorio` (106 unit, 39 e2e, Crítico ✅). **Aguardando merge + push.** Fecha o backend de features do MVP.
+- [x] RF-012/013/015/TSD-010 (backend) mergeada na `main` (`56f83bd`).
+- [x] RF-016/TSD-011 (backend) — relatório PDF final; 106 unit, 39 e2e, Crítico ✅; mergeada na `main` (com a linha do frontend). **Fecha as features de backend do MVP.**
+- [x] Frontend TSD-002 + RF-002/TSD-011 + RF-001+RF-004/TSD-012 mergeados na `main` (01/09/2026).
+- [x] RF-010 / TSD-013 (frontend) — tela de análise mergeada na `main` (`28c9e8c`).
+- [x] RF-007 / TSD-014 (frontend) — status sugerido pela IA; Crítico ✅; mergeada na `main` (`cbe9f5b`, branch empurrada).
+- [x] RF-009 / TSD-015 (frontend) — filtros por status + visão inicial priorizando não conformes; Crítico ✅; `npm run ci` verde (129 testes); mergeada na `main` (branch `frontend/rf-009-filtros`).
 - [ ] **Integração da IA real** (`HttpAdapter` da `AnaliseIaPort` + A-02) — único item de backend restante para o MVP.
-- [ ] Implementar a TSD-002 (frontend) — aprovada; por Vinicius, em branch a partir da `main`.
-- [ ] Integração com o serviço de IA real (`HttpAdapter` + A-02) — **adiada para o fim do MVP**.
+- [ ] Follow-up (frontend): o caminho "parecer diverge da IA" (RF-007) só tem caso real com RF-008; até lá vive de fixture forjada + screenshot.
+- [ ] Follow-up (frontend, RF-009): re-sincronizar os chips de filtro em navegação back/forward do browser (hoje `?requisitos=` só é lido na montagem); confirmar contraste AA do chip "Não se aplica" ativo; substituir a fixture id "7" (sem não conformes) por caso real quando houver base/backend conjunto.
+- [x] Follow-up (frontend): `next lint` → `eslint .` (feito no ciclo de RF-002).
 - [ ] Follow-up: migrar `package.json#prisma` para `prisma.config.ts` antes do Prisma 7.
+- [ ] Follow-up (frontend): smoke de `/`, do modal "Nova análise" e da tela de análise contra o backend real quando houver ambiente conjunto (os gateways HTTP só passaram por teste de contrato).
 - [ ] Questões abertas: P-07 (lista real de requisitos), P-05 (**parcialmente fechada** — falta sugestão automática de página pela IA + "quando a ausência é válida", A-02), A-05/P-09 (armazenamento do PDF), P-11 (máscara do NUP), A-07 (re-seleção de `PROCESSANDO` preso), A-02 (contrato da IA — para o fim). Ver `docs/product/questoes-abertas.md`.
 - [ ] Confirmar se `docs/licia-analisadora-product-discovery.md` está versionado neste repo (citado no PRD).
 - [ ] Limpar branches já mergeadas (`backend/tsd-001-fundacao-tecnica`, `backend/rf-001-criar-analise`, `backend/rf-002-listagem`, `backend/rf-005-processamento`, `backend/rf-009-abrir-analise`, `backend/rf-008-revisao-requisito`) — local + remota. (`backend/rf-014-pdf-pagina` já removida.)
@@ -123,10 +137,9 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 ## 7. Próximo passo recomendado
 
-1. **Backend (Pablo):** ciclo RF-016 fechado — **fazer o merge (fast-forward) da branch `backend/rf-016-relatorio` na `main` e o push**. Com isso o backend de features do MVP está completo.
-2. **Backend — último passo do MVP:** abrir o ciclo da **integração da IA real** — `HttpAdapter` da `AnaliseIaPort` + fechar A-02 (contrato de entrada/saída, auth, timeout, retry, e se o projeto aciona um serviço ou consome um resultado). É o que estava adiado desde 31/08.
-3. **Frontend (Vinicius):** branch `frontend/tsd-002-fundacao` a partir do `main`; implementar a TSD-002.
-4. Cada ciclo mergeia no `main` quando o Documentador fecha.
+1. **Backend (Pablo):** RF-016/TSD-011 (relatório PDF) mergeada — **as features de backend do MVP estão completas**. Único passo restante: abrir o ciclo da **integração da IA real** — `HttpAdapter` da `AnaliseIaPort` + fechar A-02 (contrato de entrada/saída, auth, timeout, retry, e se o projeto aciona um serviço ou consome um resultado). É o que estava adiado desde 31/08.
+2. **Frontend (Vinicius):** RF-002/RF-001/RF-004/RF-010/RF-007/RF-009 mergeados na `main`. Próximo: **RF-008** (modal de alteração de status final / "parecer"), linha 7 da tabela de sequenciamento do frontend. O PM apresenta a User Story + a TSD para validação **antes** de implementar; quando o RF fechar, push da branch + merge + push da `main`.
+3. Cada ciclo mergeia no `main` quando o Documentador fecha. As duas frentes commitam na `main` em paralelo — merges (não só fast-forward) são esperados quando as linhas divergem.
 
 ### Ajuste de processo (a partir de RF-014)
 

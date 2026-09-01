@@ -1,0 +1,31 @@
+.bloco {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding: var(--spacing-8) var(--spacing-12);
+  background: var(--color-bg-page);
+  border-radius: var(--radius-4);
+}
+
+.divergente {
+  background: var(--color-warning-subtle);
+  border-left: 3px solid var(--color-warning-default);
+}
+
+.linha {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  font-size: var(--text-caption-size);
+  line-height: var(--line-height-16);
+}
+
+.rotulo {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-title);
+}
+
+.aviso {
+  font-style: italic;
+  color: var(--color-warning-text);
+}

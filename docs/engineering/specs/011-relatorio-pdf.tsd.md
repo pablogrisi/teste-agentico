@@ -3,7 +3,7 @@
 ---
 title: TSD - Relatório PDF final (RF-016, backend)
 type: tsd
-status: concluída — aguardando merge (branch backend/rf-016-relatorio)
+status: concluída — mergeada no main
 created: 01/09/2026 // Pablo Grisi (Engenheiro)
 updated: 01/09/2026 // Pablo Grisi
 related:

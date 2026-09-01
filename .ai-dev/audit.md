@@ -34,6 +34,130 @@ Papéis:
 
 Estado: ciclo fechado, **branch aguardando merge + push**. Backend do MVP: só falta a **integração da IA real** (`HttpAdapter` da `AnaliseIaPort` + A-02).
 
+## 01/09/2026 — RF-009 / TSD-015: filtros por status + visão inicial priorizando não conformes (frontend)
+
+Contexto: 5º ciclo de RF do frontend, na branch `frontend/rf-009-filtros` (a partir da `main` — RF-007 já mergeada em `cbe9f5b`). Ciclo completo dos 6 papéis, incluindo o subagente `critico`. TSD-015 é a próxima livre na numeração compartilhada. O usuário validou a User Story + TSD e respondeu às 6 decisões abertas da §9: **(1)** filtro persistido na URL ("caso eu marque não conforme, não tire"); **(2)** filtro compartilhado entre as abas (recomendação aceita); **(3)** filtrar por `statusFinal` — "o humano sempre tem a decisão final, a IA só sugere"; **(4)** 3 chips de status + "Todos" (backend do colega tem 3 status); **(5)** grupos sem itens no filtro **continuam aparecendo** com placeholder (mudou vs. proposta original, que ocultava); **(6)** atalho "Ver todos" só no caso "nenhum não conforme" (como no documento).
+
+Papéis:
+- **PM**: User Story do recorte frontend de RF-009 no `roadmap.md` — tela abre priorizando não conformes + chips de filtro por status no `PainelRevisao` (adiados do RF-010). **Apresentada e parada** para validação.
+- **Engenheiro**: `docs/engineering/specs/015-filtros-status-frontend.tsd.md` — slice de apresentação; `filtrarPorStatus` puro; filtro na URL; estado "nenhum não conforme" (PRD §9). **Apresentada e parada.** Após as respostas do usuário às decisões §9, a TSD foi ajustada (URL + grupos visíveis) e um commit "decisões validadas" registrou a mudança.
+- **Dev**: `src/lib/data/filtro-requisito.ts` novo (`FiltroRequisito`, `FILTRO_REQUISITO_PADRAO/OPCOES/LABEL`, `parseFiltroRequisito`/`filtroParaSlug`, `filtrarPorStatus` — puro, preserva todos os grupos, não muta); `src/components/analise/FiltroStatus.tsx` + `.module.css` novo (chips `role="group"` / `aria-pressed`, cor de ativo por status portada de `.chipActive*` do protótipo); `PainelRevisao.tsx` → filtro em `useState` lido de `useSearchParams` e escrito com `router.replace(..., { scroll: false })` (param omitido no padrão), compartilhado entre abas, grupos vazios com linha de placeholder, estado "nenhum não conforme" + botão "Ver todos os requisitos", legenda RF-007 só quando há itens visíveis; `app/analise/[id]/page.tsx` → `<PainelRevisao>` sob `<Suspense>`; `fixtures-analise-detalhe.ts` → id "7" ganha `AVALIACOES_SEM_NAO_CONFORME` (andaime) para exercitar o §9.
+- **Testes (mecânico)**: `npm run ci` ✅ — `eslint .` + prettier, `tsc --noEmit`, **vitest 130 → 129/129 (18 arquivos)** (o −1 é a remoção de `contarPorFiltro` pós-Crítico), `next build` (rota `/analise/[id]` como ƒ dynamic). Novos: `filtro-requisito` (parse/slug/filtrar/não-muta), `filtro-status` (4 chips/aria-pressed/onChange/grupo), `painel-revisao` +7 (filtro inicial, URL grava/limpa, lê `?requisitos=`, mantém ao trocar de aba, placeholder de grupo vazio + badge dos visíveis, §9 + atalho, PROCESSANDO sem chips).
+- **Crítico** (subagente `critico`): **APROVADO**, sem bloqueantes. Ajustes aplicados após o Crítico: **removido `contarPorFiltro`** (só o teste o chamava — a contagem sai de `contarItens(gruposFiltrados)`); asserção da ausência do grupo de chips em `PROCESSANDO` e de que o badge do cabeçalho de grupo reflete os itens visíveis. Não-bloqueantes anotados no checkpoint §3.1: legenda "sugestões da IA" passou a depender de haver itens visíveis (decisão de implementação); `?requisitos=` só é lido na montagem (back/forward do browser não re-sincroniza os chips — follow-up); contraste AA do chip "Não se aplica" ativo; fixture id "7" é andaime.
+- **Documentador**: TSD-015 (status `implementada` + §8), `roadmap.md` (RF-009 frontend → implementada; tabela de sequenciamento linha 6), checkpoint §1/§2/§3.1/§5/§7, este arquivo.
+
+Evidência visual: `frontend/docs/visual-reference/rf-009/` — `rf009-nao-conforme.png`, `rf009-todos.png`, `rf009-grupo-vazio-placeholder.png`, `rf009-nenhum-nao-conforme.png`, `rf009-ver-todos.png` + `README.md` (comparação REF-06 / `AnalysisPanel` do protótipo; divergências intencionais registradas). A URL real após "Ver todos" (`…/analise/7?requisitos=todos`) confirma a persistência fora do mock.
+
+Estado: ciclo fechado com Crítico ✅, `npm run ci` verde, **branch aguardando push + merge na `main`**. Próximo frontend: RF-008 (modal de alteração de status final / "parecer").
+
+## 01/09/2026 — RF-007 / TSD-014: status sugerido pela IA na tela de análise (frontend)
+
+Contexto: 4º ciclo de RF do frontend, na branch `frontend/rf-007-status-ia` (a partir da `main` — RF-010 já mergeada em `28c9e8c`). O usuário reforçou: seguir o **fluxo completo dos 6 papéis, incluindo o Crítico**, em toda implementação (os ciclos anteriores de frontend pularam o Crítico). A partir daqui o subagente `critico` roda antes de fechar cada RF. TSD-014 é a próxima livre na numeração compartilhada (backend 009/010; frontend 011/012/013/014).
+
+Papéis:
+- **PM**: User Story do recorte frontend de RF-007 no `roadmap.md` — exibir `statusSugeridoIa` no `RequisitoItem` do RF-010, distinguir sugestão da IA do parecer atual, realçar divergência. Sem mudança de contrato (o payload já traz os dois campos). **Apresentada e parada.**
+- **Engenheiro**: `docs/engineering/specs/014-status-ia-frontend.tsd.md` — slice puramente de apresentação; `divergeDaIa`; caminho "diverge" implementado agora (só ocorre com RF-008) e testado via fixture; §10 (REF-07 — protótipo não distingue os dois status: divergência registrada). **Apresentada e parada.** Usuário validou: "faça igual ao protótipo, melhore onde achar melhor" + "siga o fluxo dos meus agentes".
+- **Dev**: `analise-detalhe.ts` → `divergeDaIa(item)` (puro, `Pick<AvaliacaoItem,...>`); `StatusIaResumo.tsx` novo (bloco "Sugestão da IA / Parecer atual — alterado na revisão"); `RequisitoItem.tsx` → marca "IA" (parecer = sugestão) ou chip âmbar "IA: <sugestão>" + classe `divergente` (realce âmbar do card) quando diverge, e `StatusIaResumo` no topo do expandido; `PainelRevisao.tsx` → legenda "os status abaixo são sugestões da IA…" acima da lista (some no estado processando/erro/sem itens); `fixtures-analise-detalhe.ts` → item `av-6` passou a divergir (`statusSugeridoIa=NAO_CONFORME`, `statusFinal=CONFORME`, `verificado=true`, comentário) para o caso ser exercitável e realista.
+- **Testes (mecânico)**: `npm run ci` ✅ — `eslint .` + prettier, `tsc --noEmit`, **vitest 111 → 113/113 (16 arquivos)**, `next build`. Novos: `divergeDaIa` (2), `requisito-item` RF-007 (marca/chip/badge principal/expandido igual/expandido diverge — 5), `painel-revisao` legenda (com itens / PROCESSANDO / ERRO_PROCESSAMENTO). Percalço: comentário/legenda com Prettier resolvido no `--write`.
+- **Crítico** (subagente `critico`): **APROVADO**, sem bloqueantes. Não-bloqueantes: fixture `av-6` carregou `verificado`+`comentario` além do descrito na TSD §9 (coerente com R-06 — anotado); realce âmbar só com evidência visual; legenda visível com aba ativa vazia. Ajustes aplicados após o Crítico: asserção de ausência da legenda em `ERRO_PROCESSAMENTO` e do badge principal seguir `statusFinal` na divergência.
+- **Documentador**: TSD-014 (status + §8), `roadmap.md` (RF-007 frontend → implementada), checkpoint §1/§2/§3.1/§5/§7, este arquivo, `frontend/README.md`.
+
+Evidência visual: `frontend/docs/visual-reference/rf-007/` — `parecer-igual-sugestao.png`, `parecer-diverge-da-ia.png`, `prototipo-painel.png` + `README.md`.
+
+Estado: ciclo fechado com Crítico ✅, `npm run ci` verde, **branch aguardando push + merge na `main`**. Próximo frontend: RF-009 (visão inicial priorizando não conformes + filtros por status). Follow-up: o caminho "diverge da IA" só terá caso real com RF-008.
+
+## 01/09/2026 — RF-010 / TSD-013: tela de análise — abas Checklist/Técnica (frontend)
+
+Contexto: 3º ciclo de RF do frontend, na branch `frontend/rf-010-tela-analise` (a partir da `main` `9887dca`). Numeração: backend tinha tomado TSD-009 (RF-014) e TSD-010 (RF-012/013/015); frontend seguiu com 011 (RF-002), 012 (RF-001/004) e agora **013** (RF-010).
+
+Papéis (em sequência, mesma sessão):
+- **PM**: User Story do recorte frontend de RF-010 em `docs/product/roadmap.md` — tela de análise carrega `GET /analises/:id`, abas Checklist/Técnica com navegação livre, lista de requisitos por área em acordeão **somente leitura**, estados carregando/erro/404. Fora do escopo: filtros (RF-009), IA sugerida (RF-007), verificado interativo (RF-011), modal de parecer (RF-008), comentário (RF-017), visor de PDF (RF-014), conclusão (RF-012). **Apresentada e parada para validação.**
+- **Engenheiro**: `docs/engineering/specs/013-tela-analise-frontend.tsd.md`. **Apresentada e parada.** Usuário validou com 3 decisões: (1) corte inclui a lista read-only; (2) aba Técnica **fiel ao backend** (badge de `statusFinal`, não neutra como o protótipo — P-04); (3) **ligar polling** enquanto processa; checkbox desabilitado (interativo no RF-011). TSD-013 §9/§10 atualizadas com as decisões e a inspeção do `AnalysisPanel`.
+- **Dev**:
+  - Camada de dados: `types.ts` (`AnaliseDetalhe`, `ResumoAnalise`, `AreaComItens`, `AvaliacaoItem`, `NormaReferencia`); `analise-detalhe.ts` (`separarPorAba` por prefixo `CHECKLIST`/`TECNICA`, `rotuloArea`, `normaTexto`, `calcularResumo`, `contarItens`, `ANALISE_POLL_MS`); `status-requisito.ts` (label/tone); `analises-gateway.ts` (`abrirAnalise` + `AnaliseNaoEncontradaError`); `fixtures-analise-detalhe.ts` (fixtures explícitas ids 1/2/3/5 + sintetizador a partir da listagem); `fixtures-analises-gateway.ts`/`http-analises-gateway.ts` (`abrirAnalise` + `validarAnaliseDetalhe`); `index.ts`.
+  - Rota: `app/analise/[id]/page.tsx` reescrita (Server Component `dynamic`, `notFound()` no `AnaliseNaoEncontradaError`); `not-found.tsx` novo.
+  - Componentes `src/components/analise/`: `AnaliseHeader` (NUP/objeto/status/responsável/datas — barra própria acima dos painéis), `AnaliseVisorPlaceholder` (RF-014), `AutoRefreshAnalise` (client, `setInterval`→`router.refresh()` só enquanto `PENDENTE`/`PROCESSANDO`), `PainelRevisao` (client — abas, progresso do `resumo`, grupos por área, estados processando/erro), `RequisitoItem` (client — acordeão; `<div>` header com checkbox desabilitado + `<button>` toggle para não aninhar input em button; expandido = descrição/norma/comentário/página-texto), `StatusBadgeRequisito`. Ícones: nenhum novo (reusa `ChevronDownIcon`).
+- **Testes (mecânico)**: `npm run ci` ✅ — `eslint .` + prettier, `tsc --noEmit`, **vitest 104/104 (16 arquivos)**, `next build`. Novos/estendidos: `analise-detalhe` (separar/rótulo/norma/resumo), `fixtures-analises-gateway` (+`abrirAnalise`: fixture/sintetizado/processando/404/imutabilidade), `http-analises-gateway` (+`abrirAnalise` contrato: URL encodada, mapeamento completo, `404`→`NaoEncontrada`, `500`, sem `avaliacoesPorArea`/`resumo`, status fora da allowlist, rede), `painel-revisao` (6 casos), `requisito-item` (4), `analise-header` (2). Percalço: comentário JSDoc com `CHECKLIST*/` fechava o bloco → reescrito.
+- **Visual**: screenshots (Checklist com item expandido, Técnica, processando, não-encontrada) + `prototipo-painel.png` em `frontend/docs/visual-reference/rf-010/` + `README.md` com a comparação vs REF-06/REF-07 (divergências: Técnica com status, sem filtros/checkbox/editar-parecer, badge pílula, cabeçalho em barra própria).
+
+Docs: `roadmap.md` (RF-010 frontend — User Story + status), `013-*.tsd.md` (novo), checkpoint §1/§2/§5/§7, este arquivo.
+
+Estado: ciclo implementado e validado, `npm run ci` verde, **branch aguardando push + merge na `main`**. Próximo frontend: RF-007 (status sugerido pela IA na tela de análise). Follow-up: smoke da tela de análise contra o backend real quando houver ambiente conjunto.
+
+## 01/09/2026 — RF-001 + RF-004 / TSD-012: modal "Nova análise" + upload (frontend)
+
+Contexto: usuário pediu "Continue" após aprovar RF-002. Aberto o 2º ciclo de RF do frontend na branch `frontend/rf-001-nova-analise` (a partir de `frontend/rf-002-listagem`), agrupando RF-001 (criar análise: NUP, objeto) + RF-004 (upload de PDF) — mesmo agrupamento do backend (TSD-004). Sem merge na `main`.
+
+Papéis (em sequência, mesma sessão):
+- **PM**: User Story do recorte frontend em `docs/product/roadmap.md` (RF-001), com escopo, fora do escopo e divergências protótipo × PRD (limite 25 MB vs 50 MB; `objeto`/`arquivo`; sem "Processando documento…").
+- **Engenheiro**: `docs/engineering/specs/012-nova-analise-frontend.tsd.md` — escopo, estratégia de testes (inclui **contrato** de `POST /analises`), decisões (validação client-side = obrigatórios + tipo PDF + 25 MB; magic bytes/`/Encrypt` ficam no backend), §10 (REF-05).
+- **Dev**:
+  - `src/lib/data/nova-analise.ts` — `ANALISE_PDF_TAMANHO_MAX_MB=25`, `NUP_MAX=60`, `OBJETO_MAX=2000`; `validarArquivoPdf`, `validarNovaAnalise`, `formatarTamanho` (puros).
+  - `types.ts` — `NovaAnaliseInput` (`{ nup, objeto, arquivo: File }`), `AnaliseCriada`.
+  - `analises-gateway.ts` — `criarAnalise` na interface; `AnaliseValidacaoError extends AnalisesGatewayError` (`motivos: string[]`).
+  - `fixtures-analises-gateway.ts` — `criarAnalise` revalida e devolve `AnaliseCriada` sintética `PENDENTE` (`id: nova-<uuid>`; **não** entra na lista — andaime).
+  - `http-analises-gateway.ts` — `criarAnalise` = `POST {base}/analises` (FormData `nup`/`objeto`/`arquivo`); `422` → `AnaliseValidacaoError` (lê `message` string|array); `≥500`/rede → `AnalisesGatewayError`; `validarAnaliseCriada` para o `201`.
+  - `NovaAnaliseModal` (client, `createPortal` p/ `document.body`): campos + dropzone (clique + drag&drop), `role="dialog"`/`aria-modal`, Escape / clique-fora / × / Cancelar (bloqueado enviando), foco inicial no NUP, `body` sem scroll enquanto aberto. Erro por campo (`aria-invalid`/`aria-describedby`); faixa do arquivo fica **vermelha** quando inválido; banner de erro de envio acima do rodapé com os campos preservados.
+  - `NovaAnaliseButton` (client) — substitui o `<button disabled>` do `AnalisesToolbar`; no `onCriada` faz `router.push('/analise/<id>')`.
+  - Ícones `XmarkIcon`, `UploadIcon`, `CircleCheckIcon`, `TrashIcon`.
+- **Testes (mecânico)**: `npm run ci` ✅ — `eslint .` + prettier, `tsc --noEmit`, **vitest 72/72 (12 arquivos)**, `next build`. Novos: `nova-analise` (validações puras), `nova-analise-modal` (7 casos RTL: campos, habilita só quando válido, recusa não-PDF via drag, recusa >25 MB, sucesso → `onCriada`, erro do servidor → banner + dados preservados, Escape), `nova-analise-button` (abre modal, cria → `push`), + `criarAnalise` no `fixtures-analises-gateway` e no `http-analises-gateway` (contrato: FormData/URL/método, `201`, `422` array e string, `502`, corpo fora do formato, rede). Percalços: `userEvent.upload` filtra por `accept` → teste de "não-PDF" usa `fireEvent.drop`; `crypto.randomUUID` disponível no ambiente jsdom.
+- **Visual**: screenshots do modal (vazio, com arquivo, erro de arquivo) + `prototipo-modal.png` em `frontend/docs/visual-reference/rf-001/` + `README.md` com a comparação vs REF-05. Estado "erro de envio" é coberto por teste (sem backend no ar).
+
+Docs: `roadmap.md` (RF-001/RF-004 frontend — User Story + status + TSD-012), `011-*.tsd.md` (novo), checkpoint §1/§2/§5/§7, este arquivo.
+
+Estado: ciclo implementado, `npm run ci` verde, **branch aguardando revisão (Crítico) + merge** — na ordem `tsd-002-fundacao` → `rf-002-listagem` → `rf-001-nova-analise`. Próximo frontend: RF-010 (tela de análise). Follow-up: smoke `criar → abrir` contra o backend real quando houver ambiente conjunto (o `HttpAnalisesGateway` só passou por teste de contrato).
+
+## 01/09/2026 — RF-002 / TSD-011: tela de listagem de análises (frontend)
+
+Contexto: usuário (Vinicius) pediu para abrir o 1º ciclo de RF do frontend a partir da fundação (TSD-002 não mergeada), sem merge na `main`, e incluir o follow-up de migração do `next lint`. Branch `frontend/rf-002-listagem` a partir de `frontend/tsd-002-fundacao`.
+
+Papéis (executados em sequência pela mesma sessão — feature pequena, sem subagentes):
+- **PM**: User Story do recorte frontend de RF-002 escrita em `docs/product/roadmap.md` (RF-002), com escopo, fora do escopo e divergências protótipo × PRD.
+- **Engenheiro**: `docs/engineering/specs/011-listagem-analises-frontend.tsd.md` — escopo, estratégia de testes (inclui **contrato** do `HttpAnalisesGateway`), decisões (URL como estado, chips de status, coluna Status, "Nova análise" desabilitado), §10 (REF-03 inspecionada) e divergências.
+- **Dev**:
+  - Camada de dados (`src/lib/data/`): `types.ts` (+`ListarAnalisesQuery`), `analises-query.ts` (`parseListarAnalisesQuery` tolerante + `queryParaString` omitindo defaults; `TAMANHO_PADRAO=20`/`MAX=100`), `status-analise.ts` (label/tone/allowlist), `analises-gateway.ts` (`listarAnalises(query?)` + `AnalisesGatewayError`), `fixtures-analises-gateway.ts` (aplica busca acento-insensitive/filtro multi-status/ordenação/paginação; fixtures ampliadas p/ 24), `http-analises-gateway.ts` (contrato TSD-005 + `validarAnalisesPagina`), `index.ts` (`getAnalisesGateway` → HTTP se `NEXT_PUBLIC_API_BASE_URL`).
+  - UI (`src/components/analises/`): `StatusBadge`, `AnalisesTable` (tabela real; cabeçalhos NUP/"Iniciada em" ordenáveis via `<Link>`; linha clicável por link estendido na 1ª célula), `AnalisesToolbar` (+`SearchField` client debounced, `StatusFilter` client chips), `Paginator` (links; disabled = `<span>`), `AnalisesListaVazia` (sem-analises / sem-resultado). Ícones novos.
+  - Rotas: `src/app/page.tsx` reescrita como Server Component (`dynamic = "force-dynamic"`, lê `searchParams`, redireciona página fora do intervalo), `loading.tsx` (skeleton), `error.tsx` ("tentar novamente").
+  - **Migração `next lint` → `eslint .`**: removido `.eslintrc.json`; criado `eslint.config.mjs` (flat, `FlatCompat` + `next/core-web-vitals` + `prettier`); dep `@eslint/eslintrc`; scripts `lint`/`lint:fix` (`eslint .` / `eslint . --fix`); `next.config.mjs` com `eslint.ignoreDuringBuilds: true` (lint roda no `npm run ci`).
+  - Testes (Vitest + RTL): `analises-query`, `status-analise`, `fixtures-analises-gateway` (busca/filtro/ordenação/paginação/clamp/imutabilidade), `http-analises-gateway` (**contrato**: URL, mapeamento, rejeição de payload sem `total` / status inválido / item sem `nup` / não-OK / erro de rede), `analises-table`, `analises-lista-vazia`, `paginator`, `search-field` (`next/navigation` mockado). `vitest.setup.ts` ganhou mock de `next/link` e `cleanup` por teste.
+- **Testes (mecânico)**: `npm run ci` ✅ — `eslint .` + `prettier --check` limpos, `tsc --noEmit` ✅, **vitest 43/43 (9 arquivos)**, `next build` ✅ (`/` dinâmica, First Load ~108 kB). Percalços resolvidos no ciclo: (a) CSS Modules rejeita seletores "impuros" (`thead`/`td` nus) → escopados sob `.tabela`; (b) coluna "objeto" colapsava com `max-width:0` → `<span>` com `-webkit-line-clamp` e `td` auto; (c) `userEvent` + fake timers travava → teste do `SearchField` usa timers reais + `waitFor`; (d) tipagem de `vi.fn` sem args no teste de contrato → `vi.fn((_url: string) => …)`.
+- **Visual**: screenshots 1440×900 (lista, página 2, busca+filtro+ordenação, vazio-sem-resultado) em `frontend/docs/visual-reference/rf-002/` + `README.md` com a comparação de enquadramento vs REF-03 (ok; divergências intencionais registradas).
+
+Docs: `roadmap.md` (RF-002 frontend — User Story + status + TSD-011), `docs/engineering/specs/011-*.tsd.md` (novo), checkpoint §1/§2/§5/§7, este arquivo.
+
+Estado: ciclo implementado, `npm run ci` verde, **branch aguardando revisão (Crítico) + merge** (fundação primeiro). Próximo frontend: RF-001/RF-004 (modal "Nova análise" + upload de PDF). Follow-up: smoke de `/` contra o backend real quando houver ambiente conjunto (o `HttpAnalisesGateway` só passou por teste de contrato).
+
+## 01/09/2026 — TSD-002: implementação da fundação técnica do frontend
+
+Contexto: usuário (Vinicius) pediu para trabalhar no frontend seguindo o método. TSD-002 estava `aprovada — não implementada`; §10 (Referências visuais) com inspeção `Pendente` (gate do `visual-reference-workflow`). Ciclo na branch `frontend/tsd-002-fundacao` (a partir do `main` `fb4cd8e`). Não é ciclo de 6 papéis — é fundação (§0 do workflow): implementar a TSD, rodar gates, atualizar checkpoint + audit.
+
+Etapas:
+- **Inspeção visual + §10**: lidos `Prototipo Licia Analisadora/src/theme/*`, `Topbar`, `HomePage`, `AnalysisPage` (+ `PdfPanel`/`AnalysisPanel` CSS). Preenchida a §10 da TSD-002 (§10.1 observações por REF-01..04; §10.2 chrome/divergências a não implementar). 4 `Status de inspeção` → `Inspecionado`. **Parada para revisão humana → aprovada pelo usuário.**
+- **Decisões** (registradas na TSD §9): Next.js 15 App Router + React 19 + TS estrito; Node 20 + npm; **CSS Modules + CSS custom properties** (tokens portados por valor para `src/app/theme/`); **Vitest + RTL + jsdom**; Kanit via `next/font/google`; brasão = placeholder SVG local (`CearaLogo.tsx`), não a URL do Figma MCP; sem trava `min-width: 1440px`.
+
+Alterações:
+- **`frontend/`** (novo): projeto Next.js. `package.json` (scripts `dev/build/start/lint/typecheck/test/test:watch/ci`), `tsconfig.json` (strict, alias `@/*`), `next.config.mjs`, `.eslintrc.json` (`next/core-web-vitals` + `prettier`), `.prettierrc.json`, `vitest.config.ts` (alias via `resolve.alias` — sem `vite-tsconfig-paths`, ESM-only quebrava o config `.ts`), `vitest.setup.ts` (mock de `next/font/google`), `.env.example` (`NEXT_PUBLIC_API_BASE_URL`), `.nvmrc` (20), `.gitignore`, `README.md`.
+- `src/app/`: `layout.tsx` (Kanit + `globals.css`), `globals.css` (importa tokens + reset), `theme/*.css` (6 arquivos de token portados do protótipo), `page.tsx` (rota `/` — casca lista; server component que exercita o seam), `analise/[id]/page.tsx` (rota dinâmica — casca: visor à esquerda, painel de revisão 596px à direita).
+- `src/components/`: `topbar/Topbar.tsx` (+ `.module.css`), `layout/PageShell.tsx` (frame base Topbar + conteúdo; prop `fill`), `brand/CearaLogo.tsx` (placeholder), `icons/index.tsx` (`ChevronDownIcon`).
+- `src/lib/data/`: `types.ts` (`StatusAnalise`, `StatusRequisito` com 3 valores, `AnaliseResumo`, `AnalisesPagina`), `analises-gateway.ts` (interface), `fixtures.ts` (3 análises derivadas do protótipo, sem "responsável"), `fixtures-analises-gateway.ts`, `index.ts` (`getAnalisesGateway()` — fixtures hoje; erro explícito se `NEXT_PUBLIC_API_BASE_URL` definida).
+- `test/unit/`: `page-shell.test.tsx` (2 casos), `fixtures-analises-gateway.test.ts` (2 casos).
+- `frontend/docs/visual-reference/`: 4 screenshots (casca × protótipo, `/` e `/analise`) + `README.md` com o resultado da comparação de frame.
+- Raiz: `README.md` — seção "Frontend" com instruções de execução. `docs/engineering/checkpoint.md` — slice ativada e fechada. `docs/engineering/specs/002-fundacao-frontend.tsd.md` — §8 (critérios marcados), §9 (decisões), §10, frontmatter.
+
+Validações (rodadas de `frontend/`, 01/09/2026):
+- `npm run lint` ✅ (ESLint `next/core-web-vitals` sem erros + Prettier `--check` limpo)
+- `npm run typecheck` ✅ (`tsc --noEmit`)
+- `npm run test` ✅ **4/4** (2 arquivos — `page-shell`, `fixtures-analises-gateway`)
+- `npm run build` ✅ — 4 rotas (`/` estática, `/analise/[id]` dinâmica, `/_not-found`), First Load JS ~103 kB
+- `npm run ci` ✅ (encadeia os 4)
+- **Visual**: screenshots 1440×900 via Chrome (playwright-core) da casca (`npm run build && start`) e do protótipo (`npm run dev`). Frame de REF-02 (Topbar 64px verde-gov), REF-03 (cabeçalho + regra de marca) e REF-04 (visor à esquerda + painel 596px à direita, altura `calc(100vh - 64px)`) confere. Sem gaps de enquadramento. Evidência em `frontend/docs/visual-reference/`.
+
+Percalços resolvidos: (1) `vite-tsconfig-paths` ESM-only quebrava o carregamento de `vitest.config.ts` → trocado por `resolve.alias` manual, dep removida. (2) Painéis da tela de análise não esticavam na vertical (`height: 100%` em item de flex-grow não resolve) → contêiner `align-items: stretch` + `min-height: 0` e remoção do `height: 100%` dos painéis. (3) Ordem dos painéis invertida vs. protótipo → visor à esquerda, revisão à direita. (4) `npm 11` bloqueia install scripts → `package.json#allowScripts` para `esbuild`/`unrs-resolver` (documentado no README). O `package.json` do protótipo, tocado por `npm approve-scripts` durante as screenshots de referência, foi restaurado (`git checkout`).
+
+Decisões: ver TSD-002 §9. Nenhuma questão de `questoes-abertas.md` fechada (fundação só cria seams).
+
+Pendências: revisão (Crítico) + merge da branch na `main`. Follow-up: migrar `next lint` → ESLint CLI (deprecado no Next 15). Depois: abrir o 1º ciclo de RF do frontend (RF-002 — tela de listagem + estado vazio).
+
 ## 01/09/2026 — RF-012 + RF-013 + RF-015 / TSD-010: conclusão da análise (backend)
 
 Contexto: usuário mandou "faz o merge e o push, e abre o ciclo de RF-012+RF-013+RF-015" logo após o fechamento de RF-014. Ciclo agrupado ("concluir a análise") na branch `backend/rf-012-conclusao`, com as duas paradas de aprovação humana explícitas.

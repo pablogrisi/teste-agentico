@@ -1,0 +1,52 @@
+.paginador {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--spacing-4);
+  padding: var(--spacing-8) 0;
+}
+
+.info {
+  flex: 1;
+  min-width: 12rem;
+  padding-right: var(--spacing-8);
+  text-align: right;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-line-height);
+  color: var(--color-text-body);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0 var(--spacing-8);
+  border-radius: var(--radius-full);
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-line-height);
+  color: var(--color-text-body);
+  transition: background 0.12s;
+}
+
+.btn:hover {
+  background: var(--color-bg-hover);
+}
+
+.btnAtivo,
+.btnAtivo:hover {
+  background: var(--color-bg-selected);
+  color: var(--color-text-title);
+  font-weight: var(--font-weight-semibold);
+}
+
+.btnDisabled {
+  color: var(--color-text-disabled);
+  cursor: default;
+}
+
+.btnDisabled:hover {
+  background: none;
+}

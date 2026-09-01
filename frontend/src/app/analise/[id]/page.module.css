@@ -1,0 +1,20 @@
+/* Frame da tela de análise (adaptado de AnalysisPage do protótipo): cabeçalho + dois painéis.
+   Divergência: no protótipo o NUP/objeto ficam no header do painel de PDF; aqui há um
+   cabeçalho compacto acima dos dois painéis. */
+.coluna {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  overflow: hidden;
+}
+
+.paineis {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  gap: var(--spacing-16);
+  overflow: hidden;
+}

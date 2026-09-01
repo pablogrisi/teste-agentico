@@ -39,7 +39,15 @@ Serviço em `http://localhost:3000`; health check em `http://localhost:3000/heal
 
 ### Frontend
 
-Ainda não inicializado — ver TSD-002.
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+App em `http://localhost:3000` (cascas de rota: `/` e `/analise/<id>`). O backend também
+usa a porta 3000 — rodando os dois juntos, suba o frontend noutra porta
+(`npm run dev -- -p 3001`). Detalhes e o seam de dados em [`frontend/README.md`](frontend/README.md).
 
 ## Qualidade
 
