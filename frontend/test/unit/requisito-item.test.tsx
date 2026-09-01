@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { RequisitoItem } from "@/components/analise/RequisitoItem";
 import type { AvaliacaoItem } from "@/lib/data";
 
@@ -56,6 +56,26 @@ describe("RequisitoItem", () => {
     const cb = screen.getByRole("checkbox");
     expect(cb).toBeDisabled();
     expect(cb).toBeChecked();
+  });
+
+  describe("ação 'Alterar parecer' (RF-008)", () => {
+    it("não aparece sem o callback", async () => {
+      const user = userEvent.setup();
+      render(<RequisitoItem item={item()} />);
+      await user.click(screen.getByRole("button", { expanded: false }));
+      expect(screen.queryByRole("button", { name: "Alterar parecer" })).not.toBeInTheDocument();
+    });
+
+    it("aparece no bloco expandido quando o callback vem e o dispara ao clicar", async () => {
+      const user = userEvent.setup();
+      const onAlterarParecer = vi.fn();
+      render(<RequisitoItem item={item()} onAlterarParecer={onAlterarParecer} />);
+      // recolhido: ainda não há botão
+      expect(screen.queryByRole("button", { name: "Alterar parecer" })).not.toBeInTheDocument();
+      await user.click(screen.getByRole("button", { expanded: false }));
+      await user.click(screen.getByRole("button", { name: "Alterar parecer" }));
+      expect(onAlterarParecer).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("status sugerido pela IA (RF-007)", () => {

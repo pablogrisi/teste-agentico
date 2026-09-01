@@ -15,11 +15,18 @@ const ACCENT: Record<AvaliacaoItem["statusFinal"], string> = {
 };
 
 /**
- * Um requisito avaliado, em acordeão — SOMENTE LEITURA nesta slice.
- * Mostra o status sugerido pela IA (RF-007) e o parecer atual.
- * O checkbox de "verificado" aparece desabilitado (fica interativo no RF-011).
+ * Um requisito avaliado, em acordeão.
+ * Mostra o status sugerido pela IA (RF-007) e o parecer atual; com `onAlterarParecer`,
+ * o bloco expandido ganha a ação "Alterar parecer" (RF-008).
+ * O checkbox de "verificado" segue desabilitado (fica interativo no RF-011).
  */
-export function RequisitoItem({ item }: { item: AvaliacaoItem }) {
+export function RequisitoItem({
+  item,
+  onAlterarParecer,
+}: {
+  item: AvaliacaoItem;
+  onAlterarParecer?: () => void;
+}) {
   const [aberto, setAberto] = useState(false);
   const detalheId = useId();
   const norma = normaTexto(item.norma);
@@ -91,6 +98,13 @@ export function RequisitoItem({ item }: { item: AvaliacaoItem }) {
                 <span className={styles.semPagina}>não informada</span>
               )}
             </p>
+            {onAlterarParecer && (
+              <div className={styles.acoes}>
+                <button type="button" className={styles.alterarParecer} onClick={onAlterarParecer}>
+                  Alterar parecer
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

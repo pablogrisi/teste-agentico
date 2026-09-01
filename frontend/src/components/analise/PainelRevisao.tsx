@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   contarItens,
@@ -11,7 +11,14 @@ import {
   rotuloArea,
   separarPorAba,
 } from "@/lib/data";
-import type { AbaAnalise, AnaliseDetalhe, AreaComItens, FiltroRequisito } from "@/lib/data";
+import type {
+  AbaAnalise,
+  AnaliseDetalhe,
+  AreaComItens,
+  AvaliacaoItem,
+  FiltroRequisito,
+} from "@/lib/data";
+import { AlterarParecerModal } from "./AlterarParecerModal";
 import { FiltroStatus } from "./FiltroStatus";
 import { RequisitoItem } from "./RequisitoItem";
 import styles from "./PainelRevisao.module.css";
@@ -31,6 +38,18 @@ export function PainelRevisao({ detalhe }: { detalhe: AnaliseDetalhe }) {
     parseFiltroRequisito(searchParams.get("requisitos")),
   );
 
+  // Alterações de parecer feitas nesta sessão (RF-008): sobrepõem o item e o resumo
+  // devolvidos pelo servidor, sem recarregar. Reiniciadas a cada novo `detalhe` (refetch).
+  const [overrides, setOverrides] = useState<Map<string, AvaliacaoItem>>(new Map());
+  const [resumo, setResumo] = useState(detalhe.resumo);
+  const [parecerDe, setParecerDe] = useState<AvaliacaoItem | null>(null);
+
+  useEffect(() => {
+    setOverrides(new Map());
+    setResumo(detalhe.resumo);
+    setParecerDe(null);
+  }, [detalhe]);
+
   function trocarFiltro(proximo: FiltroRequisito) {
     setFiltro(proximo);
     const sp = new URLSearchParams(searchParams.toString());
@@ -40,22 +59,30 @@ export function PainelRevisao({ detalhe }: { detalhe: AnaliseDetalhe }) {
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }
 
+  const avaliacoesEfetivas = useMemo<AreaComItens[]>(() => {
+    if (overrides.size === 0) return detalhe.avaliacoesPorArea;
+    return detalhe.avaliacoesPorArea.map((grupo) => ({
+      area: grupo.area,
+      itens: grupo.itens.map((item) => overrides.get(item.id) ?? item),
+    }));
+  }, [detalhe.avaliacoesPorArea, overrides]);
+
   const { checklist, tecnica } = useMemo(() => {
-    const separado = separarPorAba(detalhe.avaliacoesPorArea);
+    const separado = separarPorAba(avaliacoesEfetivas);
     return {
       // áreas "fora da convenção" ficam junto do Checklist para não sumir dado
       checklist: [...separado.checklist, ...separado.outras],
       tecnica: separado.tecnica,
     };
-  }, [detalhe.avaliacoesPorArea]);
+  }, [avaliacoesEfetivas]);
 
   const gruposAba = aba === "checklist" ? checklist : tecnica;
   const gruposFiltrados = useMemo(() => filtrarPorStatus(gruposAba, filtro), [gruposAba, filtro]);
 
-  const { resumo } = detalhe;
   const progresso = resumo.total > 0 ? Math.round((resumo.verificados / resumo.total) * 100) : 0;
   const semAvaliacoes = detalhe.avaliacoesPorArea.length === 0;
   const temItensVisiveis = contarItens(gruposFiltrados) > 0;
+  const podeEditar = detalhe.status === "PRONTA_PARA_REVISAO";
 
   return (
     <section className={styles.painel} aria-label="Painel de revisão">
@@ -119,10 +146,24 @@ export function PainelRevisao({ detalhe }: { detalhe: AnaliseDetalhe }) {
               grupos={gruposFiltrados}
               filtro={filtro}
               onVerTodos={() => trocarFiltro("TODOS")}
+              onAlterarParecer={podeEditar ? setParecerDe : undefined}
             />
           </>
         )}
       </div>
+
+      {parecerDe && podeEditar && (
+        <AlterarParecerModal
+          analiseId={detalhe.id}
+          item={parecerDe}
+          onFechar={() => setParecerDe(null)}
+          onAlterado={({ item, resumo: resumoNovo }) => {
+            setOverrides((atual) => new Map(atual).set(item.id, item));
+            setResumo(resumoNovo);
+            setParecerDe(null);
+          }}
+        />
+      )}
     </section>
   );
 }
@@ -131,10 +172,12 @@ function ConteudoAba({
   grupos,
   filtro,
   onVerTodos,
+  onAlterarParecer,
 }: {
   grupos: AreaComItens[];
   filtro: FiltroRequisito;
   onVerTodos: () => void;
+  onAlterarParecer?: (item: AvaliacaoItem) => void;
 }) {
   if (grupos.length === 0) {
     return <p className={styles.vazio}>Nenhum requisito nesta aba.</p>;
@@ -161,10 +204,16 @@ function ConteudoAba({
     );
   }
 
-  return <ListaAba grupos={grupos} />;
+  return <ListaAba grupos={grupos} onAlterarParecer={onAlterarParecer} />;
 }
 
-function ListaAba({ grupos }: { grupos: AreaComItens[] }) {
+function ListaAba({
+  grupos,
+  onAlterarParecer,
+}: {
+  grupos: AreaComItens[];
+  onAlterarParecer?: (item: AvaliacaoItem) => void;
+}) {
   return (
     <div className={styles.lista}>
       {grupos.map((grupo) => (
@@ -178,7 +227,11 @@ function ListaAba({ grupos }: { grupos: AreaComItens[] }) {
           ) : (
             <div className={styles.grupoItens}>
               {grupo.itens.map((item) => (
-                <RequisitoItem key={item.id} item={item} />
+                <RequisitoItem
+                  key={item.id}
+                  item={item}
+                  onAlterarParecer={onAlterarParecer ? () => onAlterarParecer(item) : undefined}
+                />
               ))}
             </div>
           )}

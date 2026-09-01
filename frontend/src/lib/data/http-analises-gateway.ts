@@ -1,4 +1,5 @@
 import {
+  AnaliseConflitoError,
   AnaliseNaoEncontradaError,
   AnaliseValidacaoError,
   AnalisesGatewayError,
@@ -8,6 +9,7 @@ import { queryParaString } from "./analises-query";
 import { isStatusAnalise } from "./status-analise";
 import { isStatusRequisito } from "./status-requisito";
 import type {
+  AlteracaoParecerInput,
   AnaliseCriada,
   AnaliseDetalhe,
   AnaliseResumo,
@@ -18,6 +20,7 @@ import type {
   NormaReferencia,
   NovaAnaliseInput,
   ResumoAnalise,
+  RevisaoRequisitoResultado,
 } from "./types";
 
 /**
@@ -112,6 +115,44 @@ export class HttpAnalisesGateway implements AnalisesGateway {
       throw new AnalisesGatewayError("Resposta do serviço de análises não é JSON válido.", causa);
     }
     return validarAnaliseDetalhe(corpo);
+  }
+
+  async revisarRequisito(
+    analiseId: string,
+    requisitoId: string,
+    patch: AlteracaoParecerInput,
+  ): Promise<RevisaoRequisitoResultado> {
+    const base = this.baseUrl.replace(/\/+$/, "");
+    const url = `${base}/analises/${encodeURIComponent(analiseId)}/requisitos/${encodeURIComponent(
+      requisitoId,
+    )}`;
+
+    let resposta: Response;
+    try {
+      resposta = await fetch(url, {
+        method: "PATCH",
+        body: JSON.stringify({ statusFinal: patch.statusFinal, comentario: patch.comentario }),
+        headers: { "content-type": "application/json", accept: "application/json" },
+        cache: "no-store",
+      });
+    } catch (causa) {
+      throw new AnalisesGatewayError("Não foi possível contatar o serviço de análises.", causa);
+    }
+
+    if (resposta.status === 422) throw new AnaliseValidacaoError(await extrairMotivos(resposta));
+    if (resposta.status === 409) throw new AnaliseConflitoError();
+    if (resposta.status === 404) throw new AnaliseNaoEncontradaError(analiseId);
+    if (!resposta.ok) {
+      throw new AnalisesGatewayError(`Falha ao alterar o parecer (HTTP ${resposta.status}).`);
+    }
+
+    let corpo: unknown;
+    try {
+      corpo = await resposta.json();
+    } catch (causa) {
+      throw new AnalisesGatewayError("Resposta do serviço de análises não é JSON válido.", causa);
+    }
+    return validarRevisaoResultado(corpo);
   }
 }
 
@@ -273,6 +314,15 @@ function lerResumo(v: unknown): ResumoAnalise {
     verificados: r.verificados as number,
     obrigatoriosPendentes: r.obrigatoriosPendentes as number,
   };
+}
+
+/** Valida a resposta `{ item, resumo }` de `PATCH /analises/:id/requisitos/:requisitoId` (TSD-008). */
+export function validarRevisaoResultado(corpo: unknown): RevisaoRequisitoResultado {
+  if (typeof corpo !== "object" || corpo === null) {
+    throw new AnalisesGatewayError("Formato inesperado na alteração do parecer.");
+  }
+  const c = corpo as Record<string, unknown>;
+  return { item: lerItem(c.item), resumo: lerResumo(c.resumo) };
 }
 
 /** Valida o payload de `GET /analises/:id` (SDD §7 — TSD-004 + TSD-007 + TSD-009 + TSD-010). */

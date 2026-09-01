@@ -172,3 +172,28 @@
   font-style: italic;
   color: var(--color-text-disabled);
 }
+
+.acoes {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-4);
+}
+
+.alterarParecer {
+  padding: var(--spacing-8) var(--spacing-16);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-8);
+  background: var(--color-bg-card);
+  font-family: var(--font-family-base);
+  font-size: var(--text-small-semibold-size);
+  font-weight: var(--text-small-semibold-weight);
+  line-height: var(--text-small-semibold-line-height);
+  color: var(--color-brand-default);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.alterarParecer:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-border-strong);
+}
