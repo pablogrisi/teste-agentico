@@ -55,7 +55,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 
 | Sequência | ID | Feature (recorte frontend) | Prioridade | Status |
 |---|---|---|---|---|
-| 1 | RF-002 | Tela de listagem de análises + estado vazio | Must | não iniciada |
+| 1 | RF-002 | Tela de listagem de análises + estado vazio | Must | implementada (branch `frontend/rf-002-listagem`) |
 | 2 | RF-001 | Modal "Nova análise" (NUP, objeto) + validação | Must | não iniciada |
 | 3 | RF-004 | Campo de upload de PDF no modal + estados de erro | Must | não iniciada |
 | 4 | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre | Must | não iniciada |
@@ -160,13 +160,27 @@ Recorte backend deste ciclo:
 
 **Frentes:** Backend · Frontend
 **Status (backend):** implementada (mergeada no `main` `57b170f`)
-**Status (frontend):** não iniciada
+**Status (frontend):** implementada na branch `frontend/rf-002-listagem` — aguardando revisão + merge
 
 **User Story**
 
 Como analista técnico, quero ver a lista das análises que criei, com identificação suficiente e o status de cada uma, para reabrir a que eu precisar e acompanhar o andamento.
 
 Recorte backend deste ciclo: `GET /analises` — devolve as análises do analista atual, com busca/filtro/ordenação/paginação a definir (P-06). Sem alteração no modelo `Analise`. Sem a tela (frente frontend).
+
+**Recorte frontend deste ciclo (RF-002 frontend):**
+
+Como analista técnico, quero abrir a tela inicial e ver, numa tabela, as análises que criei — com NUP, objeto, status e data de início —, podendo buscar por NUP/objeto, filtrar por status, ordenar e paginar, para localizar e reabrir rapidamente a análise que preciso; e quando eu ainda não tiver análises, quero uma tela que me oriente a criar a primeira.
+
+- `/` deixa de ser casca: tabela + busca (`q`) + filtro por status (multi) + ordenação (`iniciadaEm`/`nup`) + paginação, tudo refletido na URL. Linha leva a `/analise/[id]`.
+- Estados: vazio "sem análises" (orienta a criar) e "sem resultado" (limpar busca/filtros); carregando; erro com "tentar novamente" (PRD §9).
+- Consome o contrato `GET /analises` (TSD-005) pelo seam de dados: `HttpAnalisesGateway` + teste de contrato; `getAnalisesGateway()` usa HTTP quando `NEXT_PUBLIC_API_BASE_URL` estiver definida, senão fixtures.
+- **Fora:** criação de análise (RF-001, frontend); tela de análise (RF-010+); painel de filtros consolidado; seletor de tamanho de página na UI; contagens de requisitos por linha (RF-007).
+- **Divergências protótipo × PRD** (na TSD): coluna "Status" adicionada e "Adicionado por" removida (analista único); filtro por status como chips inline em vez do modal "Filtros"; "Nova análise" desabilitado.
+
+**Follow-up incluído neste ciclo:** migração de `next lint` → `eslint .` (ESLint CLI + flat config), scripts do `package.json` adaptados.
+
+**TSD associada (frontend):** `docs/engineering/specs/010-listagem-analises-frontend.tsd.md`.
 
 **Critérios de aceite**
 
