@@ -1,0 +1,21 @@
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+}
+
+.linhaTopo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-16);
+  flex-wrap: wrap;
+}
+
+.buscaFallback {
+  width: 100%;
+  max-width: 28rem;
+  height: 2.5rem;
+  background: var(--color-bg-hover);
+  border-radius: var(--radius-8);
+}

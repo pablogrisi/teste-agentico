@@ -14,18 +14,17 @@ Fundação percorrida (`.ai-dev/bootstrap.md`): PRD e SDD aprovados, `questoes-a
 
 Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJS, Pablo) e `frontend/` (Next.js, Vinicius), método e docs compartilhados na raiz. Cada frente roda seu próprio ciclo de seis papéis.
 
-- **`main` `19f308b`** (push feito): TSD-001 + RF-006 + RF-001/004/018 + RF-002 + RF-005/RF-007 + RF-009 + RF-008/011/017 + **RF-014/TSD-009** integradas.
-- **RF-012 + RF-013 + RF-015 / TSD-010** (conclusão global da análise, backend) — **ciclo fechado** na branch `backend/rf-012-conclusao` (6 papéis, gates cumpridos). `npm run ci` ✅ (97 unit) · `test:e2e` ✅ 36/36. **Aguardando merge + push.**
-- **TSD-002** (`frontend/`) — aprovada; **não implementada**. Por Vinicius, em branch a partir da `main`.
+- **`main` `56f83bd`**: TSD-001 + RF-006 + RF-001/004/018 + RF-002 + RF-005/RF-007 + RF-009 + RF-008/011/017 + **RF-014/TSD-009** + **RF-012/RF-013/RF-015/TSD-010** integradas (backend). **Frontend TSD-002 + RF-002/TSD-011 + RF-001+RF-004/TSD-012** mergeados na sequência (ver abaixo).
+- **Frontend (`frontend/`) — TSD-002 + RF-002/TSD-011 + RF-001+RF-004/TSD-012 mergeados na `main`** (01/09/2026), nas branches encadeadas `frontend/tsd-002-fundacao` → `frontend/rf-002-listagem` → `frontend/rf-001-nova-analise`. App Next.js 15: `/` listagem real (tabela + busca/filtro/ordenação/paginação na URL + estados vazio/carregando/erro) e modal "Nova análise" (NUP/objeto/upload de PDF, validação client-side, `POST /analises` multipart). Camada de dados atrás de seam (`getAnalisesGateway` — fixtures ou `HttpAnalisesGateway` por `NEXT_PUBLIC_API_BASE_URL`); testes de contrato de `GET /analises` e `POST /analises`. `npm run ci` verde (72 testes). Ciclos frontend rodados PM→Engenheiro→Dev→Testes (User Story + TSD validadas pelo responsável antes de implementar); Crítico não rodou como passo separado.
 - Infra de teste: `test:e2e` sobe/derruba um PostgreSQL embutido (`embedded-postgres`) — sem Docker.
 - Integração com o serviço de IA real (`HttpAdapter` da `AnaliseIaPort` + A-02) foi **adiada para o fim do MVP** por decisão do responsável (31/08/2026); até lá o `StubAdapter` sustenta os ciclos.
 - **Modelo de branch:** uma branch curta por ciclo/TSD, merge na `main` quando o Documentador fecha.
 
 ## 2. Spec ativa
 
-- **Nenhuma spec de backend ativa.** Ciclo RF-012+RF-013+RF-015 / TSD-010 fechado na branch `backend/rf-012-conclusao`, aguardando merge + push. Próximo ciclo de backend: **RF-016** (relatório PDF final) — o PM abre quando o responsável mandar.
-- Os pontos de aprovação PM→Engenheiro e Engenheiro→Dev são paradas explícitas (ver observação no §7).
-- Frontend: `docs/engineering/specs/002-fundacao-frontend.tsd.md` aguardando o Vinicius.
+- **Nenhuma spec de backend ativa.** RF-012+RF-013+RF-015 / TSD-010 mergeada (`56f83bd`). Próximo ciclo de backend: **RF-016** (relatório PDF final) — o PM abre quando o responsável mandar.
+- **Nenhuma spec de frontend ativa.** TSD-002 + RF-002/TSD-011 + RF-001+RF-004/TSD-012 mergeadas. Próximo ciclo de frontend: **RF-010** (tela de análise: abas Checklist/Técnica + navegação livre) — PM apresenta a User Story + TSD para validação antes de implementar.
+- Os pontos de aprovação PM→Engenheiro e Engenheiro→Dev são paradas explícitas (ver observação no §7). No frontend, o responsável valida a User Story e a TSD antes de qualquer implementação de RF, e cada RF concluído é mergeado e empurrado incrementalmente.
 
 ## 3. Specs concluídas
 
@@ -99,10 +98,12 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 - [x] P-03 (quando exigir comentário) fechado — R-06.
 - [x] RF-008/011/017/TSD-008 mergeada na `main` (`ad2e8cd`).
 - [x] RF-014/TSD-009 mergeada na `main` (`19f308b`, push feito).
-- [x] RF-012/013/015/TSD-010 — ciclo fechado na branch `backend/rf-012-conclusao` (97 unit, 36 e2e, Crítico ✅). **Aguardando merge + push.**
-- [ ] Implementar a TSD-002 (frontend) — aprovada; por Vinicius, em branch a partir da `main`.
+- [x] RF-012/013/015/TSD-010 (backend) mergeada na `main` (`56f83bd`).
+- [x] Frontend TSD-002 + RF-002/TSD-011 + RF-001+RF-004/TSD-012 mergeados na `main` (01/09/2026).
+- [x] Follow-up (frontend): `next lint` → `eslint .` (feito no ciclo de RF-002).
 - [ ] Integração com o serviço de IA real (`HttpAdapter` + A-02) — **adiada para o fim do MVP**.
 - [ ] Follow-up: migrar `package.json#prisma` para `prisma.config.ts` antes do Prisma 7.
+- [ ] Follow-up (frontend): smoke de `/` e do modal "Nova análise" contra o backend real quando houver ambiente conjunto (os gateways HTTP só passaram por teste de contrato).
 - [ ] Questões abertas: P-07 (lista real de requisitos), P-05 (**parcialmente fechada** — falta sugestão automática de página pela IA + "quando a ausência é válida", A-02), A-05/P-09 (armazenamento do PDF), P-11 (máscara do NUP), A-07 (re-seleção de `PROCESSANDO` preso), A-02 (contrato da IA — para o fim). Ver `docs/product/questoes-abertas.md`.
 - [ ] Confirmar se `docs/licia-analisadora-product-discovery.md` está versionado neste repo (citado no PRD).
 - [ ] Limpar branches já mergeadas (`backend/tsd-001-fundacao-tecnica`, `backend/rf-001-criar-analise`, `backend/rf-002-listagem`, `backend/rf-005-processamento`, `backend/rf-009-abrir-analise`, `backend/rf-008-revisao-requisito`) — local + remota. (`backend/rf-014-pdf-pagina` já removida.)
@@ -116,8 +117,8 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 ## 7. Próximo passo recomendado
 
-1. **Backend (Pablo):** ciclo RF-012+RF-013+RF-015 fechado — **fazer o merge (fast-forward) da branch `backend/rf-012-conclusao` na `main` e o push**. Depois o PM abre o **último ciclo de feature do backend: RF-016** (relatório PDF final).
-2. **Frontend (Vinicius):** branch `frontend/tsd-002-fundacao` a partir do `main`; implementar a TSD-002.
+1. **Backend (Pablo):** RF-012+RF-013+RF-015 mergeada. O PM abre o **último ciclo de feature do backend: RF-016** (relatório PDF final).
+2. **Frontend (Vinicius):** TSD-002 + RF-002/TSD-011 + RF-001+RF-004/TSD-012 mergeados na `main`. Próximo: **RF-010** (tela de análise: abas Checklist/Técnica + navegação livre), linha 4 da tabela de sequenciamento do frontend (o backend de RF-010 já saiu em RF-009/TSD-007). O PM apresenta a User Story + a TSD do RF-010 para validação **antes** de implementar; quando o RF fechar, merge + push incremental.
 3. Cada ciclo mergeia no `main` quando o Documentador fecha.
 4. Depois de RF-016 resta só a **integração da IA real** (`HttpAdapter` da `AnaliseIaPort` + A-02) para fechar o MVP de backend.
 

@@ -1,0 +1,33 @@
+.grupo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-8);
+}
+
+.chip {
+  padding: var(--spacing-4) var(--spacing-12);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-full);
+  background: var(--color-bg-card);
+  color: var(--color-text-secondary);
+  font-size: var(--text-caption-size);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-16);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.chip:hover {
+  background: var(--color-bg-hover);
+}
+
+.chipAtivo,
+.chipAtivo:hover {
+  background: var(--color-brand-default);
+  border-color: var(--color-brand-default);
+  color: var(--color-text-inverse);
+}

@@ -55,9 +55,9 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 
 | Sequência | ID | Feature (recorte frontend) | Prioridade | Status |
 |---|---|---|---|---|
-| 1 | RF-002 | Tela de listagem de análises + estado vazio | Must | não iniciada |
-| 2 | RF-001 | Modal "Nova análise" (NUP, objeto) + validação | Must | não iniciada |
-| 3 | RF-004 | Campo de upload de PDF no modal + estados de erro | Must | não iniciada |
+| 1 | RF-002 | Tela de listagem de análises + estado vazio | Must | implementada (branch `frontend/rf-002-listagem`) |
+| 2 | RF-001 | Modal "Nova análise" (NUP, objeto) + validação | Must | implementada (branch `frontend/rf-001-nova-analise`) |
+| 3 | RF-004 | Campo de upload de PDF no modal + estados de erro | Must | implementada com RF-001 (branch `frontend/rf-001-nova-analise`) |
 | 4 | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre | Must | não iniciada |
 | 5 | RF-007 | Exibição dos requisitos com status sugerido pela IA | Must | não iniciada |
 | 6 | RF-009 | Visão inicial priorizando não conformes + filtros por status | Must | não iniciada |
@@ -112,7 +112,7 @@ Recorte deste ciclo (backend): modelar e persistir a base de requisitos e popul�
 
 **Frentes:** Backend · Frontend
 **Status (backend):** implementada (mergeada no `main` `9dd6792`)
-**Status (frontend):** não iniciada
+**Status (frontend):** implementada na branch `frontend/rf-001-nova-analise` (ciclo agrupado RF-001 + RF-004) — aguardando revisão + merge
 
 > Ciclo backend agrupado: **RF-001 + RF-004 + RF-018** = "criar análise com PDF persistido". A User Story e os critérios abaixo cobrem o recorte backend dos três.
 
@@ -143,13 +143,26 @@ Recorte backend deste ciclo:
 3. **Status da análise**: todos os valores do SDD §8 como **string + allowlist** em `src/analises/status-analise.ts` (padrão do `area` de RF-006). Neste slice só `PENDENTE` é atribuído.
 4. **NUP repetido**: **permitido** — sem constraint de unicidade. Reanálise é caso legítimo.
 
-**TSD associada:** `docs/engineering/specs/004-criar-analise.tsd.md` (a redigir pelo Engenheiro).
+**TSD associada (backend):** `docs/engineering/specs/004-criar-analise.tsd.md`.
+
+**Recorte frontend deste ciclo (RF-001 + RF-004 frontend):**
+
+Como analista técnico, quero criar uma análise por um modal — informando NUP e objeto da contratação e anexando o PDF do processo (clique ou arrastar-e-soltar) — com validação clara antes do envio e mensagens de erro que não me façam reescrever tudo, para registrar a análise e ser levado à tela dela.
+
+- Botão "Nova análise" (hoje desabilitado) abre o modal `NovaAnaliseModal`: campos NUP (obrigatório, ≤ 60), Objeto (obrigatório, ≤ 2000), Arquivo (PDF, ≤ 25 MB — igual ao backend).
+- Validação client-side: campos obrigatórios; arquivo `application/pdf` e dentro do limite; "Confirmar" desabilitado até válido; erros por campo.
+- Envio via seam de dados (`AnalisesGateway.criarAnalise`, multipart `POST /analises` no `HttpAnalisesGateway`). Sucesso → fecha o modal e navega para `/analise/[id]`.
+- Estados de erro (PRD §9): PDF inválido (antes do envio, na área do arquivo); erro no upload / persistência (banner no modal, **dados preservados**, permite reenviar); indisponibilidade.
+- **Fora:** validação de magic bytes / `/Encrypt` no cliente (o backend é a autoridade e devolve 422); máscara de NUP; visor de PDF; qualquer coisa pós-criação além de navegar para a análise.
+- **Divergências protótipo × PRD** (na TSD): limite exibido **25 MB** (protótipo dizia 50 MB); campo `objeto`/`arquivo` (não `subject`/`file`); sem a simulação de "Processando documento…" (o `POST` responde `201` na hora, análise nasce `PENDENTE`).
+
+**TSD associada (frontend):** `docs/engineering/specs/012-nova-analise-frontend.tsd.md`.
 
 ### RF-004 — Upload manual de PDF na criação da análise
 
 **Frentes:** Backend · Frontend
 **Status (backend):** coberto no ciclo de RF-001 (ver seção RF-001)
-**Status (frontend):** não iniciada
+**Status (frontend):** implementada na branch `frontend/rf-001-nova-analise` (com RF-001) — aguardando revisão + merge
 
 ### RF-018 — Persistência do PDF de entrada, associado à análise
 
@@ -160,13 +173,27 @@ Recorte backend deste ciclo:
 
 **Frentes:** Backend · Frontend
 **Status (backend):** implementada (mergeada no `main` `57b170f`)
-**Status (frontend):** não iniciada
+**Status (frontend):** implementada na branch `frontend/rf-002-listagem` — aguardando revisão + merge
 
 **User Story**
 
 Como analista técnico, quero ver a lista das análises que criei, com identificação suficiente e o status de cada uma, para reabrir a que eu precisar e acompanhar o andamento.
 
 Recorte backend deste ciclo: `GET /analises` — devolve as análises do analista atual, com busca/filtro/ordenação/paginação a definir (P-06). Sem alteração no modelo `Analise`. Sem a tela (frente frontend).
+
+**Recorte frontend deste ciclo (RF-002 frontend):**
+
+Como analista técnico, quero abrir a tela inicial e ver, numa tabela, as análises que criei — com NUP, objeto, status e data de início —, podendo buscar por NUP/objeto, filtrar por status, ordenar e paginar, para localizar e reabrir rapidamente a análise que preciso; e quando eu ainda não tiver análises, quero uma tela que me oriente a criar a primeira.
+
+- `/` deixa de ser casca: tabela + busca (`q`) + filtro por status (multi) + ordenação (`iniciadaEm`/`nup`) + paginação, tudo refletido na URL. Linha leva a `/analise/[id]`.
+- Estados: vazio "sem análises" (orienta a criar) e "sem resultado" (limpar busca/filtros); carregando; erro com "tentar novamente" (PRD §9).
+- Consome o contrato `GET /analises` (TSD-005) pelo seam de dados: `HttpAnalisesGateway` + teste de contrato; `getAnalisesGateway()` usa HTTP quando `NEXT_PUBLIC_API_BASE_URL` estiver definida, senão fixtures.
+- **Fora:** criação de análise (RF-001, frontend); tela de análise (RF-010+); painel de filtros consolidado; seletor de tamanho de página na UI; contagens de requisitos por linha (RF-007).
+- **Divergências protótipo × PRD** (na TSD): coluna "Status" adicionada e "Adicionado por" removida (analista único); filtro por status como chips inline em vez do modal "Filtros"; "Nova análise" desabilitado.
+
+**Follow-up incluído neste ciclo:** migração de `next lint` → `eslint .` (ESLint CLI + flat config), scripts do `package.json` adaptados.
+
+**TSD associada (frontend):** `docs/engineering/specs/011-listagem-analises-frontend.tsd.md`.
 
 **Critérios de aceite**
 

@@ -1,0 +1,41 @@
+.barraTitulo,
+.barraToolbar,
+.bloco {
+  background: var(--color-bg-hover);
+  border-radius: var(--radius-4);
+  animation: pulso 1.4s ease-in-out infinite;
+}
+
+.barraTitulo {
+  width: 12rem;
+  height: 2rem;
+}
+
+.barraToolbar {
+  width: 100%;
+  max-width: 28rem;
+  height: 2.5rem;
+}
+
+.bloco {
+  flex: 1;
+  min-height: 16rem;
+}
+
+@keyframes pulso {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barraTitulo,
+  .barraToolbar,
+  .bloco {
+    animation: none;
+  }
+}

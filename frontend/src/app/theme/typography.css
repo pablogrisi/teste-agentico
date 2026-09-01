@@ -1,0 +1,90 @@
+/* Tipografia — portada de Prototipo Licia Analisadora/src/theme/typography.css.
+   A família vem do `next/font` (Kanit) via a custom property --font-kanit, definida no layout. */
+:root {
+  --font-family-base: var(--font-kanit), sans-serif;
+
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --font-size-10: 0.625rem;
+  --font-size-12: 0.75rem;
+  --font-size-14: 0.875rem;
+  --font-size-16: 1rem;
+  --font-size-20: 1.25rem;
+  --font-size-26: 1.625rem;
+  --font-size-32: 2rem;
+  --font-size-40: 2.5rem;
+  --font-size-52: 3.25rem;
+
+  --line-height-14: 0.875rem;
+  --line-height-16: 1rem;
+  --line-height-20: 1.25rem;
+  --line-height-24: 1.5rem;
+  --line-height-32: 2rem;
+  --line-height-40: 2.5rem;
+  --line-height-52: 3.25rem;
+  --line-height-64: 4rem;
+  --line-height-82: 5.125rem;
+
+  /* Headline */
+  --text-h1-size: var(--font-size-52);
+  --text-h1-line-height: var(--line-height-82);
+  --text-h1-weight: var(--font-weight-light);
+
+  --text-h2-size: var(--font-size-40);
+  --text-h2-line-height: var(--line-height-64);
+  --text-h2-weight: var(--font-weight-medium);
+
+  --text-h3-size: var(--font-size-32);
+  --text-h3-line-height: var(--line-height-52);
+  --text-h3-weight: var(--font-weight-bold);
+
+  --text-h4-size: var(--font-size-26);
+  --text-h4-line-height: var(--line-height-40);
+  --text-h4-weight: var(--font-weight-bold);
+
+  --text-h5-size: var(--font-size-20);
+  --text-h5-line-height: var(--line-height-32);
+  --text-h5-weight: var(--font-weight-bold);
+
+  /* Texto */
+  --text-large-size: var(--font-size-20);
+  --text-large-line-height: var(--line-height-32);
+  --text-large-weight: var(--font-weight-regular);
+
+  --text-body-size: var(--font-size-16);
+  --text-body-line-height: var(--line-height-24);
+  --text-body-weight: var(--font-weight-regular);
+
+  --text-body-semibold-size: var(--font-size-16);
+  --text-body-semibold-line-height: var(--line-height-24);
+  --text-body-semibold-weight: var(--font-weight-semibold);
+
+  --text-body-bold-size: var(--font-size-16);
+  --text-body-bold-line-height: var(--line-height-24);
+  --text-body-bold-weight: var(--font-weight-bold);
+
+  --text-small-size: var(--font-size-14);
+  --text-small-line-height: var(--line-height-20);
+  --text-small-weight: var(--font-weight-regular);
+
+  --text-small-semibold-size: var(--font-size-14);
+  --text-small-semibold-line-height: var(--line-height-20);
+  --text-small-semibold-weight: var(--font-weight-semibold);
+
+  --text-small-bold-size: var(--font-size-14);
+  --text-small-bold-line-height: var(--line-height-20);
+  --text-small-bold-weight: var(--font-weight-bold);
+
+  /* Legenda */
+  --text-caption-size: var(--font-size-12);
+  --text-caption-line-height: var(--line-height-16);
+  --text-caption-weight: var(--font-weight-regular);
+
+  --text-caption-xs-size: var(--font-size-10);
+  --text-caption-xs-line-height: var(--line-height-14);
+  --text-caption-xs-weight: var(--font-weight-regular);
+}
