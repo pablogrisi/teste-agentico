@@ -1,0 +1,220 @@
+import type { AnaliseResumo } from "./types";
+
+/**
+ * Dados de exemplo derivados de `Prototipo Licia Analisadora/src/data/analyses.ts`,
+ * ajustados às decisões do PRD/glossário:
+ * - sem "responsável por linha" (MVP tem analista único fixo);
+ * - `status` usa o ciclo de vida real da análise (SDD §8), não rótulos do protótipo.
+ *
+ * Volume (24 itens) escolhido para exercitar busca, filtro por status e paginação.
+ * Substituídos por dados reais quando `NEXT_PUBLIC_API_BASE_URL` estiver configurada.
+ */
+const OBJETOS = [
+  "EQUIPAMENTOS E MATERIAL PERMANENTE - APARELHOS, EQUIPAMENTOS, UTENSÍLIOS MÉDICO-ODONTOLÓGICO, LABORATORIAL E HOSPITALAR",
+  "EQUIPAMENTOS E MATERIAL PERMANENTE - MATERIAL HOSPITALAR",
+  "MATERIAL DE CONSUMO - MATERIAL FARMACOLÓGICO",
+  "EQUIPAMENTOS E MATERIAL PERMANENTE - MATERIAL LABORATORIAL",
+  "SERVIÇOS DE ENGENHARIA - REFORMA DE UNIDADE BÁSICA DE SAÚDE",
+  "MATERIAL DE CONSUMO - GÊNEROS ALIMENTÍCIOS PARA MERENDA ESCOLAR",
+  "SERVIÇOS DE TECNOLOGIA DA INFORMAÇÃO - LICENCIAMENTO DE SOFTWARE",
+  "LOCAÇÃO DE VEÍCULOS PARA A FROTA ADMINISTRATIVA",
+];
+
+function iso(ano: number, mes: number, dia: number, hora: number, min: number): string {
+  return new Date(Date.UTC(ano, mes - 1, dia, hora, min)).toISOString();
+}
+
+export const ANALISES_FIXTURE: readonly AnaliseResumo[] = [
+  {
+    id: "1",
+    nup: "74037.000634/2024-22",
+    objeto: OBJETOS[0],
+    status: "PRONTA_PARA_REVISAO",
+    iniciadaEm: iso(2024, 3, 20, 14, 30),
+    concluidaEm: null,
+  },
+  {
+    id: "2",
+    nup: "74037.000635/2024-77",
+    objeto: OBJETOS[1],
+    status: "PROCESSANDO",
+    iniciadaEm: iso(2024, 3, 20, 9, 15),
+    concluidaEm: null,
+  },
+  {
+    id: "3",
+    nup: "75842.000634/2023-12",
+    objeto: OBJETOS[2],
+    status: "CONCLUIDA",
+    iniciadaEm: iso(2023, 7, 1, 11, 45),
+    concluidaEm: iso(2023, 7, 3, 16, 10),
+  },
+  {
+    id: "4",
+    nup: "27647.000278/2022-02",
+    objeto: OBJETOS[3],
+    status: "CONCLUIDA",
+    iniciadaEm: iso(2022, 10, 6, 16, 0),
+    concluidaEm: iso(2022, 10, 7, 10, 12),
+  },
+  {
+    id: "5",
+    nup: "74037.000811/2024-05",
+    objeto: OBJETOS[4],
+    status: "ERRO_PROCESSAMENTO",
+    iniciadaEm: iso(2024, 5, 2, 8, 0),
+    concluidaEm: null,
+  },
+  {
+    id: "6",
+    nup: "60112.000090/2025-31",
+    objeto: OBJETOS[5],
+    status: "PENDENTE",
+    iniciadaEm: iso(2025, 1, 14, 19, 20),
+    concluidaEm: null,
+  },
+  {
+    id: "7",
+    nup: "75842.000701/2023-40",
+    objeto: OBJETOS[6],
+    status: "PRONTA_PARA_REVISAO",
+    iniciadaEm: iso(2023, 8, 11, 10, 30),
+    concluidaEm: null,
+  },
+  {
+    id: "8",
+    nup: "27647.000512/2022-19",
+    objeto: OBJETOS[7],
+    status: "CONCLUIDA",
+    iniciadaEm: iso(2022, 11, 28, 13, 50),
+    concluidaEm: iso(2022, 12, 2, 9, 5),
+  },
+  {
+    id: "9",
+    nup: "74037.001002/2024-88",
+    objeto: OBJETOS[0],
+    status: "PROCESSANDO",
+    iniciadaEm: iso(2024, 6, 5, 17, 5),
+    concluidaEm: null,
+  },
+  {
+    id: "10",
+    nup: "74037.001188/2024-14",
+    objeto: OBJETOS[1],
+    status: "PRONTA_PARA_REVISAO",
+    iniciadaEm: iso(2024, 7, 9, 22, 15),
+    concluidaEm: null,
+  },
+  {
+    id: "11",
+    nup: "60112.000145/2025-02",
+    objeto: OBJETOS[2],
+    status: "PENDENTE",
+    iniciadaEm: iso(2025, 2, 3, 8, 45),
+    concluidaEm: null,
+  },
+  {
+    id: "12",
+    nup: "75842.000905/2023-73",
+    objeto: OBJETOS[3],
+    status: "CONCLUIDA",
+    iniciadaEm: iso(2023, 9, 20, 15, 0),
+    concluidaEm: iso(2023, 9, 25, 11, 40),
+  },
+  {
+    id: "13",
+    nup: "74037.001450/2024-61",
+    objeto: OBJETOS[4],
+    status: "ERRO_PROCESSAMENTO",
+    iniciadaEm: iso(2024, 9, 1, 7, 30),
+    concluidaEm: null,
+  },
+  {
+    id: "14",
+    nup: "31500.000034/2021-90",
+    objeto: OBJETOS[5],
+    status: "CONCLUIDA",
+    iniciadaEm: iso(2021, 4, 12, 10, 0),
+    concluidaEm: iso(2021, 4, 20, 17, 0),
+  },
+  {
+    id: "15",
+    nup: "60112.000260/2025-55",
+    objeto: OBJETOS[6],
+    status: "PRONTA_PARA_REVISAO",
+    iniciadaEm: iso(2025, 3, 18, 9, 0),
+    concluidaEm: null,
+  },
+  {
+    id: "16",
+    nup: "74037.001677/2024-30",
+    objeto: OBJETOS[7],
+    status: "PROCESSANDO",
+    iniciadaEm: iso(2024, 10, 22, 11, 25),
+    concluidaEm: null,
+  },
+  {
+    id: "17",
+    nup: "75842.001100/2023-08",
+    objeto: OBJETOS[0],
+    status: "CONCLUIDA",
+    iniciadaEm: iso(2023, 10, 30, 14, 10),
+    concluidaEm: iso(2023, 11, 6, 16, 45),
+  },
+  {
+    id: "18",
+    nup: "27647.000733/2022-64",
+    objeto: OBJETOS[1],
+    status: "CONCLUIDA",
+    iniciadaEm: iso(2022, 12, 15, 8, 20),
+    concluidaEm: iso(2022, 12, 21, 10, 0),
+  },
+  {
+    id: "19",
+    nup: "60112.000377/2025-19",
+    objeto: OBJETOS[2],
+    status: "PENDENTE",
+    iniciadaEm: iso(2025, 4, 7, 16, 40),
+    concluidaEm: null,
+  },
+  {
+    id: "20",
+    nup: "74037.001900/2024-46",
+    objeto: OBJETOS[3],
+    status: "PRONTA_PARA_REVISAO",
+    iniciadaEm: iso(2024, 11, 11, 13, 0),
+    concluidaEm: null,
+  },
+  {
+    id: "21",
+    nup: "31500.000128/2021-27",
+    objeto: OBJETOS[4],
+    status: "CONCLUIDA",
+    iniciadaEm: iso(2021, 6, 1, 9, 30),
+    concluidaEm: iso(2021, 6, 9, 12, 15),
+  },
+  {
+    id: "22",
+    nup: "75842.001320/2023-51",
+    objeto: OBJETOS[5],
+    status: "ERRO_PROCESSAMENTO",
+    iniciadaEm: iso(2023, 12, 4, 18, 5),
+    concluidaEm: null,
+  },
+  {
+    id: "23",
+    nup: "60112.000480/2025-83",
+    objeto: OBJETOS[6],
+    status: "PROCESSANDO",
+    iniciadaEm: iso(2025, 5, 26, 10, 50),
+    concluidaEm: null,
+  },
+  {
+    id: "24",
+    nup: "74037.002100/2024-72",
+    objeto: OBJETOS[7],
+    status: "PRONTA_PARA_REVISAO",
+    iniciadaEm: iso(2024, 12, 19, 21, 30),
+    concluidaEm: null,
+  },
+];

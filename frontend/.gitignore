@@ -1,0 +1,15 @@
+# Next.js
+/.next/
+/out/
+
+# Testes / cobertura
+/coverage/
+
+# Build
+/build/
+
+# Misc
+*.tsbuildinfo
+
+# Ambiente
+.env*.local

@@ -1,0 +1,22 @@
+/* Cabeçalho — adaptado do frame de HomePage do protótipo (bloco de título + regra da marca). */
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding-bottom: var(--spacing-8);
+  border-bottom: 2px solid var(--color-brand-default);
+}
+
+.breadcrumb {
+  font-size: var(--text-caption-size);
+  font-weight: var(--text-caption-weight);
+  line-height: var(--text-caption-line-height);
+  color: var(--color-text-title);
+}
+
+.title {
+  font-size: var(--text-body-semibold-size);
+  font-weight: var(--text-body-semibold-weight);
+  line-height: var(--text-body-semibold-line-height);
+  color: var(--color-text-title);
+}

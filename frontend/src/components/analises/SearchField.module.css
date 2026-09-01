@@ -1,0 +1,37 @@
+.campo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  width: 100%;
+  max-width: 28rem;
+  padding: var(--spacing-8) var(--spacing-12);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-8);
+  transition: border-color 0.15s;
+}
+
+.campo:focus-within {
+  border-color: var(--color-border-brand);
+}
+
+.icone {
+  flex-shrink: 0;
+  color: var(--color-icon-brand);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  font-family: var(--font-family-base);
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-line-height);
+  color: var(--color-text-body);
+}
+
+.input::placeholder {
+  color: var(--color-text-disabled);
+}
