@@ -15,7 +15,7 @@ Fundação percorrida (`.ai-dev/bootstrap.md`): PRD e SDD aprovados, `questoes-a
 Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJS, Pablo) e `frontend/` (Next.js, Vinicius), método e docs compartilhados na raiz. Cada frente roda seu próprio ciclo de seis papéis.
 
 - **`main` `ad2e8cd`**: TSD-001 + RF-006 + RF-001/004/018 + RF-002 + RF-005/RF-007 + RF-009 + RF-008/011/017 integradas.
-- **RF-014 / TSD-009** (referência de página + entrega do PDF por página, backend) — **ciclo aberto** na branch `backend/rf-014-pdf-pagina`. PM aguardando validação da User Story + decisões.
+- **RF-014 / TSD-009** (referência de página do PDF, backend) — **ciclo aberto** na branch `backend/rf-014-pdf-pagina`. User Story validada (31/08/2026); **TSD-009 redigida, aguardando aprovação humana** antes do Dev.
 - **TSD-002** (`frontend/`) — aprovada; **não implementada**. Por Vinicius, em branch a partir da `main`.
 - Infra de teste: `test:e2e` sobe/derruba um PostgreSQL embutido (`embedded-postgres`) — sem Docker.
 - Integração com o serviço de IA real (`HttpAdapter` da `AnaliseIaPort` + A-02) foi **adiada para o fim do MVP** por decisão do responsável (31/08/2026); até lá o `StubAdapter` sustenta os ciclos.
@@ -23,7 +23,8 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 ## 2. Spec ativa
 
-- Branch `backend/rf-014-pdf-pagina`: ciclo de RF-014 aberto pelo PM. **User Story + critérios rascunhados, aguardando validação humana e decisões (lib de PDF, comportamento de página fora do intervalo) antes do Engenheiro.**
+- Branch `backend/rf-014-pdf-pagina`: ciclo de RF-014. **User Story validada e decisões tomadas (visor navega client-side via `#page=N`, sem extração no servidor; lib `pdf-lib` só para contar páginas; correção de `paginaReferencia` no PATCH de revisão).** Engenheiro redigiu `docs/engineering/specs/009-pdf-por-pagina.tsd.md` — **aguardando aprovação humana da TSD antes do Dev.**
+- Recorte backend da TSD-009: coluna `Analise.totalPaginasPdf Int?` (best-effort no `criar`) + migration; `totalPaginasPdf` no `GET /analises/:id`; `paginaReferencia` no `PATCH /analises/:id/requisitos/:requisitoId` (`1..total` ou `≥1` ou `null` → senão `422`; não dispara a R-06); `lerPagina` segue como seam.
 - A partir deste ciclo, os pontos de aprovação PM→Engenheiro e Engenheiro→Dev voltam a ser paradas explícitas (ver observação no §7).
 - Frontend: `docs/engineering/specs/002-fundacao-frontend.tsd.md` aguardando o Vinicius.
 
@@ -88,7 +89,7 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 - [x] RF-009/TSD-007 mergeada na `main` (`96ff8fb`).
 - [x] P-03 (quando exigir comentário) fechado — R-06.
 - [x] RF-008/011/017/TSD-008 mergeada na `main` (`ad2e8cd`).
-- [ ] **RF-014 / TSD-009** — ciclo aberto; PM aguardando validação da User Story + decisões.
+- [ ] **RF-014 / TSD-009** — User Story validada; TSD-009 redigida, **aguardando aprovação humana** antes do Dev.
 - [ ] Implementar a TSD-002 (frontend) — aprovada; por Vinicius, em branch a partir da `main`.
 - [ ] Integração com o serviço de IA real (`HttpAdapter` + A-02) — **adiada para o fim do MVP**.
 - [ ] Follow-up: migrar `package.json#prisma` para `prisma.config.ts` antes do Prisma 7.
@@ -105,7 +106,7 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 ## 7. Próximo passo recomendado
 
-1. **Backend (Pablo):** ciclo RF-014 aberto (`backend/rf-014-pdf-pagina`). PM apresentou a User Story + critérios — **validar antes do Engenheiro escrever a TSD-009**. Decisões pendentes: lib de extração de página de PDF; comportamento quando `pagina` está fora do intervalo do documento (P-05).
+1. **Backend (Pablo):** ciclo RF-014 (`backend/rf-014-pdf-pagina`). User Story validada e decisões tomadas. Engenheiro apresentou `docs/engineering/specs/009-pdf-por-pagina.tsd.md` — **aprovar a TSD antes de o Dev implementar**.
 2. **Frontend (Vinicius):** branch `frontend/tsd-002-fundacao` a partir do `main`; implementar a TSD-002.
 3. Cada ciclo mergeia no `main` quando o Documentador fecha.
 4. Restam **2 ciclos** de backend depois de RF-014: RF-012+RF-013+RF-015, RF-016 — mais a integração da IA real no fim.
