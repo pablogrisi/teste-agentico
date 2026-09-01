@@ -4,6 +4,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { PDFDocument } from 'pdf-lib';
 import { AnalisesService } from '../../src/analises/analises.service';
 
 const PDF = Buffer.from('%PDF-1.4 ok');
@@ -116,6 +117,30 @@ describe('AnalisesService.criar', () => {
       create: jest.fn().mockRejectedValue(new Error('constraint')),
     });
     await expect(service.criar(entrada)).rejects.toThrow('constraint');
+  });
+
+  it('persiste totalPaginasPdf contado do PDF (RF-014)', async () => {
+    const doc = await PDFDocument.create();
+    doc.addPage();
+    doc.addPage();
+    const pdf2 = Buffer.from(await doc.save());
+    const { service, prisma } = build({});
+    await service.criar({
+      nup: 'NUP-1',
+      objeto: 'Objeto',
+      arquivo: { mimetype: 'application/pdf', size: pdf2.length, buffer: pdf2 },
+    });
+    expect(prisma.analise.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ totalPaginasPdf: 2 }),
+    });
+  });
+
+  it('persiste totalPaginasPdf = null quando o PDF não é parseável, sem falhar', async () => {
+    const { service, prisma } = build({});
+    await service.criar(entrada);
+    expect(prisma.analise.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ totalPaginasPdf: null }),
+    });
   });
 });
 

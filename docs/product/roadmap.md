@@ -44,7 +44,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 9 | RF-008 | Endpoint de definição do status final do requisito | Must | implementada |
 | 10 | RF-011 | Endpoint de marcação de "verificado" | Must | implementada com RF-008 |
 | 11 | RF-017 | Validação de comentário obrigatório nas ações de revisão | Must | implementada com RF-008 |
-| 12 | RF-014 | Referência de página + entrega do PDF por página | Must | TSD em aprovação |
+| 12 | RF-014 | Referência de página + entrega do PDF por página | Must | em validação |
 | 13 | RF-012 | Endpoint de conclusão global com trava por obrigatórios | Must | não iniciada |
 | 14 | RF-013 | Registro de responsável, datas e status final | Must | não iniciada |
 | 15 | RF-015 | Conclusão interna sem aprovação/assinatura/dupla revisão | Must | não iniciada |
@@ -309,7 +309,7 @@ Recorte backend deste ciclo: `PATCH /analises/:id/requisitos/:requisitoId` que a
 ### RF-014 — Rastreabilidade documental por referência de página do PDF
 
 **Frentes:** Backend · Frontend
-**Status (backend):** TSD em aprovação
+**Status (backend):** em validação
 **Status (frontend):** não iniciada
 
 **User Story** — *validada em 31/08/2026*

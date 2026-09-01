@@ -33,11 +33,12 @@ export class ArmazenamentoPdfFilesystemAdapter implements ArmazenamentoPdfPort {
   }
 
   lerPagina(ref: string, pagina: number): Promise<Buffer> {
-    // A extração por página depende de uma lib de PDF e será implementada no
-    // ciclo do RF-014. O seam já existe para não haver retrabalho estrutural.
+    // Seam não implementado por decisão do RF-014 (TSD-009): o visor do frontend
+    // navega para a página client-side (`#page=N`) contra o PDF inteiro servido
+    // por `ler`. Não há extração de página no servidor no MVP.
     return Promise.reject(
       new Error(
-        `lerPagina(${ref}, ${pagina}) ainda não implementada — ver ciclo do RF-014`,
+        `lerPagina(${ref}, ${pagina}) não implementada — RF-014 optou por navegação no visor (client-side)`,
       ),
     );
   }

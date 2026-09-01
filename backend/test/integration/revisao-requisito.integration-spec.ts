@@ -6,10 +6,17 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PrismaClient } from '@prisma/client';
+import { PDFDocument } from 'pdf-lib';
 import { AppModule } from '../../src/app.module';
 import { ProcessamentoService } from '../../src/processamento/processamento.service';
 
 const PDF = Buffer.from('%PDF-1.4\n%%EOF\n');
+
+const pdfComPaginas = async (n: number): Promise<Buffer> => {
+  const doc = await PDFDocument.create();
+  for (let i = 0; i < n; i++) doc.addPage([200, 200]);
+  return Buffer.from(await doc.save());
+};
 
 describe('PATCH /analises/:id/requisitos/:requisitoId (integração)', () => {
   let app: INestApplication;
@@ -42,7 +49,9 @@ describe('PATCH /analises/:id/requisitos/:requisitoId (integração)', () => {
     await prisma.requisito.deleteMany();
   });
 
-  const prepararAnalise = async (): Promise<{ id: string; reqId: string }> => {
+  const prepararAnalise = async (
+    arquivo: Buffer = PDF,
+  ): Promise<{ id: string; reqId: string }> => {
     await prisma.requisito.createMany({
       data: [
         {
@@ -60,7 +69,7 @@ describe('PATCH /analises/:id/requisitos/:requisitoId (integração)', () => {
       .post('/analises')
       .field('nup', 'NUP-REV')
       .field('objeto', 'Objeto')
-      .attach('arquivo', PDF, {
+      .attach('arquivo', arquivo, {
         filename: 'p.pdf',
         contentType: 'application/pdf',
       });
@@ -117,6 +126,33 @@ describe('PATCH /analises/:id/requisitos/:requisitoId (integração)', () => {
     const { id, reqId } = await prepararAnalise();
     expect((await patch(id, reqId, { statusFinal: 'X' })).status).toBe(422);
     expect((await patch(id, reqId, {})).status).toBe(422);
+  });
+
+  it('paginaReferencia: aceita página no intervalo, rejeita fora, limpa com null (RF-014)', async () => {
+    const { id, reqId } = await prepararAnalise(await pdfComPaginas(3));
+
+    const detalhe = await request(app.getHttpServer()).get(`/analises/${id}`);
+    expect(detalhe.body.totalPaginasPdf).toBe(3);
+
+    const ok = await patch(id, reqId, { paginaReferencia: 2 });
+    expect(ok.status).toBe(200);
+    expect(ok.body.item.paginaReferencia).toBe(2);
+    // só página → não exige comentário e não marca verificado
+    expect(ok.body.item.verificado).toBe(false);
+    expect(ok.body.item.statusFinal).toBe('NAO_SE_APLICA');
+
+    expect((await patch(id, reqId, { paginaReferencia: 99 })).status).toBe(422);
+    expect((await patch(id, reqId, { paginaReferencia: 0 })).status).toBe(422);
+
+    const limpa = await patch(id, reqId, { paginaReferencia: null });
+    expect(limpa.status).toBe(200);
+    expect(limpa.body.item.paginaReferencia).toBeNull();
+  });
+
+  it('paginaReferencia com totalPaginasPdf desconhecido: qualquer inteiro >= 1', async () => {
+    const { id, reqId } = await prepararAnalise(); // PDF placeholder → total null
+    expect((await patch(id, reqId, { paginaReferencia: 42 })).status).toBe(200);
+    expect((await patch(id, reqId, { paginaReferencia: -1 })).status).toBe(422);
   });
 
   it('404 para requisito não avaliado; 409 para análise fora de revisão', async () => {

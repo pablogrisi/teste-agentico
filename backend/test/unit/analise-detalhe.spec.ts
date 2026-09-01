@@ -11,6 +11,7 @@ const analise = {
   motivoErro: null,
   iniciadaEm: new Date('2026-01-01'),
   concluidaEm: null,
+  totalPaginasPdf: 7,
 } as never;
 
 function av(over: {
@@ -141,6 +142,10 @@ describe('montarAnaliseDetalhe', () => {
       verificados: 1,
       obrigatoriosPendentes: 2, // ids 2 e 4 (obrigatórios, não verificados)
     });
+  });
+
+  it('expõe totalPaginasPdf vindo da análise', () => {
+    expect(montarAnaliseDetalhe(analise, []).totalPaginasPdf).toBe(7);
   });
 
   it('sem avaliações → grupos vazios e resumo zerado', () => {

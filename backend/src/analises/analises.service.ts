@@ -29,6 +29,7 @@ import {
   toItem,
 } from './analise-detalhe';
 import { PatchRevisaoBody, validarEResolverPatch } from './revisao-requisito';
+import { contarPaginasPdf } from './contar-paginas-pdf';
 
 /** Campos de uma análise numa listagem (RF-002). */
 export type AnaliseResumo = Pick<
@@ -76,6 +77,9 @@ export class AnalisesService {
 
     const { analistaId } = this.analistaAtual.getAnalistaAtual();
 
+    // RF-014: contagem best-effort — `null` não interrompe a criação.
+    const totalPaginasPdf = await contarPaginasPdf(entrada.arquivo!.buffer);
+
     let ref: string;
     try {
       ref = await this.armazenamentoPdf.salvar(entrada.arquivo!.buffer);
@@ -97,6 +101,7 @@ export class AnalisesService {
           analistaId,
           arquivoPdfRef: ref,
           status: 'PENDENTE',
+          totalPaginasPdf,
         },
       });
     } catch (erro) {
@@ -202,7 +207,11 @@ export class AnalisesService {
       );
     }
 
-    const { erros, dados } = validarEResolverPatch(avaliacao, body);
+    const { erros, dados } = validarEResolverPatch(
+      avaliacao,
+      body,
+      analise.totalPaginasPdf,
+    );
     if (erros.length > 0) {
       throw new UnprocessableEntityException({
         message: 'Não foi possível salvar a revisão',

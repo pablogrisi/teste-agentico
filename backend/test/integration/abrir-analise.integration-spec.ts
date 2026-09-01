@@ -6,10 +6,17 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PrismaClient } from '@prisma/client';
+import { PDFDocument } from 'pdf-lib';
 import { AppModule } from '../../src/app.module';
 import { ProcessamentoService } from '../../src/processamento/processamento.service';
 
 const PDF = Buffer.from('%PDF-1.4\n%%EOF\n');
+
+const pdfComPaginas = async (n: number): Promise<Buffer> => {
+  const doc = await PDFDocument.create();
+  for (let i = 0; i < n; i++) doc.addPage([200, 200]);
+  return Buffer.from(await doc.save());
+};
 
 const requisito = (codigo: string, area: string, ordem: number) => ({
   codigo,
@@ -120,5 +127,28 @@ describe('GET /analises/:id — abrir análise (integração)', () => {
       `/analises/${randomUUID()}`,
     );
     expect(res.status).toBe(404);
+  });
+
+  it('expõe totalPaginasPdf contado do PDF enviado (RF-014)', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/analises')
+      .field('nup', 'NUP-PAGS')
+      .field('objeto', 'Objeto')
+      .attach('arquivo', await pdfComPaginas(5), {
+        filename: 'p.pdf',
+        contentType: 'application/pdf',
+      });
+    expect(res.status).toBe(201);
+    const detalhe = await request(app.getHttpServer()).get(
+      `/analises/${res.body.id}`,
+    );
+    expect(detalhe.body.totalPaginasPdf).toBe(5);
+  });
+
+  it('totalPaginasPdf = null quando o PDF não é parseável, sem falhar a criação', async () => {
+    const id = await criar(); // PDF placeholder não parseável
+    const res = await request(app.getHttpServer()).get(`/analises/${id}`);
+    expect(res.status).toBe(200);
+    expect(res.body.totalPaginasPdf).toBeNull();
   });
 });

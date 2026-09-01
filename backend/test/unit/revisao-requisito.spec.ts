@@ -102,4 +102,88 @@ describe('validarEResolverPatch', () => {
     expect(r.erros).toEqual([]);
     expect(r.dados).toEqual({});
   });
+
+  describe('paginaReferencia (RF-014)', () => {
+    it('corpo só com paginaReferencia não é "vazio"', () => {
+      const r = validarEResolverPatch(avaliacao(), { paginaReferencia: 2 }, 10);
+      expect(r.erros).toEqual([]);
+      expect(r.dados).toEqual({ paginaReferencia: 2 });
+    });
+
+    it('aceita inteiro dentro do intervalo quando o total é conhecido', () => {
+      const r = validarEResolverPatch(
+        avaliacao(),
+        { paginaReferencia: 10 },
+        10,
+      );
+      expect(r.erros).toEqual([]);
+      expect(r.dados).toEqual({ paginaReferencia: 10 });
+    });
+
+    it('rejeita página acima do total conhecido', () => {
+      const r = validarEResolverPatch(
+        avaliacao(),
+        { paginaReferencia: 11 },
+        10,
+      );
+      expect(r.erros[0]).toMatch(/entre 1 e 10/);
+      expect(r.dados).toEqual({});
+    });
+
+    it('rejeita 0, negativo e não-inteiro', () => {
+      expect(
+        validarEResolverPatch(avaliacao(), { paginaReferencia: 0 }, 10).erros,
+      ).toHaveLength(1);
+      expect(
+        validarEResolverPatch(avaliacao(), { paginaReferencia: -3 }, 10).erros,
+      ).toHaveLength(1);
+      expect(
+        validarEResolverPatch(avaliacao(), { paginaReferencia: 2.5 }, 10).erros,
+      ).toHaveLength(1);
+    });
+
+    it('rejeita tipo não numérico', () => {
+      const r = validarEResolverPatch(
+        avaliacao(),
+        { paginaReferencia: 'x' as unknown as number },
+        10,
+      );
+      expect(r.erros).toHaveLength(1);
+    });
+
+    it('com total desconhecido (null) aceita qualquer inteiro >= 1', () => {
+      expect(
+        validarEResolverPatch(avaliacao(), { paginaReferencia: 999 }, null)
+          .dados,
+      ).toEqual({ paginaReferencia: 999 });
+      expect(
+        validarEResolverPatch(avaliacao(), { paginaReferencia: 0 }, null)
+          .erros[0],
+      ).toMatch(/inteiro >= 1/);
+    });
+
+    it('null limpa a página', () => {
+      const atual = avaliacao({ paginaReferencia: 4 });
+      const r = validarEResolverPatch(atual, { paginaReferencia: null }, 10);
+      expect(r.erros).toEqual([]);
+      expect(r.dados).toEqual({ paginaReferencia: null });
+    });
+
+    it('não gera dados quando a página não muda', () => {
+      const atual = avaliacao({ paginaReferencia: 4 });
+      const r = validarEResolverPatch(atual, { paginaReferencia: 4 }, 10);
+      expect(r.dados).toEqual({});
+    });
+
+    it('não dispara a regra de comentário: página isolada numa avaliação divergente com comentário já gravado', () => {
+      const atual = avaliacao({
+        statusFinal: 'NAO_CONFORME',
+        comentario: 'motivo',
+        verificado: true,
+      });
+      const r = validarEResolverPatch(atual, { paginaReferencia: 3 }, 10);
+      expect(r.erros).toEqual([]);
+      expect(r.dados).toEqual({ paginaReferencia: 3 });
+    });
+  });
 });

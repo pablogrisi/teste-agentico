@@ -63,6 +63,9 @@ model Analise {
   arquivoPdfRef String    @map("arquivo_pdf_ref")
   status        String    @default("PENDENTE")
   motivoErro    String?   @map("motivo_erro")
+  /// Total de páginas do PDF de entrada (RF-014). Calculado no `criar` com
+  /// `pdf-lib`, best-effort: `null` quando o PDF não pôde ser parseado.
+  totalPaginasPdf Int?    @map("total_paginas_pdf")
   iniciadaEm    DateTime  @default(now()) @map("iniciada_em")
   concluidaEm   DateTime? @map("concluida_em")
   criadoEm      DateTime  @default(now()) @map("criado_em")

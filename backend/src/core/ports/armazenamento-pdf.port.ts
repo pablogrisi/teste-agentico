@@ -13,8 +13,12 @@ export interface ArmazenamentoPdfPort {
   ler(ref: string): Promise<Buffer>;
 
   /**
-   * Lê uma página específica do PDF (para o visor com referência de página,
-   * RF-014). Implementação real entra no ciclo do RF-014.
+   * Lê uma página específica do PDF. Seam deixado deliberadamente sem
+   * implementação: no ciclo do RF-014 (TSD-009) decidiu-se que o visor do
+   * frontend navega para a página client-side (`#page=N`) contra o PDF inteiro,
+   * então não há extração de página no servidor no MVP. Mantido para uma
+   * eventual necessidade futura (ex.: recorte/render server-side), sem ciclo
+   * agendado.
    */
   lerPagina(ref: string, pagina: number): Promise<Buffer>;
 }

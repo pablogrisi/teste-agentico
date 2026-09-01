@@ -52,6 +52,7 @@ export interface AnaliseDetalhe {
   motivoErro: string | null;
   iniciadaEm: Date;
   concluidaEm: Date | null;
+  totalPaginasPdf: number | null;
   resumo: ResumoAnalise;
   avaliacoesPorArea: AreaComItens[];
 }
@@ -138,6 +139,7 @@ export function montarAnaliseDetalhe(
     motivoErro: analise.motivoErro,
     iniciadaEm: analise.iniciadaEm,
     concluidaEm: analise.concluidaEm,
+    totalPaginasPdf: analise.totalPaginasPdf,
     resumo: calcularResumo(avaliacoes),
     avaliacoesPorArea,
   };
