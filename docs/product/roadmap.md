@@ -350,7 +350,7 @@ Recorte backend deste ciclo (reduzido após as decisões — o visor do frontend
 ### RF-012 — Conclusão global da análise
 
 **Frentes:** Backend · Frontend
-**Status (backend):** implementada (ciclo fechado na branch `backend/rf-012-conclusao`, aguardando merge na `main`)
+**Status (backend):** implementada (mergeada no `main` `56f83bd`)
 **Status (frontend):** não iniciada
 
 > Ciclo backend agrupado: **RF-012 + RF-013 + RF-015** = "concluir a análise" (um endpoint de conclusão). User Story e critérios abaixo cobrem os três.

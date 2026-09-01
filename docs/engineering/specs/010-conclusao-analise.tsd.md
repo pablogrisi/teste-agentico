@@ -3,7 +3,7 @@
 ---
 title: TSD - Conclusão da análise (RF-012/013/015, backend)
 type: tsd
-status: concluída — aguardando merge (branch backend/rf-012-conclusao)
+status: concluída — mergeada no main (56f83bd)
 created: 01/09/2026 // Pablo Grisi (Engenheiro)
 updated: 01/09/2026 // Pablo Grisi
 related:
