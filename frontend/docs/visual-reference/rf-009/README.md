@@ -4,13 +4,13 @@ Evidência da validação visual do ciclo RF-009 frontend (`.ai-dev/visual-refer
 Capturado em 01/09/2026, viewport 1440×900, via Chrome (playwright-core), contra
 `npm run build && npx next start -p 3200` do frontend (gateway de fixtures).
 
-| Arquivo                             | O que é                                                                                                                                                                              |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `rf009-nao-conforme.png`            | `/analise/1` — visão inicial: chip **"Não conforme"** ativo (vermelho), só os requisitos com `statusFinal = NAO_CONFORME`; grupos com contagem dos itens visíveis                     |
-| `rf009-todos.png`                   | Mesmo item, chip **"Todos"** (azul) — todos os requisitos da aba                                                                                                                     |
+| Arquivo                             | O que é                                                                                                                                                                                         |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `rf009-nao-conforme.png`            | `/analise/1` — visão inicial: chip **"Não conforme"** ativo (vermelho), só os requisitos com `statusFinal = NAO_CONFORME`; grupos com contagem dos itens visíveis                               |
+| `rf009-todos.png`                   | Mesmo item, chip **"Todos"** (azul) — todos os requisitos da aba                                                                                                                                |
 | `rf009-grupo-vazio-placeholder.png` | `/analise/1`, filtro **"Não se aplica"** — "Dados gerais" fica com `0` itens mas **continua visível** com a linha "Nenhum requisito neste grupo com o filtro atual."; "Orcamento" mostra o item |
-| `rf009-nenhum-nao-conforme.png`     | `/analise/7` (sem nenhum não conforme) — estado do PRD §9: "Nenhum requisito não conforme nesta aba." + botão **"Ver todos os requisitos"**                                            |
-| `rf009-ver-todos.png`               | Após "Ver todos os requisitos" — filtro passa para "Todos", lista revelada, URL `…/analise/7?requisitos=todos`                                                                        |
+| `rf009-nenhum-nao-conforme.png`     | `/analise/7` (sem nenhum não conforme) — estado do PRD §9: "Nenhum requisito não conforme nesta aba." + botão **"Ver todos os requisitos"**                                                     |
+| `rf009-ver-todos.png`               | Após "Ver todos os requisitos" — filtro passa para "Todos", lista revelada, URL `…/analise/7?requisitos=todos`                                                                                  |
 
 Referência: **REF-06** — `AnalysisPanel` do protótipo (`.filters` / `.chip` / `.chipActive*`),
 já inspecionada no RF-010 / TSD-013 §10. Imagem do painel do protótipo em

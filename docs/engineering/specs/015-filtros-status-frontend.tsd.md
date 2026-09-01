@@ -61,9 +61,8 @@ primeiro e o `resumo` (TSD-007). Nenhuma chamada nova.
   - `filtrarPorStatus(grupos: AreaComItens[], filtro: FiltroRequisito): AreaComItens[]` — puro;
     `"TODOS"` devolve os grupos como estão; senão devolve **os mesmos grupos**, cada um com
     `itens` reduzido a `statusFinal === filtro` (grupo pode ficar com `itens: []`);
-    não muta a entrada.
-  - `contarPorFiltro(grupos, filtro): number` — total de itens que passam (para o estado
-    "nenhum não conforme" / evitar recontar).
+    não muta a entrada. A contagem para o estado "nenhum não conforme" sai de
+    `contarItens(gruposFiltrados)` no `PainelRevisao` — sem função extra.
 - `src/components/analise/FiltroStatus.tsx` (+ `.module.css`, client) — `role="group"`, um
   `<button>` por opção, `aria-pressed`; ativo colorido (Não conforme = erro, Conforme = marca,
   Não se aplica = neutro, Todos = info); `onChange(filtro)`.
@@ -120,7 +119,7 @@ primeiro e o `resumo` (TSD-007). Nenhuma chamada nova.
 ## 6. Plano de implementação
 
 1. `filtro-requisito.ts` (tipo, opções, `parseFiltroRequisito`/`filtroParaSlug`,
-   `filtrarPorStatus`, `contarPorFiltro`) + export.
+   `filtrarPorStatus`) + export.
 2. `FiltroStatus` (+ CSS) — portar `.filters`/`.chip`/`.chipActive*` do protótipo.
 3. `PainelRevisao` — filtro em `useState` lido de `useSearchParams`, escrito com
    `router.replace`; renderizar `FiltroStatus`; aplicar filtro; grupos vazios com placeholder;
@@ -135,7 +134,7 @@ primeiro e o `resumo` (TSD-007). Nenhuma chamada nova.
 
 | Tipo | Aplica-se? | Justificativa |
 |---|---|---|
-| Unitário | Sim | `filtrarPorStatus`: `"TODOS"` devolve tudo; cada status reduz `itens` por `statusFinal`; **todos os grupos permanecem** (grupo pode vir com `itens: []`); não muta a entrada. `parseFiltroRequisito` (slug válido → tipo; ausente/inválido → padrão) e `filtroParaSlug`. `contarPorFiltro`. Componentes: `FiltroStatus` (4 chips, `aria-pressed`, `onChange` dispara com o valor certo, classe de ativo por status); `PainelRevisao` (abre em "Não conforme" mostrando só não conformes, grupos sem não conformes ainda visíveis com a linha de placeholder; clicar "Todos" mostra o resto; filtro mantido ao trocar de aba; filtro inicial lido de `?requisitos=` e escrito na URL ao trocar; aba inteira sem não conformes no filtro padrão → mensagem + "Ver todos" leva a "TODOS"; estado processando/erro inalterado). |
+| Unitário | Sim | `filtrarPorStatus`: `"TODOS"` devolve tudo; cada status reduz `itens` por `statusFinal`; **todos os grupos permanecem** (grupo pode vir com `itens: []`); não muta a entrada. `parseFiltroRequisito` (slug válido → tipo; ausente/inválido → padrão) e `filtroParaSlug`. Componentes: `FiltroStatus` (4 chips, `aria-pressed`, `onChange` dispara com o valor certo, classe de ativo por status); `PainelRevisao` (abre em "Não conforme" mostrando só não conformes, grupos sem não conformes ainda visíveis com a linha de placeholder; clicar "Todos" mostra o resto; filtro mantido ao trocar de aba; filtro inicial lido de `?requisitos=` e escrito na URL ao trocar; aba inteira sem não conformes no filtro padrão → mensagem + "Ver todos" leva a "TODOS"; estado processando/erro inalterado). |
 | Integração (módulos/camadas reais) | Não nesta slice | Sem backend/dado novo; a cadeia é render + filtro puro, coberta no unitário. |
 | Contrato (formato entre serviços) | Não nesta slice | Nenhum campo novo — `avaliacoesPorArea`/`statusFinal` já validados no contrato de `GET /analises/:id` (TSD-013). |
 | Smoke/validação manual contra dependência externa real | Não | Sem chamada ao backend. |

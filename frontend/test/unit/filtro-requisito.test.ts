@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  contarPorFiltro,
   FILTRO_REQUISITO_OPCOES,
   FILTRO_REQUISITO_PADRAO,
   filtrarPorStatus,
@@ -89,14 +88,5 @@ describe("filtrarPorStatus", () => {
     const antes = JSON.stringify(GRUPOS);
     filtrarPorStatus(GRUPOS, "CONFORME");
     expect(JSON.stringify(GRUPOS)).toBe(antes);
-  });
-});
-
-describe("contarPorFiltro", () => {
-  it("conta os itens que passam pelo filtro", () => {
-    expect(contarPorFiltro(GRUPOS, "NAO_CONFORME")).toBe(1);
-    expect(contarPorFiltro(GRUPOS, "CONFORME")).toBe(2);
-    expect(contarPorFiltro(GRUPOS, "NAO_SE_APLICA")).toBe(1);
-    expect(contarPorFiltro(GRUPOS, "TODOS")).toBe(4);
   });
 });

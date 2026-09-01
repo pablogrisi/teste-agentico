@@ -112,11 +112,14 @@ describe("PainelRevisao", () => {
     expect(screen.getByText(/sugestões da IA/)).toBeInTheDocument();
   });
 
-  it("PROCESSANDO → mensagem de processamento, sem lista, sem progresso, sem legenda", () => {
+  it("PROCESSANDO → mensagem de processamento, sem lista, sem progresso, sem legenda, sem chips", () => {
     render(<PainelRevisao detalhe={detalhe("PROCESSANDO", [])} />);
     expect(screen.getByText(/Processando a análise/)).toBeInTheDocument();
     expect(screen.queryByText(/verificados/)).not.toBeInTheDocument();
     expect(screen.queryByText(/sugestões da IA/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("group", { name: /Filtrar requisitos por status/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("ERRO_PROCESSAMENTO → mostra o motivo do erro, sem legenda de sugestões da IA", () => {
@@ -150,13 +153,17 @@ describe("PainelRevisao", () => {
       expect(screen.queryByText("Requisito c2")).not.toBeInTheDocument();
     });
 
-    it("grupo sem itens no filtro atual continua visível com uma linha de placeholder", () => {
+    it("grupo sem itens no filtro atual continua visível com placeholder e contagem dos visíveis", () => {
       render(<PainelRevisao detalhe={detalhe("PRONTA_PARA_REVISAO", COM_CONFORMES)} />);
-      // "Orcamento" só tem conforme → o grupo aparece, mas sem itens
-      expect(screen.getByText("Orcamento")).toBeInTheDocument();
+      // "Orcamento" só tem conforme → o grupo aparece, mas sem itens (badge 0 + placeholder)
+      const orcamento = screen.getByText("Orcamento").parentElement as HTMLElement;
+      expect(within(orcamento).getByText("0")).toBeInTheDocument();
       expect(
         screen.getByText("Nenhum requisito neste grupo com o filtro atual."),
       ).toBeInTheDocument();
+      // "Dados gerais" mostra só o não conforme → badge reflete os itens visíveis (1)
+      const dadosGerais = screen.getByText("Dados gerais").parentElement as HTMLElement;
+      expect(within(dadosGerais).getByText("1")).toBeInTheDocument();
     });
 
     it("clicar em 'Todos' revela todos os requisitos e grava ?requisitos=todos na URL", async () => {

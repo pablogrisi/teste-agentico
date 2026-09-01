@@ -55,15 +55,3 @@ export function filtrarPorStatus(grupos: AreaComItens[], filtro: FiltroRequisito
     itens: grupo.itens.filter((item) => item.statusFinal === filtro),
   }));
 }
-
-/** Total de itens que passam pelo filtro (para o estado "nenhum não conforme"). */
-export function contarPorFiltro(grupos: AreaComItens[], filtro: FiltroRequisito): number {
-  return grupos.reduce(
-    (soma, grupo) =>
-      soma +
-      (filtro === "TODOS"
-        ? grupo.itens.length
-        : grupo.itens.filter((item) => item.statusFinal === filtro).length),
-    0,
-  );
-}
