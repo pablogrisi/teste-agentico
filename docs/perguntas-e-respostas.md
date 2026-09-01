@@ -320,3 +320,28 @@ Opções: incluir no PATCH agora / não neste slice.
 **Apresentação da TSD-009** (`docs/engineering/specs/009-pdf-por-pagina.tsd.md`): coluna `Analise.totalPaginasPdf Int?` + migration; `contarPaginasPdf` best-effort com `pdf-lib`; `totalPaginasPdf` no `GET /analises/:id`; `paginaReferencia` no `PATCH .../requisitos/:requisitoId` (`1..total` | `≥1` | `null` → senão `422`), sem disparar a R-06; `lerPagina` mantido como seam.
 **Resposta do usuário:** "Aprova, pode implementar."
 **Decisão:** TSD-009 aprovada; Dev implementou; ciclo fechado (91 unit, 32 e2e, Crítico ✅) na branch `backend/rf-014-pdf-pagina`, aguardando merge.
+
+---
+
+## 01/09/2026 — Ciclo RF-012 + RF-013 + RF-015 (conclusão da análise), Agente PM
+
+**Validação da User Story:** aprovada (implícita nas respostas abaixo).
+
+**P1 — segunda chamada de `POST /analises/:id/concluir` numa análise já `CONCLUIDA`:**
+Opções: idempotente `200` / `409`.
+**R1:** **Idempotente `200`** — retorna a análise já concluída, sem alterar `concluidaEm`.
+
+**P2 — resposta do `POST /concluir` no sucesso:**
+Opções: payload completo (= `GET /analises/:id`) / enxuto (`{ id, status, concluidaEm }`).
+**R2:** **Payload completo.**
+
+**P3 — como expor o responsável (RF-013) no `GET /analises/:id`:**
+Opções: só `analistaId` / `analistaId` + `analistaNome`.
+**R3:** "você decide."
+**Decisão da IA:** expor **`analistaId` + `analistaNome`** (ambos já na config, resolvidos pelo `AnalistaAtualProvider`). O relatório PDF (RF-016) vai precisar de um nome legível; custo baixo agora.
+
+**P4 — a trava de conclusão (RF-012) considera só o campo `verificado`?**
+Opções: só `verificado` (fiel ao PRD) / também exigir `statusFinal` decidido ativamente.
+**R4:** **Só `verificado`** — basta que todo requisito obrigatório esteja verificado; o analista pode verificar aceitando a sugestão da IA.
+
+**Decisão:** vai para a TSD-010. `POST /analises/:id/concluir` com trava por `resumo.obrigatoriosPendentes`; `422` com lista de pendentes; `409` fora de `PRONTA_PARA_REVISAO`; `200` idempotente; payload completo; `analistaId`+`analistaNome` no detalhe.

@@ -45,9 +45,9 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 10 | RF-011 | Endpoint de marcação de "verificado" | Must | implementada com RF-008 |
 | 11 | RF-017 | Validação de comentário obrigatório nas ações de revisão | Must | implementada com RF-008 |
 | 12 | RF-014 | Referência de página + entrega do PDF por página | Must | implementada |
-| 13 | RF-012 | Endpoint de conclusão global com trava por obrigatórios | Must | user story em aprovação |
-| 14 | RF-013 | Registro de responsável, datas e status final | Must | user story em aprovação (com RF-012) |
-| 15 | RF-015 | Conclusão interna sem aprovação/assinatura/dupla revisão | Must | user story em aprovação (com RF-012) |
+| 13 | RF-012 | Endpoint de conclusão global com trava por obrigatórios | Must | user story aprovada |
+| 14 | RF-013 | Registro de responsável, datas e status final | Must | user story aprovada (com RF-012) |
+| 15 | RF-015 | Conclusão interna sem aprovação/assinatura/dupla revisão | Must | user story aprovada (com RF-012) |
 | 16 | RF-016 | Geração sob demanda do relatório PDF final | Must | não iniciada |
 | 17 | RF-003 | Escopo de acesso por analista | Must (fase com identidade) | não iniciada — pós-MVP (P-10) |
 
@@ -350,12 +350,12 @@ Recorte backend deste ciclo (reduzido após as decisões — o visor do frontend
 ### RF-012 — Conclusão global da análise
 
 **Frentes:** Backend · Frontend
-**Status (backend):** user story em aprovação
+**Status (backend):** user story aprovada
 **Status (frontend):** não iniciada
 
 > Ciclo backend agrupado: **RF-012 + RF-013 + RF-015** = "concluir a análise" (um endpoint de conclusão). User Story e critérios abaixo cobrem os três.
 
-**User Story** — *aguardando validação*
+**User Story** — *validada em 01/09/2026*
 
 Como analista técnico, quero, quando terminar de verificar todos os requisitos obrigatórios de uma análise, concluí-la numa única confirmação — sem depender de aprovação, assinatura ou segunda pessoa — para registrar o parecer final e deixar a análise pronta para consulta e para o relatório.
 
@@ -373,15 +373,19 @@ Recorte backend deste ciclo:
 - Mesma chamada com ≥ 1 requisito obrigatório não verificado → `422` com a lista de pendentes; nada é gravado; a análise segue `PRONTA_PARA_REVISAO`.
 - Requisito **não** obrigatório não verificado **não** bloqueia a conclusão.
 - Análise fora de `PRONTA_PARA_REVISAO` → `409`. Análise inexistente para o analista → `404`.
-- Segunda chamada de `concluir` numa análise já `CONCLUIDA` → comportamento definido no ciclo (idempotente `200` ou `409` — ver decisões).
-- `GET /analises/:id` de uma análise concluída traz `analistaId` (responsável), `iniciadaEm`, `concluidaEm` e `statusFinal` por requisito.
-- Testes: unit da regra de bloqueio (obrigatório vs. não obrigatório; `NAO_SE_APLICA` obrigatório conta; transição de status) e integração (criar → processar → verificar todos → concluir `200`; tentar concluir com pendente → `422` + lista; `409` fora de revisão).
+- Segunda chamada de `concluir` numa análise já `CONCLUIDA` → **idempotente `200`** com a análise já concluída (não altera `concluidaEm`).
+- `GET /analises/:id` de uma análise concluída traz o responsável (`analistaId` + `analistaNome`), `iniciadaEm`, `concluidaEm` e `statusFinal` por requisito.
+- Resposta do `POST /concluir` no sucesso = **payload completo**, no mesmo formato de `GET /analises/:id`.
+- Testes: unit da regra de bloqueio (obrigatório vs. não obrigatório; `NAO_SE_APLICA` obrigatório conta; transição de status; idempotência) e integração (criar → processar → verificar todos → concluir `200`; tentar concluir com pendente → `422` + lista; `409` fora de revisão; reconcluir → `200`).
 
-**Decisões do ciclo (respostas do usuário)**
+**Decisões do ciclo (respostas do usuário — 01/09/2026)**
 
-*(a preencher após a validação da User Story)*
+1. **Re-conclusão:** idempotente — `POST /concluir` numa análise já `CONCLUIDA` retorna `200` com o payload da análise, sem mexer em `concluidaEm`.
+2. **Resposta de sucesso:** payload completo (mesmo corpo de `GET /analises/:id`).
+3. **Responsável (RF-013):** *"você decide"* → expor `analistaId` **e** `analistaNome` (resolvidos pelo `AnalistaAtualProvider`, que já tem os dois na config). Motivo: o relatório PDF (RF-016, próximo ciclo) precisa de um nome legível; custo baixo agora.
+4. **Trava (RF-012):** fiel ao PRD — basta que **todo requisito obrigatório esteja `verificado`**. Não se exige que o `statusFinal` tenha sido editado (o analista pode verificar aceitando a sugestão da IA).
 
-**TSD associada:** `docs/engineering/specs/010-conclusao-analise.tsd.md` (a redigir pelo Engenheiro após a validação).
+**TSD associada:** `docs/engineering/specs/010-conclusao-analise.tsd.md` (a redigir pelo Engenheiro).
 
 ### RF-013 — Registro de responsável, datas e status final
 

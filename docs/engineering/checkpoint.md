@@ -15,7 +15,7 @@ Fundação percorrida (`.ai-dev/bootstrap.md`): PRD e SDD aprovados, `questoes-a
 Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJS, Pablo) e `frontend/` (Next.js, Vinicius), método e docs compartilhados na raiz. Cada frente roda seu próprio ciclo de seis papéis.
 
 - **`main` `19f308b`** (push feito): TSD-001 + RF-006 + RF-001/004/018 + RF-002 + RF-005/RF-007 + RF-009 + RF-008/011/017 + **RF-014/TSD-009** integradas.
-- **RF-012 + RF-013 + RF-015 / TSD-010** (conclusão global da análise, backend) — **ciclo aberto** na branch `backend/rf-012-conclusao`. PM redigindo a User Story.
+- **RF-012 + RF-013 + RF-015 / TSD-010** (conclusão global da análise, backend) — **ciclo aberto** na branch `backend/rf-012-conclusao`. User Story validada (01/09/2026); decisões: `200` idempotente na reconclusão, payload completo na resposta, `analistaId`+`analistaNome` no detalhe, trava só por `verificado`. **Aguardando o Engenheiro redigir a TSD-010.**
 - **TSD-002** (`frontend/`) — aprovada; **não implementada**. Por Vinicius, em branch a partir da `main`.
 - Infra de teste: `test:e2e` sobe/derruba um PostgreSQL embutido (`embedded-postgres`) — sem Docker.
 - Integração com o serviço de IA real (`HttpAdapter` da `AnaliseIaPort` + A-02) foi **adiada para o fim do MVP** por decisão do responsável (31/08/2026); até lá o `StubAdapter` sustenta os ciclos.
@@ -23,7 +23,7 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 ## 2. Spec ativa
 
-- Branch `backend/rf-012-conclusao`: ciclo **RF-012 + RF-013 + RF-015** aberto pelo PM (conclusão global da análise com trava por obrigatórios; registro de responsável/datas/status final; sem aprovação/assinatura/dupla revisão no MVP). **User Story rascunhada — aguardando validação humana antes do Engenheiro.**
+- Branch `backend/rf-012-conclusao`: ciclo **RF-012 + RF-013 + RF-015** aberto pelo PM (conclusão global da análise com trava por obrigatórios; registro de responsável/datas/status final; sem aprovação/assinatura/dupla revisão no MVP). **User Story validada e decisões tomadas — aguardando o Engenheiro redigir `docs/engineering/specs/010-conclusao-analise.tsd.md` e apresentá-la para aprovação.**
 - Os pontos de aprovação PM→Engenheiro e Engenheiro→Dev são paradas explícitas (ver observação no §7).
 - Frontend: `docs/engineering/specs/002-fundacao-frontend.tsd.md` aguardando o Vinicius.
 
