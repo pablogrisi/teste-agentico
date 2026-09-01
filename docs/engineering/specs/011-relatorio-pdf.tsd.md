@@ -3,7 +3,7 @@
 ---
 title: TSD - Relatório PDF final (RF-016, backend)
 type: tsd
-status: em aprovação
+status: concluída — aguardando merge (branch backend/rf-016-relatorio)
 created: 01/09/2026 // Pablo Grisi (Engenheiro)
 updated: 01/09/2026 // Pablo Grisi
 related:
@@ -154,20 +154,20 @@ npm run build
 
 ## 8. Critérios de aceite
 
-- [ ] `GET /analises/:id/relatorio` numa análise `CONCLUIDA` → `200`,
+- [x] `GET /analises/:id/relatorio` numa análise `CONCLUIDA` → `200`,
       `Content-Type: application/pdf`, `Content-Disposition: inline; filename="relatorio-analise-<id>.pdf"`,
       corpo com assinatura `%PDF-`.
-- [ ] O modelo do relatório (base do PDF) contém NUP, objeto, nome do responsável,
+- [x] O modelo do relatório (base do PDF) contém NUP, objeto, nome do responsável,
       `iniciadaEm`, `concluidaEm`, o `resumo` de contagens e, por área, os
       requisitos com `codigo`, `titulo`, norma formatada, página (quando houver) e
       `statusFinal`.
-- [ ] Dentro de cada área os requisitos saem por `requisito.ordem` (não a ordem
+- [x] Dentro de cada área os requisitos saem por `requisito.ordem` (não a ordem
       "não conformes primeiro" da tela).
-- [ ] `formatarNorma` inclui só os campos não nulos; `''` quando não há norma.
-- [ ] Análise fora de `CONCLUIDA` → `409`; análise inexistente para o analista →
+- [x] `formatarNorma` inclui só os campos não nulos; `''` quando não há norma.
+- [x] Análise fora de `CONCLUIDA` → `409`; análise inexistente para o analista →
       `404`.
-- [ ] Nenhuma escrita em disco/banco no caminho do relatório.
-- [ ] `npm run ci` e `npm run test:e2e` verdes.
+- [x] Nenhuma escrita em disco/banco no caminho do relatório.
+- [x] `npm run ci` e `npm run test:e2e` verdes.
 
 ## 9. Riscos e decisões abertas
 

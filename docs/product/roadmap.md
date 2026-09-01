@@ -48,7 +48,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 13 | RF-012 | Endpoint de conclusão global com trava por obrigatórios | Must | implementada |
 | 14 | RF-013 | Registro de responsável, datas e status final | Must | implementada (com RF-012) |
 | 15 | RF-015 | Conclusão interna sem aprovação/assinatura/dupla revisão | Must | implementada (com RF-012) |
-| 16 | RF-016 | Geração sob demanda do relatório PDF final | Must | em validação |
+| 16 | RF-016 | Geração sob demanda do relatório PDF final | Must | implementada |
 | 17 | RF-003 | Escopo de acesso por analista | Must (fase com identidade) | não iniciada — pós-MVP (P-10) |
 
 ## Tabela de sequenciamento — Frente Frontend (`frontend/`)
@@ -407,7 +407,7 @@ Recorte backend deste ciclo:
 ### RF-016 — Relatório PDF final da análise concluída
 
 **Frentes:** Backend · Frontend
-**Status (backend):** em validação
+**Status (backend):** implementada (ciclo fechado na branch `backend/rf-016-relatorio`, aguardando merge na `main`)
 **Status (frontend):** não iniciada
 
 **User Story** — *validada em 01/09/2026*
@@ -438,7 +438,16 @@ Recorte backend deste ciclo:
 3. **Ordenação:** *"você decide"* → agrupar por área e listar na ordem natural do requisito (`ordem`), não a visão "não conformes primeiro". Motivo: é um documento de arquivo/compartilhamento, previsível; a priorização é afordância de tela (RF-009).
 4. **Entrega:** `Content-Disposition: inline` (abre no visor; usuário salva se quiser), consistente com `GET /analises/:id/pdf`.
 
-**TSD associada:** `docs/engineering/specs/011-relatorio-pdf.tsd.md` (redigida — em aprovação).
+**TSD associada:** `docs/engineering/specs/011-relatorio-pdf.tsd.md` (aprovada e implementada).
+
+**Notas do ciclo (01/09/2026)**
+
+- **Testes:** `npm run ci` ✅ (106 unit, lint, typecheck, `prisma:validate`, build) · `npm run test:e2e` ✅ 39/39.
+- **Crítico:** aprovado, sem desvios de escopo. Menores: o texto do PDF não é assertável por extração (`pdfkit` não devolve texto) — a lógica de conteúdo mora em `montarModeloRelatorio` (puro, testado), o render tem smoke; fuso fixado em `America/Sao_Paulo`; documento montado em memória (ok no MVP).
+- **Documentador:** SDD §7 ("Relatório PDF" — contrato final); `questoes-abertas.md` **A-04 fechada para o MVP** (sob demanda, sem persistir); audit `01/09/2026`.
+- **Frente frontend:** botão "baixar relatório" na tela da análise concluída → `GET /analises/:id/relatorio` (abre inline / salva).
+
+> **Marco:** com RF-016 mergeado, o **backend de features do MVP está completo**. Resta só a integração com o serviço de IA real (`HttpAdapter` da `AnaliseIaPort` + A-02), adiada para o fim.
 
 ### RF-003 — Restrição de visualização das análises ao analista que as iniciou
 

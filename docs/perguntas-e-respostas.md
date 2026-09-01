@@ -378,3 +378,11 @@ Opções: download forçado (attachment) / inline.
 **R4:** `Content-Disposition: inline`, consistente com `GET /analises/:id/pdf`.
 
 **Decisão:** vai para a TSD-011. `GET /analises/:id/relatorio` → `application/pdf` inline, sob demanda com `pdfkit`, sem persistir; `409` se não `CONCLUIDA`; conteúdo = mínimo do PRD + resumo + norma + página.
+
+---
+
+## 01/09/2026 — Ciclo RF-016 (relatório PDF final), Agente Engenheiro
+
+**Apresentação da TSD-011** (`docs/engineering/specs/011-relatorio-pdf.tsd.md`): `GET /analises/:id/relatorio` → `application/pdf` inline, sob demanda com `pdfkit`, sem persistir; `RelatorioModule` novo consumindo `AnalisesService`; modelo puro `montarModeloRelatorio` + `renderRelatorioPdf`; `409` se `!= CONCLUIDA`; sem migration.
+**Resposta do usuário:** "Sim, implemente."
+**Decisão:** TSD-011 aprovada; Dev implementou; ciclo fechado (106 unit, 39 e2e, Crítico ✅) na branch `backend/rf-016-relatorio`, aguardando merge. Fecha o backend de features do MVP — resta só a integração da IA real (A-02).

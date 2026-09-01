@@ -20,6 +20,20 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 01/09/2026 — RF-016 / TSD-011: relatório PDF final (backend)
+
+Contexto: usuário mandou "vamos continuar o desenvolvimento pra fechar o backend do mvp" — RF-016 é o último ciclo de feature do backend (depois só a integração da IA real). Branch `backend/rf-016-relatorio`, dois pontos de aprovação humana explícitos.
+
+Papéis:
+- **PM**: 4 perguntas. Decisões: (1) lib `pdfkit` (+ `@types/pdfkit`); (2) conteúdo além do mínimo do PRD → resumo de contagens + referência de página + norma estruturada; **sem** comentário do analista; (3) ordenação → *"você decide"* → agrupar por área, ordem natural do requisito (documento formal, não a visão "não conformes primeiro" da tela); (4) entrega → `Content-Disposition: inline`. User Story validada.
+- **Engenheiro**: `docs/engineering/specs/011-relatorio-pdf.tsd.md` — apresentada e **aprovada** ("Sim, implemente"). Sem migration; sem mudança de contrato existente.
+- **Dev**: `src/relatorio/` — `relatorio-modelo.ts` (`montarModeloRelatorio` puro + `formatarNorma`; itens de cada área reordenados por `ordem`), `relatorio.builder.ts` (`renderRelatorioPdf` com `pdfkit`, coleta chunks do stream → `Buffer`; `ROTULO_STATUS` pt-BR; datas `America/Sao_Paulo`), `relatorio.service.ts` (`gerar(id)` → `abrir` (404) → `409` se `!= CONCLUIDA` → `{ bytes, nomeArquivo }`), `relatorio.controller.ts` (`GET /analises/:id/relatorio` → `StreamableFile` `application/pdf` inline), `relatorio.module.ts` (`imports: [AnalisesModule]`). Deps: `pdfkit` ^0.20 + `@types/pdfkit`. +11 unit (`relatorio-modelo` — campos, ordenação por `ordem`, `formatarNorma`, página condicional; `relatorio-builder` — smoke `%PDF-` + páginas via `pdf-lib`) + 1 suite de integração (`relatorio-pdf`: `200 application/pdf inline` com assinatura `%PDF-` / `409` antes de concluir / `404`).
+- **Testes**: `npm run ci` ✅ — lint, typecheck, `prisma:validate`, **106 unit**, build. `npm run test:e2e` ✅ **39/39** (9 suites).
+- **Crítico**: aprovado, sem desvios de escopo. Menores: conteúdo textual do PDF não é assertável por extração (`pdfkit` não devolve texto) — mitigado pela lógica morar em `montarModeloRelatorio` (puro, 100% testado) + smoke no render; fuso fixado em `America/Sao_Paulo` (revisitar com identidade real); `renderRelatorioPdf` monta o documento inteiro em memória (ok para o volume do MVP).
+- **Documentador**: SDD §7 ("Relatório PDF" — contrato final: inline, conteúdo, `409`/`404`); `questoes-abertas.md` **A-04 fechada para o MVP** (sob demanda, sem persistir); checkpoint; roadmap RF-016 → `implementada` (branch).
+
+Estado: ciclo fechado, **branch aguardando merge + push**. Backend do MVP: só falta a **integração da IA real** (`HttpAdapter` da `AnaliseIaPort` + A-02).
+
 ## 01/09/2026 — RF-012 + RF-013 + RF-015 / TSD-010: conclusão da análise (backend)
 
 Contexto: usuário mandou "faz o merge e o push, e abre o ciclo de RF-012+RF-013+RF-015" logo após o fechamento de RF-014. Ciclo agrupado ("concluir a análise") na branch `backend/rf-012-conclusao`, com as duas paradas de aprovação humana explícitas.

@@ -14,8 +14,8 @@ Fundação percorrida (`.ai-dev/bootstrap.md`): PRD e SDD aprovados, `questoes-a
 
 Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJS, Pablo) e `frontend/` (Next.js, Vinicius), método e docs compartilhados na raiz. Cada frente roda seu próprio ciclo de seis papéis.
 
-- **`main` `56f83bd`** (push feito): backend fechado até RF-012/RF-013/RF-015 (conclusão da análise) — mergeado. Falta RF-016 (relatório) + integração da IA real.
-- **RF-016 / TSD-011** (relatório PDF final, backend) — **ciclo aberto** na branch `backend/rf-016-relatorio`. User Story validada (01/09/2026). Engenheiro redigiu `docs/engineering/specs/011-relatorio-pdf.tsd.md` — **aguardando aprovação humana da TSD antes do Dev.**
+- **`main` `56f83bd`** (push feito): backend até RF-012/RF-013/RF-015 (conclusão) mergeado.
+- **RF-016 / TSD-011** (relatório PDF final, backend) — **ciclo fechado** na branch `backend/rf-016-relatorio` (6 papéis, gates cumpridos). `npm run ci` ✅ (106 unit) · `test:e2e` ✅ 39/39. **Aguardando merge + push.** Com isso, **o backend de features do MVP fica completo** — resta só a integração da IA real (A-02).
 - **TSD-002** (`frontend/`) — aprovada; **não implementada**. Por Vinicius, em branch a partir da `main`.
 - Infra de teste: `test:e2e` sobe/derruba um PostgreSQL embutido (`embedded-postgres`) — sem Docker.
 - Integração com o serviço de IA real (`HttpAdapter` da `AnaliseIaPort` + A-02) foi **adiada para o fim do MVP** por decisão do responsável (31/08/2026); até lá o `StubAdapter` sustenta os ciclos.
@@ -23,7 +23,7 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 ## 2. Spec ativa
 
-- Branch `backend/rf-016-relatorio`: ciclo **RF-016** (relatório PDF final). User Story validada; decisões: `pdfkit`, entrega `inline`, conteúdo = mínimo do PRD + resumo + norma + página (sem comentário). Engenheiro redigiu a TSD-011 — **aguardando aprovação humana antes do Dev.**
+- **Nenhuma spec de backend ativa.** Ciclo RF-016 / TSD-011 fechado na branch `backend/rf-016-relatorio`, aguardando merge + push. Depois disso o backend só precisa da **integração da IA real** (`HttpAdapter` da `AnaliseIaPort` + A-02) para fechar o MVP.
 - Os pontos de aprovação PM→Engenheiro e Engenheiro→Dev são paradas explícitas (ver observação no §7).
 - Frontend: `docs/engineering/specs/002-fundacao-frontend.tsd.md` aguardando o Vinicius.
 
@@ -40,6 +40,7 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 | TSD-008 — Revisão de requisito (RF-008/011/017, backend) | `PATCH /analises/:id/requisitos/:requisitoId` (`statusFinal`/`verificado`/`comentario`); alterar `statusFinal` ⇒ `verificado=true`; comentário obrigatório sse resultado `statusFinal ≠ statusSugeridoIa` sem comentário (R-06); `409` fora de `PRONTA_PARA_REVISAO`, `404`, `422`; resposta `{ item, resumo }`. Sem mudança de modelo. | `npm run ci` ✅ (75 unit) · `npm run test:e2e` ✅ 28/28 (+ integração `revisao-requisito`: 422 sem comentário / 200 com / verificado sem comentário / 422 inválido+vazio / 404 / 409) · build ✅ · Crítico ✅ · mergeada `main` `ad2e8cd` |
 | TSD-009 — Referência de página do PDF (RF-014, backend) | `Analise.totalPaginasPdf Int?` + migration; contagem best-effort com `pdf-lib` no `criar` (`null` se não parseável, sem falhar); `totalPaginasPdf` no `GET /analises/:id`; `PATCH .../requisitos/:requisitoId` aceita `paginaReferencia` (`1..total` \| `≥1` \| `null` → senão `422`), **sem** disparar a R-06; `lerPagina` segue como seam. | `npm run ci` ✅ (91 unit) · `npm run test:e2e` ✅ 32/32 (+ integração: criar→`totalPaginasPdf` no payload / `null` quando não parseável / `PATCH paginaReferencia` ok / fora do intervalo → 422 / `null` limpa / total desconhecido) · build ✅ · Crítico ✅ · mergeada `main` `19f308b` |
 | TSD-010 — Conclusão da análise (RF-012/013/015, backend) | `POST /analises/:id/concluir` (`@HttpCode 200`): `404` \| `CONCLUIDA` → `200` idempotente \| fora de `PRONTA_PARA_REVISAO` → `409` \| obrigatório não verificado → `422` com `requisitosPendentes` \| senão transição atômica `updateMany` → `CONCLUIDA` + `concluidaEm`, devolve payload completo. `AnaliseDetalhe` ganha `analistaId` + `analistaNome` (RF-013). Trava só por `verificado`. Sem migration. | `npm run ci` ✅ (97 unit) · `npm run test:e2e` ✅ 36/36 (+ integração `conclusao-analise`: 422+lista / 200+CONCLUIDA+concluidaEm+responsável / idempotente / não-obrigatório não bloqueia / 409 / 404) · build ✅ · Crítico ✅ · mergeada `main` `56f83bd` |
+| TSD-011 — Relatório PDF final (RF-016, backend) | `GET /analises/:id/relatorio` → `application/pdf` `inline`, sob demanda com `pdfkit`, **não persiste** (A-04). `409` se `!= CONCLUIDA`; `404`. `RelatorioModule` novo (consome `AnalisesService`); `montarModeloRelatorio` puro (itens por `ordem`, `formatarNorma`) + `renderRelatorioPdf`. Conteúdo: NUP, objeto, responsável, datas, resumo, e por requisito `codigo`/`titulo`/norma/página/`statusFinal`. Sem migration. | `npm run ci` ✅ (106 unit) · `npm run test:e2e` ✅ 39/39 (+ integração `relatorio-pdf`: `200 application/pdf inline` + `%PDF-` / `409` antes de concluir / `404`) · build ✅ · Crítico ✅ · **branch `backend/rf-016-relatorio`, aguardando merge** |
 
 ### 3.1 Notas de revisão dos ciclos fechados
 
@@ -65,7 +66,11 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 **Crítico — RF-012/013/015 / TSD-010 (01/09/2026):** **aprovado**, sem desvios de escopo. Todos os critérios com evidência (97 unit + 36 e2e): trava por obrigatório não verificado → `422` com `requisitosPendentes` (não obrigatório não bloqueia; obrigatório `NAO_SE_APLICA` não verificado bloqueia); `200` na conclusão com `CONCLUIDA` + `concluidaEm` + responsável; `200` idempotente na reconclusão (mesmo `concluidaEm`); `409` fora de `PRONTA_PARA_REVISAO`; `404`; transição por `updateMany` condicional. `analistaId`+`analistaNome` no `GET /analises/:id`. Menores não bloqueantes: `concluir` relê a análise inteira no fim (via `abrir`); `analistaNome` de análises antigas mostra sempre o analista corrente (analista único — P-10); a transição condicional cobre a corrida de status, não a de conteúdo.
 
-**Documentador (01/09/2026):** ciclo RF-012/013/015/TSD-010 **fechado, aguardando merge** (branch `backend/rf-012-conclusao`). SDD §7 ("Concluir análise" — contrato final), §8 (`analise`: `analista_id`/`concluida_em` expostos, transição condicional). `questoes-abertas.md` P-01/P-02 anotadas (conclusão interna, auditoria mínima). Roadmap RF-012/013/015 → `implementada` (branch) + notas do ciclo. Detalhe em `.ai-dev/audit.md` (`01/09/2026`).
+**Documentador (01/09/2026):** ciclo RF-012/013/015/TSD-010 **fechado e mergeado** (`main` `56f83bd`). SDD §7 ("Concluir análise" — contrato final), §8 (`analise`: `analista_id`/`concluida_em` expostos, transição condicional). `questoes-abertas.md` P-01/P-02 anotadas (conclusão interna, auditoria mínima). Roadmap RF-012/013/015 → `implementada`. Detalhe em `.ai-dev/audit.md` (`01/09/2026`).
+
+**Crítico — RF-016 / TSD-011 (01/09/2026):** **aprovado**, sem desvios de escopo. Todos os critérios com evidência (106 unit + 39 e2e): `GET /analises/:id/relatorio` numa análise `CONCLUIDA` → `200 application/pdf`, `Content-Disposition: inline; filename="relatorio-analise-<id>.pdf"`, corpo `%PDF-`; modelo com NUP/objeto/responsável/datas/resumo e, por área, requisitos por `ordem` com `codigo`/`titulo`/norma formatada/página condicional/`statusFinal`; `409` se `!= CONCLUIDA`; `404`; nada persistido. Menores não bloqueantes: o texto do PDF não é assertável por extração (`pdfkit` não devolve texto) — a lógica mora em `montarModeloRelatorio` (puro, testado), o render tem smoke via `pdf-lib`; fuso fixado em `America/Sao_Paulo`; documento montado em memória (ok no volume do MVP).
+
+**Documentador (01/09/2026):** ciclo RF-016/TSD-011 **fechado, aguardando merge** (branch `backend/rf-016-relatorio`). SDD §7 ("Relatório PDF" — contrato final). `questoes-abertas.md` **A-04 fechada para o MVP** (sob demanda, sem persistir). Roadmap RF-016 → `implementada` (branch) + notas + marco "backend de features do MVP completo". Detalhe em `.ai-dev/audit.md` (`01/09/2026`).
 
 ## 4. Decisões relevantes
 
@@ -99,7 +104,9 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 - [x] P-03 (quando exigir comentário) fechado — R-06.
 - [x] RF-008/011/017/TSD-008 mergeada na `main` (`ad2e8cd`).
 - [x] RF-014/TSD-009 mergeada na `main` (`19f308b`, push feito).
-- [x] RF-012/013/015/TSD-010 — ciclo fechado na branch `backend/rf-012-conclusao` (97 unit, 36 e2e, Crítico ✅). **Aguardando merge + push.**
+- [x] RF-012/013/015/TSD-010 mergeada na `main` (`56f83bd`, push feito).
+- [x] RF-016/TSD-011 — ciclo fechado na branch `backend/rf-016-relatorio` (106 unit, 39 e2e, Crítico ✅). **Aguardando merge + push.** Fecha o backend de features do MVP.
+- [ ] **Integração da IA real** (`HttpAdapter` da `AnaliseIaPort` + A-02) — único item de backend restante para o MVP.
 - [ ] Implementar a TSD-002 (frontend) — aprovada; por Vinicius, em branch a partir da `main`.
 - [ ] Integração com o serviço de IA real (`HttpAdapter` + A-02) — **adiada para o fim do MVP**.
 - [ ] Follow-up: migrar `package.json#prisma` para `prisma.config.ts` antes do Prisma 7.
@@ -116,10 +123,10 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 ## 7. Próximo passo recomendado
 
-1. **Backend (Pablo):** ciclo RF-012+RF-013+RF-015 fechado — **fazer o merge (fast-forward) da branch `backend/rf-012-conclusao` na `main` e o push**. Depois o PM abre o **último ciclo de feature do backend: RF-016** (relatório PDF final).
-2. **Frontend (Vinicius):** branch `frontend/tsd-002-fundacao` a partir do `main`; implementar a TSD-002.
-3. Cada ciclo mergeia no `main` quando o Documentador fecha.
-4. Depois de RF-016 resta só a **integração da IA real** (`HttpAdapter` da `AnaliseIaPort` + A-02) para fechar o MVP de backend.
+1. **Backend (Pablo):** ciclo RF-016 fechado — **fazer o merge (fast-forward) da branch `backend/rf-016-relatorio` na `main` e o push**. Com isso o backend de features do MVP está completo.
+2. **Backend — último passo do MVP:** abrir o ciclo da **integração da IA real** — `HttpAdapter` da `AnaliseIaPort` + fechar A-02 (contrato de entrada/saída, auth, timeout, retry, e se o projeto aciona um serviço ou consome um resultado). É o que estava adiado desde 31/08.
+3. **Frontend (Vinicius):** branch `frontend/tsd-002-fundacao` a partir do `main`; implementar a TSD-002.
+4. Cada ciclo mergeia no `main` quando o Documentador fecha.
 
 ### Ajuste de processo (a partir de RF-014)
 
