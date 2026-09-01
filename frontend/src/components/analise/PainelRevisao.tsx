@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   contarItens,
@@ -39,16 +39,18 @@ export function PainelRevisao({ detalhe }: { detalhe: AnaliseDetalhe }) {
   );
 
   // Alterações de parecer feitas nesta sessão (RF-008): sobrepõem o item e o resumo
-  // devolvidos pelo servidor, sem recarregar. Reiniciadas a cada novo `detalhe` (refetch).
+  // devolvidos pelo servidor, sem recarregar. Só são zeradas ao trocar de análise —
+  // um refetch por mudança de filtro (RF-009) não pode descartar o que o analista revisou.
   const [overrides, setOverrides] = useState<Map<string, AvaliacaoItem>>(new Map());
   const [resumo, setResumo] = useState(detalhe.resumo);
   const [parecerDe, setParecerDe] = useState<AvaliacaoItem | null>(null);
-
-  useEffect(() => {
+  const [analiseId, setAnaliseId] = useState(detalhe.id);
+  if (detalhe.id !== analiseId) {
+    setAnaliseId(detalhe.id);
     setOverrides(new Map());
     setResumo(detalhe.resumo);
     setParecerDe(null);
-  }, [detalhe]);
+  }
 
   function trocarFiltro(proximo: FiltroRequisito) {
     setFiltro(proximo);

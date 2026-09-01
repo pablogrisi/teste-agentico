@@ -33,7 +33,6 @@ export function AlterarParecerModal({
   const [montado, setMontado] = useState(false);
   const [statusFinal, setStatusFinal] = useState<StatusRequisito | "">("");
   const [comentario, setComentario] = useState("");
-  const [tentouEnviar, setTentouEnviar] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [erroServidor, setErroServidor] = useState<string | null>(null);
 
@@ -60,7 +59,7 @@ export function AlterarParecerModal({
     };
   }, []);
 
-  const { ok, erros, divergeDaSugestao } = validarAlteracaoParecer({
+  const { ok, divergeDaSugestao } = validarAlteracaoParecer({
     statusFinal,
     statusAtual: item.statusFinal,
     statusSugeridoIa: item.statusSugeridoIa,
@@ -70,7 +69,6 @@ export function AlterarParecerModal({
   const opcoes = PARECER_OPCOES.filter((s) => s !== item.statusFinal);
 
   async function confirmar() {
-    setTentouEnviar(true);
     if (!ok || statusFinal === "") return;
 
     setEnviando(true);
@@ -155,7 +153,6 @@ export function AlterarParecerModal({
                 className={styles.select}
                 value={statusFinal}
                 onChange={(evento) => setStatusFinal(evento.target.value as StatusRequisito)}
-                aria-invalid={tentouEnviar && erros.statusFinal ? true : undefined}
                 disabled={enviando}
               >
                 <option value="" disabled>
@@ -173,9 +170,6 @@ export function AlterarParecerModal({
                   explique a mudança no comentário.
                 </p>
               )}
-              {tentouEnviar && erros.statusFinal && (
-                <p className={styles.erroCampo}>{erros.statusFinal}</p>
-              )}
             </div>
 
             <div className={styles.field}>
@@ -188,12 +182,8 @@ export function AlterarParecerModal({
                 value={comentario}
                 onChange={(evento) => setComentario(evento.target.value)}
                 placeholder="Justifique o novo parecer"
-                aria-invalid={tentouEnviar && erros.comentario ? true : undefined}
                 disabled={enviando}
               />
-              {tentouEnviar && erros.comentario && (
-                <p className={styles.erroCampo}>{erros.comentario}</p>
-              )}
             </div>
           </section>
         </div>

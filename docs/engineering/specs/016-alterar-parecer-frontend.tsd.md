@@ -3,7 +3,7 @@
 ---
 title: TSD - Alterar parecer do requisito (RF-008, frontend)
 type: tsd
-status: em aprovação
+status: implementada
 created: 01/09/2026 // Vinicius
 updated: 01/09/2026 // Vinicius
 related:
@@ -101,7 +101,9 @@ Sem mudança de contrato. O endpoint já existe (backend `ad2e8cd`).
   - "Novo parecer": `<select>` com `PARECER_OPCOES` menos `item.statusFinal`; `<textarea>` de
     comentário. Dica curta abaixo do select quando a escolha diverge da IA
     ("A IA sugeriu <X>; explique a mudança.").
-  - Confirmar: desabilitado enquanto `!validarAlteracaoParecer(...).ok || enviando`. No clique:
+  - Confirmar: desabilitado enquanto `!validarAlteracaoParecer(...).ok || enviando` — como o
+    botão desabilitado já é o sinal de "inválido" (idem protótipo), **não há erro inline por
+    campo**; só a faixa de erro do servidor. No clique:
     `getAnalisesGateway().revisarRequisito(analiseId, item.requisitoId, { statusFinal, comentario })`.
     Sucesso → `onAlterado(resultado)` (o pai fecha). `AnaliseValidacaoError` → `erroServidor =
     motivos[0]`, modal aberto, dados preservados. `AnaliseConflitoError` → mensagem "Esta
@@ -117,9 +119,11 @@ Sem mudança de contrato. O endpoint já existe (backend `ad2e8cd`).
 - **`PainelRevisao.tsx`**:
   - `const [overrides, setOverrides] = useState<Map<string, AvaliacaoItem>>(new Map())` — chave =
     `item.id` (id da avaliação).
-  - `const [resumo, setResumo] = useState(detalhe.resumo)`; quando `detalhe` muda de identidade
-    (novo fetch), `overrides` e `resumo` são reinicializados (via `useEffect` com dependência
-    em `detalhe`).
+  - `const [resumo, setResumo] = useState(detalhe.resumo)`; `overrides`/`resumo` são zerados
+    **só quando `detalhe.id` muda** (troca de análise) — padrão de estado derivado no render
+    (`if (detalhe.id !== analiseId) { setAnaliseId(...); reset }`). Um refetch por mudança de
+    filtro (RF-009 usa `router.replace`, que dispara novo RSC) traz um `detalhe` novo com o
+    mesmo id e **não** descarta o que o analista já revisou.
   - `aplicarOverrides(grupos)` mapeia cada item para `overrides.get(item.id) ?? item` antes de
     `separarPorAba` / `filtrarPorStatus`. As contagens das abas e o progresso passam a sair de
     `resumo` (estado), não de `detalhe.resumo`.
@@ -217,16 +221,16 @@ npm run ci
 
 ## 8. Critérios de aceite
 
-- [ ] Cada `RequisitoItem` tem uma ação **"Alterar parecer"** que abre o modal com o **parecer atual** visível (requisito + status, só leitura).
-- [ ] O modal tem um **select** com os 3 status **menos o atual** e um **textarea de comentário**; "Confirmar" fica desabilitado até haver um parecer escolhido e um comentário não vazio.
-- [ ] Confirmar chama `PATCH /analises/:id/requisitos/:requisitoId` com `{ statusFinal, comentario }` via `AnalisesGateway.revisarRequisito` (nenhum componente fala HTTP direto).
-- [ ] No **sucesso**: o modal fecha; o item passa a mostrar o novo `statusFinal` (badge), a divergência da IA (RF-007) reavalia, o item entra/sai da lista conforme o filtro ativo (RF-009), e a **barra de progresso** e as **contagens das abas** se ajustam pelo `resumo` devolvido — **sem recarregar a página**.
-- [ ] `422` → mensagem do backend no modal, **modal continua aberto**, campos preservados. `409` → "análise não está mais em revisão". `404` → "requisito não encontrado". Erro de rede → mensagem genérica.
-- [ ] Validação client-side espelha a R-06: quando o novo parecer difere da sugestão da IA, o comentário é claramente exigido (neste fluxo ele é sempre exigido).
-- [ ] O checkbox de "verificado" **continua desabilitado** (RF-011); alterar o status liga `verificado` só porque o backend devolve assim.
-- [ ] `HttpAnalisesGateway` e `FixturesAnalisesGateway` implementam `revisarRequisito`; a fixture aplica as mesmas regras e **não persiste** (andaime — §9).
-- [ ] `npm run ci` verde: `eslint .` + prettier, `tsc --noEmit`, testes, `next build`.
-- [ ] §10 revisada; screenshots (modal / erro / lista após alterar) comparados com o protótipo — `frontend/docs/visual-reference/rf-008/`.
+- [x] Cada `RequisitoItem` tem uma ação **"Alterar parecer"** que abre o modal com o **parecer atual** visível (requisito + status, só leitura).
+- [x] O modal tem um **select** com os 3 status **menos o atual** e um **textarea de comentário**; "Confirmar" fica desabilitado até haver um parecer escolhido e um comentário não vazio.
+- [x] Confirmar chama `PATCH /analises/:id/requisitos/:requisitoId` com `{ statusFinal, comentario }` via `AnalisesGateway.revisarRequisito` (nenhum componente fala HTTP direto).
+- [x] No **sucesso**: o modal fecha; o item passa a mostrar o novo `statusFinal` (badge), a divergência da IA (RF-007) reavalia, o item entra/sai da lista conforme o filtro ativo (RF-009), e a **barra de progresso** e as **contagens das abas** se ajustam pelo `resumo` devolvido — **sem recarregar a página**.
+- [x] `422` → mensagem do backend no modal, **modal continua aberto**, campos preservados. `409` → "análise não está mais em revisão". `404` → "requisito não encontrado". Erro de rede → mensagem genérica.
+- [x] Validação client-side espelha a R-06: quando o novo parecer difere da sugestão da IA, o comentário é claramente exigido (neste fluxo ele é sempre exigido).
+- [x] O checkbox de "verificado" **continua desabilitado** (RF-011); alterar o status liga `verificado` só porque o backend devolve assim.
+- [x] `HttpAnalisesGateway` e `FixturesAnalisesGateway` implementam `revisarRequisito`; a fixture aplica as mesmas regras e **não persiste** (andaime — §9).
+- [x] `npm run ci` verde: `eslint .` + prettier, `tsc --noEmit`, testes, `next build`.
+- [x] §10 revisada; screenshots (modal / erro / lista após alterar) comparados com o protótipo — `frontend/docs/visual-reference/rf-008/`.
 
 ## 9. Riscos e decisões abertas
 
@@ -262,7 +266,7 @@ npm run ci
 - **Interação com RF-009:** alterar um item para fora do filtro ativo faz ele sumir da lista
   imediatamente. É o comportamento do protótipo ("o item migra para o novo parecer") e está
   coberto por teste; pode surpreender — a barra de progresso mexendo ajuda a explicar.
-- **Reinicialização dos overrides quando `detalhe` muda:** o polling (`AutoRefreshAnalise`) só
+- **Reinicialização dos overrides:** zerada só quando `detalhe.id` muda (ver §3). O polling (`AutoRefreshAnalise`) só
   roda em `PENDENTE`/`PROCESSANDO`; numa análise `PRONTA_PARA_REVISAO` o `detalhe` não muda
   sozinho, então os overrides sobrevivem. Ainda assim o `useEffect` de reset por identidade de
   `detalhe` cobre um eventual refresh manual.
