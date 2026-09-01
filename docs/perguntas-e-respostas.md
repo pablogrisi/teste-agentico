@@ -353,3 +353,28 @@ Opções: só `verificado` (fiel ao PRD) / também exigir `statusFinal` decidido
 **Apresentação da TSD-010** (`docs/engineering/specs/010-conclusao-analise.tsd.md`): `POST /analises/:id/concluir` (`200` idempotente se `CONCLUIDA` | `409` fora de `PRONTA_PARA_REVISAO` | `422` com `requisitosPendentes` | transição atômica `updateMany`); `conclusao-analise.ts` com a regra pura de pendências; `AnaliseDetalhe` ganha `analistaId` + `analistaNome`; sem migration.
 **Resposta do usuário:** "Aprova, pode implementar."
 **Decisão:** TSD-010 aprovada; Dev implementou; ciclo fechado (97 unit, 36 e2e, Crítico ✅) na branch `backend/rf-012-conclusao`, aguardando merge.
+
+---
+
+## 01/09/2026 — Ciclo RF-016 (relatório PDF final), Agente PM
+
+**Validação da User Story:** aprovada (implícita nas respostas).
+
+**P1 — biblioteca de geração de PDF:**
+Opções: `pdfkit` (sugestão do SDD) / `pdf-lib` (já é dep).
+**R1:** `pdfkit` (+ `@types/pdfkit`).
+
+**P2 — conteúdo além do mínimo do PRD:**
+Opções (multi): resumo de contagens / comentário do analista por requisito / referência de página / norma estruturada.
+**R2:** resumo de contagens + referência de página + norma. **Sem** o comentário do analista neste ciclo.
+
+**P3 — ordenação dos requisitos no relatório:**
+Opções: natural (área + ordem) / não conformes primeiro (como na tela).
+**R3:** "você decide."
+**Decisão da IA:** agrupar por área, ordem natural do requisito. É documento de arquivo/compartilhamento; a priorização "pior primeiro" é afordância de tela (RF-009), não de documento.
+
+**P4 — entrega do PDF:**
+Opções: download forçado (attachment) / inline.
+**R4:** `Content-Disposition: inline`, consistente com `GET /analises/:id/pdf`.
+
+**Decisão:** vai para a TSD-011. `GET /analises/:id/relatorio` → `application/pdf` inline, sob demanda com `pdfkit`, sem persistir; `409` se não `CONCLUIDA`; conteúdo = mínimo do PRD + resumo + norma + página.
