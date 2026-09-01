@@ -45,9 +45,9 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 10 | RF-011 | Endpoint de marcação de "verificado" | Must | implementada com RF-008 |
 | 11 | RF-017 | Validação de comentário obrigatório nas ações de revisão | Must | implementada com RF-008 |
 | 12 | RF-014 | Referência de página + entrega do PDF por página | Must | implementada |
-| 13 | RF-012 | Endpoint de conclusão global com trava por obrigatórios | Must | não iniciada |
-| 14 | RF-013 | Registro de responsável, datas e status final | Must | não iniciada |
-| 15 | RF-015 | Conclusão interna sem aprovação/assinatura/dupla revisão | Must | não iniciada |
+| 13 | RF-012 | Endpoint de conclusão global com trava por obrigatórios | Must | user story em aprovação |
+| 14 | RF-013 | Registro de responsável, datas e status final | Must | user story em aprovação (com RF-012) |
+| 15 | RF-015 | Conclusão interna sem aprovação/assinatura/dupla revisão | Must | user story em aprovação (com RF-012) |
 | 16 | RF-016 | Geração sob demanda do relatório PDF final | Must | não iniciada |
 | 17 | RF-003 | Escopo de acesso por analista | Must (fase com identidade) | não iniciada — pós-MVP (P-10) |
 
@@ -309,7 +309,7 @@ Recorte backend deste ciclo: `PATCH /analises/:id/requisitos/:requisitoId` que a
 ### RF-014 — Rastreabilidade documental por referência de página do PDF
 
 **Frentes:** Backend · Frontend
-**Status (backend):** implementada (ciclo fechado na branch `backend/rf-014-pdf-pagina`, aguardando merge na `main`)
+**Status (backend):** implementada (mergeada no `main` `19f308b`)
 **Status (frontend):** não iniciada
 
 **User Story** — *validada em 31/08/2026*
@@ -350,18 +350,48 @@ Recorte backend deste ciclo (reduzido após as decisões — o visor do frontend
 ### RF-012 — Conclusão global da análise
 
 **Frentes:** Backend · Frontend
-**Status (backend):** não iniciada
+**Status (backend):** user story em aprovação
 **Status (frontend):** não iniciada
+
+> Ciclo backend agrupado: **RF-012 + RF-013 + RF-015** = "concluir a análise" (um endpoint de conclusão). User Story e critérios abaixo cobrem os três.
+
+**User Story** — *aguardando validação*
+
+Como analista técnico, quero, quando terminar de verificar todos os requisitos obrigatórios de uma análise, concluí-la numa única confirmação — sem depender de aprovação, assinatura ou segunda pessoa — para registrar o parecer final e deixar a análise pronta para consulta e para o relatório.
+
+Recorte backend deste ciclo:
+- `POST /analises/:id/concluir` — muda a análise de `PRONTA_PARA_REVISAO` para `CONCLUIDA` e grava `concluidaEm`, **somente** se não houver nenhum requisito **obrigatório** com `verificado = false` (RF-012). Requisito obrigatório com status final `NAO_SE_APLICA` também precisa estar `verificado`.
+- Bloqueio → `422` com a lista dos requisitos obrigatórios ainda pendentes (`codigo`, `titulo`, `area`); a análise continua aberta (`PRONTA_PARA_REVISAO`).
+- `409` se a análise não está `PRONTA_PARA_REVISAO` (ex.: `PENDENTE`, `PROCESSANDO`, `ERRO_PROCESSAMENTO`).
+- Conclusão é do próprio analista, sem etapa de aprovação/assinatura/dupla revisão (RF-015) — nada além da checagem de obrigatórios.
+- **RF-013:** a análise concluída expõe, para consulta, o responsável (`analistaId`), `iniciadaEm`, `concluidaEm` e o `statusFinal` de cada requisito. `iniciadaEm` e `statusFinal` já são persistidos; este ciclo grava `concluidaEm` e passa a incluir `analistaId` no payload de `GET /analises/:id`.
+- Depois de `CONCLUIDA`, os requisitos ficam congelados: `PATCH .../requisitos/:requisitoId` já responde `409` fora de `PRONTA_PARA_REVISAO` (sem reabertura no MVP).
+
+**Critérios de aceite**
+
+- `POST /analises/:id/concluir` numa análise `PRONTA_PARA_REVISAO` sem obrigatórios pendentes → `200`, `status = CONCLUIDA`, `concluidaEm` gravado.
+- Mesma chamada com ≥ 1 requisito obrigatório não verificado → `422` com a lista de pendentes; nada é gravado; a análise segue `PRONTA_PARA_REVISAO`.
+- Requisito **não** obrigatório não verificado **não** bloqueia a conclusão.
+- Análise fora de `PRONTA_PARA_REVISAO` → `409`. Análise inexistente para o analista → `404`.
+- Segunda chamada de `concluir` numa análise já `CONCLUIDA` → comportamento definido no ciclo (idempotente `200` ou `409` — ver decisões).
+- `GET /analises/:id` de uma análise concluída traz `analistaId` (responsável), `iniciadaEm`, `concluidaEm` e `statusFinal` por requisito.
+- Testes: unit da regra de bloqueio (obrigatório vs. não obrigatório; `NAO_SE_APLICA` obrigatório conta; transição de status) e integração (criar → processar → verificar todos → concluir `200`; tentar concluir com pendente → `422` + lista; `409` fora de revisão).
+
+**Decisões do ciclo (respostas do usuário)**
+
+*(a preencher após a validação da User Story)*
+
+**TSD associada:** `docs/engineering/specs/010-conclusao-analise.tsd.md` (a redigir pelo Engenheiro após a validação).
 
 ### RF-013 — Registro de responsável, datas e status final
 
 **Frentes:** Backend
-**Status:** não iniciada
+**Status:** coberto no ciclo de RF-012 (ver seção RF-012)
 
 ### RF-015 — Conclusão interna sem aprovação, assinatura ou dupla revisão
 
 **Frentes:** Backend
-**Status:** não iniciada
+**Status:** coberto no ciclo de RF-012 (ver seção RF-012)
 
 ### RF-016 — Relatório PDF final da análise concluída
 

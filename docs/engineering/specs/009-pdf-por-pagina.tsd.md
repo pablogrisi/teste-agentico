@@ -3,7 +3,7 @@
 ---
 title: TSD - Referência de página do PDF (RF-014, backend)
 type: tsd
-status: concluída — aguardando merge (branch backend/rf-014-pdf-pagina)
+status: concluída — mergeada no main (19f308b)
 created: 31/08/2026 // Pablo Grisi (Engenheiro)
 updated: 01/09/2026 // Pablo Grisi
 related:
