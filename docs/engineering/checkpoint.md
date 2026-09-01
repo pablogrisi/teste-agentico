@@ -23,7 +23,8 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 ## 2. Spec ativa
 
-- Branch `backend/rf-012-conclusao`: ciclo **RF-012 + RF-013 + RF-015** aberto pelo PM (conclusão global da análise com trava por obrigatórios; registro de responsável/datas/status final; sem aprovação/assinatura/dupla revisão no MVP). **User Story validada e decisões tomadas — aguardando o Engenheiro redigir `docs/engineering/specs/010-conclusao-analise.tsd.md` e apresentá-la para aprovação.**
+- Branch `backend/rf-012-conclusao`: ciclo **RF-012 + RF-013 + RF-015** (conclusão global da análise). User Story validada e decisões tomadas. Engenheiro redigiu `docs/engineering/specs/010-conclusao-analise.tsd.md` — **aguardando aprovação humana da TSD antes do Dev.**
+- Recorte da TSD-010: `POST /analises/:id/concluir` (`200` idempotente | `409` fora de `PRONTA_PARA_REVISAO` | `422` com `requisitosPendentes` | transição atômica `updateMany`); `AnaliseDetalhe`/`montarAnaliseDetalhe` ganham `analistaId` + `analistaNome` (RF-013). Sem migration (`concluida_em`/`CONCLUIDA` já existem).
 - Os pontos de aprovação PM→Engenheiro e Engenheiro→Dev são paradas explícitas (ver observação no §7).
 - Frontend: `docs/engineering/specs/002-fundacao-frontend.tsd.md` aguardando o Vinicius.
 
