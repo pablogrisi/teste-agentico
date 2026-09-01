@@ -58,7 +58,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 1 | RF-002 | Tela de listagem de análises + estado vazio | Must | implementada (branch `frontend/rf-002-listagem`) |
 | 2 | RF-001 | Modal "Nova análise" (NUP, objeto) + validação | Must | implementada (branch `frontend/rf-001-nova-analise`) |
 | 3 | RF-004 | Campo de upload de PDF no modal + estados de erro | Must | implementada com RF-001 (branch `frontend/rf-001-nova-analise`) |
-| 4 | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre | Must | não iniciada |
+| 4 | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre | Must | user story em aprovação (branch `frontend/rf-010-tela-analise`) |
 | 5 | RF-007 | Exibição dos requisitos com status sugerido pela IA | Must | não iniciada |
 | 6 | RF-009 | Visão inicial priorizando não conformes + filtros por status | Must | não iniciada |
 | 7 | RF-008 | Modal de alteração de status final ("parecer") | Must | não iniciada |
@@ -286,7 +286,35 @@ Recorte backend deste ciclo: o endpoint de leitura da análise passa a devolver 
 ### RF-010 — Navegação livre entre seções e abas da análise
 
 **Frentes:** Frontend (backend entrega os requisitos agrupados por área)
-**Status:** não iniciada
+**Status (frontend):** user story em aprovação — branch `frontend/rf-010-tela-analise`
+
+**User Story (frontend)**
+
+Como analista técnico, quero abrir uma análise e ver os requisitos avaliados organizados nas abas **Checklist** e **Técnica**, podendo alternar livremente entre elas (sem ordem obrigatória de revisão) e expandir cada requisito para ler o detalhe, para começar a revisão pela parte que eu quiser.
+
+Recorte deste ciclo (frontend):
+
+- `/analise/[id]` deixa de ser casca: carrega `GET /analises/:id` pelo seam de dados (`AnalisesGateway.abrirAnalise(id)`), com estados de carregando / erro / não encontrada (404).
+- Cabeçalho da análise: NUP, objeto, badge de status; quando `PENDENTE`/`PROCESSANDO`, mostra "processando" em vez da lista; `ERRO_PROCESSAMENTO` mostra o `motivoErro`.
+- Frame de dois painéis (do TSD-002): à esquerda o **espaço do visor de PDF** (segue placeholder — o visor real é RF-014); à direita o **painel de revisão**.
+- Painel de revisão: **abas Checklist / Técnica** (derivadas de `avaliacoesPorArea` pelo prefixo da `area`), **navegação livre** entre elas; Legislação/Outros aparecem desabilitadas (indisponíveis no MVP).
+- Dentro da aba: lista dos requisitos **agrupada por área**, na ordem que o backend já entrega (não conformes primeiro, depois `ordem`); cada requisito é um item em acordeão — recolhido: título + badge do `statusFinal`; expandido: descrição, norma (lei/artigo/…), comentário (se houver), referência de página (texto, ainda não clicável).
+- Barra de progresso a partir do `resumo` (verificados / total).
+
+**Fora do escopo (entram nos próximos ciclos):**
+
+- Filtros por status (chips) + "visão inicial priorizando não conformes" na UI → **RF-009**.
+- Destaque do status **sugerido pela IA** vs. final → **RF-007**.
+- Controle interativo de "marcar como verificado" → **RF-011**.
+- Modal de alteração do parecer (`statusFinal`) → **RF-008**.
+- Campo/obrigatoriedade de comentário na revisão → **RF-017**.
+- Visor de PDF real + referência de página clicável (`#page=N`) → **RF-014**.
+- Modal de conclusão + botão global → **RF-012**.
+- Semântica definitiva da aba Técnica (P-04): neste ciclo os itens de Técnica são renderizados como os de Checklist (com badge de `statusFinal`, que o backend entrega para todo requisito ativo). Divergência do protótipo (que trata Técnica como "observações" neutras) registrada na TSD.
+
+**Contrato consumido:** `GET /analises/:id` (backend TSD-004 + TSD-007 + TSD-009 + TSD-010) — SDD §7, fluxo "Abrir análise".
+
+**TSD associada (frontend):** `docs/engineering/specs/013-tela-analise-frontend.tsd.md`.
 
 ### RF-008 — Definição do status final de cada requisito
 
