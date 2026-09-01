@@ -43,6 +43,23 @@ export interface AnalisesPagina {
   tamanho: number;
 }
 
+/** Entrada de `POST /analises` (multipart) — TSD-004. */
+export interface NovaAnaliseInput {
+  nup: string;
+  objeto: string;
+  /** PDF do processo. */
+  arquivo: File;
+}
+
+/** Resposta `201` de `POST /analises` (TSD-004). */
+export interface AnaliseCriada {
+  id: string;
+  nup: string;
+  objeto: string;
+  status: StatusAnalise;
+  iniciadaEm: string;
+}
+
 /** Parâmetros de consulta de `GET /analises` (TSD-005). */
 export interface ListarAnalisesQuery {
   /** Busca em `nup` + `objeto`, contém, case/acento-insensitive. */

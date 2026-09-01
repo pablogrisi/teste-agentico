@@ -1,7 +1,14 @@
-import type { AnalisesGateway } from "./analises-gateway";
+import { AnaliseValidacaoError, type AnalisesGateway } from "./analises-gateway";
 import { TAMANHO_MAX, TAMANHO_PADRAO } from "./analises-query";
 import { ANALISES_FIXTURE } from "./fixtures";
-import type { AnaliseResumo, AnalisesPagina, ListarAnalisesQuery } from "./types";
+import { validarNovaAnalise } from "./nova-analise";
+import type {
+  AnaliseCriada,
+  AnaliseResumo,
+  AnalisesPagina,
+  ListarAnalisesQuery,
+  NovaAnaliseInput,
+} from "./types";
 
 /** Remove acentos e caixa para comparação de busca (equivale ao "insensitive" do backend). */
 function normalizar(texto: string): string {
@@ -49,5 +56,23 @@ export class FixturesAnalisesGateway implements AnalisesGateway {
     const itens = ordenadas.slice(inicio, inicio + tamanho).map((a) => ({ ...a }));
 
     return { itens, total, pagina, tamanho };
+  }
+
+  /**
+   * Sem backend: revalida e devolve uma análise sintética `PENDENTE`.
+   * Andaime — a análise criada NÃO entra na lista de fixtures (ver TSD-011 §9).
+   */
+  async criarAnalise(input: NovaAnaliseInput): Promise<AnaliseCriada> {
+    const { ok, erros } = validarNovaAnalise(input);
+    if (!ok) {
+      throw new AnaliseValidacaoError(Object.values(erros).filter(Boolean) as string[]);
+    }
+    return {
+      id: `nova-${crypto.randomUUID()}`,
+      nup: input.nup.trim(),
+      objeto: input.objeto.trim(),
+      status: "PENDENTE",
+      iniciadaEm: new Date().toISOString(),
+    };
   }
 }

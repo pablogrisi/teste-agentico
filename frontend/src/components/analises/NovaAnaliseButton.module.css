@@ -1,0 +1,20 @@
+.botao {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  padding: var(--spacing-8) var(--spacing-16) var(--spacing-8) var(--spacing-12);
+  background: var(--color-brand-default);
+  border: none;
+  border-radius: var(--radius-8);
+  color: var(--color-text-inverse);
+  font-family: var(--font-family-base);
+  font-size: var(--text-small-semibold-size);
+  font-weight: var(--text-small-semibold-weight);
+  line-height: var(--text-small-semibold-line-height);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.botao:hover {
+  background: var(--color-brand-hover);
+}

@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { FixturesAnalisesGateway } from "@/lib/data";
+import { AnaliseValidacaoError, FixturesAnalisesGateway } from "@/lib/data";
 import type { AnaliseResumo } from "@/lib/data";
 import { ANALISES_FIXTURE } from "@/lib/data/fixtures";
+
+function pdf(nome = "processo.pdf"): File {
+  return new File(["%PDF-1.4"], nome, { type: "application/pdf" });
+}
 
 function make(over: Partial<AnaliseResumo> & { id: string }): AnaliseResumo {
   return {
@@ -80,5 +84,30 @@ describe("FixturesAnalisesGateway", () => {
     primeira.itens.splice(0, primeira.itens.length);
     const segunda = await gw.listarAnalises();
     expect(segunda.itens).toHaveLength(20);
+  });
+
+  describe("criarAnalise", () => {
+    it("devolve uma análise sintética PENDENTE com os dados trimados", async () => {
+      const criada = await new FixturesAnalisesGateway().criarAnalise({
+        nup: "  74037.000634/2024-22  ",
+        objeto: "  Aquisição de equipamentos  ",
+        arquivo: pdf(),
+      });
+      expect(criada.status).toBe("PENDENTE");
+      expect(criada.nup).toBe("74037.000634/2024-22");
+      expect(criada.objeto).toBe("Aquisição de equipamentos");
+      expect(criada.id).toMatch(/^nova-/);
+      expect(Date.parse(criada.iniciadaEm)).not.toBeNaN();
+    });
+
+    it("rejeita entrada inválida com AnaliseValidacaoError", async () => {
+      await expect(
+        new FixturesAnalisesGateway().criarAnalise({
+          nup: "",
+          objeto: "",
+          arquivo: new File(["x"], "nota.txt", { type: "text/plain" }),
+        }),
+      ).rejects.toBeInstanceOf(AnaliseValidacaoError);
+    });
   });
 });

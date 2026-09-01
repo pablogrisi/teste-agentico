@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AnalisesGatewayError, HttpAnalisesGateway } from "@/lib/data";
+import { AnaliseValidacaoError, AnalisesGatewayError, HttpAnalisesGateway } from "@/lib/data";
 
 /**
  * Teste de contrato: o formato consumido de `GET /analises` (TSD-005 / SDD §7).
@@ -131,5 +131,115 @@ describe("HttpAnalisesGateway (contrato)", () => {
     await expect(new HttpAnalisesGateway(BASE).listarAnalises()).rejects.toBeInstanceOf(
       AnalisesGatewayError,
     );
+  });
+});
+
+describe("HttpAnalisesGateway.criarAnalise (contrato POST /analises — TSD-004)", () => {
+  const CRIADA_OK = {
+    id: "nova-1",
+    nup: "74037.000634/2024-22",
+    objeto: "Aquisição de equipamentos",
+    status: "PENDENTE",
+    iniciadaEm: "2026-09-01T12:00:00.000Z",
+  };
+
+  function pdf(): File {
+    return new File(["%PDF-1.4"], "processo.pdf", { type: "application/pdf" });
+  }
+
+  function stubFetch(resposta: { ok?: boolean; status?: number; jsonData?: unknown }) {
+    const fn = vi.fn(async (_url: string, _init?: RequestInit) => ({
+      ok: resposta.ok ?? true,
+      status: resposta.status ?? 201,
+      json: async () => resposta.jsonData,
+    }));
+    vi.stubGlobal("fetch", fn);
+    return fn;
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("faz POST multipart para {base}/analises com nup, objeto e arquivo", async () => {
+    const fetchSpy = stubFetch({ status: 201, jsonData: CRIADA_OK });
+    await new HttpAnalisesGateway(`${BASE}/`).criarAnalise({
+      nup: "74037.000634/2024-22",
+      objeto: "Aquisição de equipamentos",
+      arquivo: pdf(),
+    });
+
+    const [url, init] = fetchSpy.mock.calls[0];
+    expect(url).toBe(`${BASE}/analises`);
+    expect(init?.method).toBe("POST");
+    const form = init?.body as FormData;
+    expect(form).toBeInstanceOf(FormData);
+    expect(form.get("nup")).toBe("74037.000634/2024-22");
+    expect(form.get("objeto")).toBe("Aquisição de equipamentos");
+    expect(form.get("arquivo")).toBeInstanceOf(File);
+  });
+
+  it("mapeia o 201 para AnaliseCriada", async () => {
+    stubFetch({ status: 201, jsonData: CRIADA_OK });
+    const criada = await new HttpAnalisesGateway(BASE).criarAnalise({
+      nup: "n",
+      objeto: "o",
+      arquivo: pdf(),
+    });
+    expect(criada).toEqual(CRIADA_OK);
+  });
+
+  it("422 vira AnaliseValidacaoError com os motivos do backend", async () => {
+    stubFetch({
+      ok: false,
+      status: 422,
+      jsonData: { statusCode: 422, message: ["NUP é obrigatório", "PDF protegido por senha"] },
+    });
+    const erro = await new HttpAnalisesGateway(BASE)
+      .criarAnalise({ nup: "n", objeto: "o", arquivo: pdf() })
+      .catch((e) => e);
+    expect(erro).toBeInstanceOf(AnaliseValidacaoError);
+    expect((erro as AnaliseValidacaoError).motivos).toEqual([
+      "NUP é obrigatório",
+      "PDF protegido por senha",
+    ]);
+  });
+
+  it("422 com message string também é aceito", async () => {
+    stubFetch({ ok: false, status: 422, jsonData: { message: "Arquivo não é PDF" } });
+    const erro = await new HttpAnalisesGateway(BASE)
+      .criarAnalise({ nup: "n", objeto: "o", arquivo: pdf() })
+      .catch((e) => e);
+    expect(erro).toBeInstanceOf(AnaliseValidacaoError);
+    expect((erro as AnaliseValidacaoError).motivos).toEqual(["Arquivo não é PDF"]);
+  });
+
+  it("502 vira AnalisesGatewayError (não de validação)", async () => {
+    stubFetch({ ok: false, status: 502, jsonData: {} });
+    const erro = await new HttpAnalisesGateway(BASE)
+      .criarAnalise({ nup: "n", objeto: "o", arquivo: pdf() })
+      .catch((e) => e);
+    expect(erro).toBeInstanceOf(AnalisesGatewayError);
+    expect(erro).not.toBeInstanceOf(AnaliseValidacaoError);
+  });
+
+  it("201 com corpo fora do formato é rejeitado", async () => {
+    stubFetch({ status: 201, jsonData: { id: "x" } });
+    await expect(
+      new HttpAnalisesGateway(BASE).criarAnalise({ nup: "n", objeto: "o", arquivo: pdf() }),
+    ).rejects.toBeInstanceOf(AnalisesGatewayError);
+  });
+
+  it("falha de rede vira AnalisesGatewayError", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new TypeError("network down");
+      }),
+    );
+    await expect(
+      new HttpAnalisesGateway(BASE).criarAnalise({ nup: "n", objeto: "o", arquivo: pdf() }),
+    ).rejects.toBeInstanceOf(AnalisesGatewayError);
   });
 });

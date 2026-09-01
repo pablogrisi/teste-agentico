@@ -68,6 +68,41 @@ export function SortIcon(props: IconProps) {
   );
 }
 
+export function XmarkIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M5 5l10 10M15 5L5 15" {...stroke} strokeWidth={1.6} />
+    </Icon>
+  );
+}
+
+export function UploadIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M10 13V4M6.5 7.5L10 4l3.5 3.5" {...stroke} strokeWidth={1.6} />
+      <path d="M4 13v2.5h12V13" {...stroke} strokeWidth={1.6} />
+    </Icon>
+  );
+}
+
+export function CircleCheckIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="10" cy="10" r="8" {...stroke} strokeWidth={1.6} />
+      <path d="M6.5 10l2.2 2.2L13.5 7.5" {...stroke} strokeWidth={1.6} />
+    </Icon>
+  );
+}
+
+export function TrashIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 6h12M8 6V4.5h4V6M6 6l.7 9.5h6.6L14 6" {...stroke} strokeWidth={1.6} />
+      <path d="M8.5 9v4M11.5 9v4" {...stroke} strokeWidth={1.6} />
+    </Icon>
+  );
+}
+
 /* ── Paginador (viewBox 14) ── */
 function PgIcon({ size = 14, children, ...props }: IconProps & { children: React.ReactNode }) {
   return (

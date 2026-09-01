@@ -4,10 +4,10 @@ App **Next.js (App Router) + TypeScript** da LicIA Analisadora. Frente `frontend
 monorepo; a frente `backend/` (NestJS) roda isolada. Método e docs de produto/arquitetura
 vivem na raiz.
 
-> **Estado:** fundação técnica (TSD-002) + **RF-002 — tela de listagem de análises**
-> (TSD-010). `/` é uma tela funcional (tabela, busca, filtro por status, ordenação,
-> paginação, estados vazio/carregando/erro). `/analise/[id]` ainda é casca (RF-010+).
-> Criação de análise (RF-001) ainda não implementada.
+> **Estado:** fundação técnica (TSD-002) + **RF-002** (listagem, TSD-010) + **RF-001/RF-004**
+> (modal "Nova análise" + upload de PDF, TSD-011). `/` é uma tela funcional (tabela, busca,
+> filtro por status, ordenação, paginação, estados vazio/carregando/erro) e o botão "Nova
+> análise" abre o modal de criação. `/analise/[id]` ainda é casca (RF-010+).
 
 ## Pré-requisitos
 
@@ -27,7 +27,9 @@ npm run dev        # http://localhost:3000
 
 Rotas:
 
-- `/` — lista de análises (RF-002): tabela + busca + filtro por status + ordenação + paginação.
+- `/` — lista de análises (RF-002) + modal "Nova análise" (RF-001/RF-004): tabela + busca +
+  filtro por status + ordenação + paginação; "Nova análise" cria via `POST /analises` e navega
+  para a análise.
 - `/analise/<id>` — casca da tela de análise (frame visor de PDF + painel de revisão).
 
 ## Scripts

@@ -2,7 +2,7 @@ import type { AnalisesGateway } from "./analises-gateway";
 import { FixturesAnalisesGateway } from "./fixtures-analises-gateway";
 import { HttpAnalisesGateway } from "./http-analises-gateway";
 
-export { AnalisesGatewayError } from "./analises-gateway";
+export { AnaliseValidacaoError, AnalisesGatewayError } from "./analises-gateway";
 export type { AnalisesGateway } from "./analises-gateway";
 export { FixturesAnalisesGateway } from "./fixtures-analises-gateway";
 export { HttpAnalisesGateway } from "./http-analises-gateway";
@@ -14,6 +14,16 @@ export {
 } from "./analises-query";
 export type { ParamsBrutos } from "./analises-query";
 export {
+  ANALISE_PDF_TAMANHO_MAX_MB,
+  formatarTamanho,
+  NUP_MAX,
+  OBJETO_MAX,
+  toNovaAnaliseInput,
+  validarArquivoPdf,
+  validarNovaAnalise,
+} from "./nova-analise";
+export type { ErrosNovaAnalise, ResultadoValidacao } from "./nova-analise";
+export {
   isStatusAnalise,
   STATUS_ANALISE,
   STATUS_ANALISE_LABEL,
@@ -21,9 +31,11 @@ export {
 } from "./status-analise";
 export type { StatusTone } from "./status-analise";
 export type {
+  AnaliseCriada,
   AnaliseResumo,
   AnalisesPagina,
   ListarAnalisesQuery,
+  NovaAnaliseInput,
   OrdemListagem,
   OrdenarAnalisesPor,
   StatusAnalise,
