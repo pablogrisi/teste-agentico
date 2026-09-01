@@ -44,7 +44,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 9 | RF-008 | Endpoint de definição do status final do requisito | Must | implementada |
 | 10 | RF-011 | Endpoint de marcação de "verificado" | Must | implementada com RF-008 |
 | 11 | RF-017 | Validação de comentário obrigatório nas ações de revisão | Must | implementada com RF-008 |
-| 12 | RF-014 | Referência de página + entrega do PDF por página | Must | em validação |
+| 12 | RF-014 | Referência de página + entrega do PDF por página | Must | implementada |
 | 13 | RF-012 | Endpoint de conclusão global com trava por obrigatórios | Must | não iniciada |
 | 14 | RF-013 | Registro de responsável, datas e status final | Must | não iniciada |
 | 15 | RF-015 | Conclusão interna sem aprovação/assinatura/dupla revisão | Must | não iniciada |
@@ -309,7 +309,7 @@ Recorte backend deste ciclo: `PATCH /analises/:id/requisitos/:requisitoId` que a
 ### RF-014 — Rastreabilidade documental por referência de página do PDF
 
 **Frentes:** Backend · Frontend
-**Status (backend):** em validação
+**Status (backend):** implementada (ciclo fechado na branch `backend/rf-014-pdf-pagina`, aguardando merge na `main`)
 **Status (frontend):** não iniciada
 
 **User Story** — *validada em 31/08/2026*
@@ -338,7 +338,14 @@ Recorte backend deste ciclo (reduzido após as decisões — o visor do frontend
 3. **Correção da página pelo analista incluída** no `PATCH` de revisão.
 4. Lib: **`pdf-lib`**, só para contar páginas.
 
-**TSD associada:** `docs/engineering/specs/009-pdf-por-pagina.tsd.md` (redigida — em aprovação).
+**TSD associada:** `docs/engineering/specs/009-pdf-por-pagina.tsd.md` (aprovada e implementada).
+
+**Notas do ciclo (01/09/2026)**
+
+- **Testes:** `npm run ci` ✅ (91 unit, lint, typecheck, `prisma:validate`, build) · `npm run test:e2e` ✅ 32/32.
+- **Crítico:** aprovado, sem desvios de escopo. Menores: `contarPaginasPdf` roda no caminho do request de `criar` (aceitável no MVP; mover para o worker se pesar); `pdf-lib` loga warnings de parse em PDFs malformados (ruído, tratado pelo `catch`); 3º parâmetro `totalPaginasPdf` de `validarEResolverPatch` com default `null`.
+- **Documentador:** SDD §7/§8/§9; `questoes-abertas.md` P-05 → parcialmente fechada; audit `01/09/2026`.
+- **Frente frontend:** consumir `totalPaginasPdf` de `GET /analises/:id` e navegar no visor via `#page=N`; enviar correção de página no `PATCH .../requisitos/:requisitoId` com `paginaReferencia`.
 
 ### RF-012 — Conclusão global da análise
 

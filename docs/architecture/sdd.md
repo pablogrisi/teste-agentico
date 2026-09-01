@@ -135,7 +135,7 @@ Não há identidade no MVP: o `AnalistaAtualProvider` devolve sempre o analista 
 1. `POST /analises` (multipart: NUP, objeto/descrição, arquivo PDF). `AnalistaAtualProvider` resolve o analista configurado.
 2. Valida campos obrigatórios e o PDF (tipo/assinatura de arquivo, tamanho máximo). PDF inválido → 422 sem criar a análise.
 3. `ArmazenamentoPdfPort` grava o PDF; falha de gravação → 502/500, nada é criado.
-4. Cria `analise` com `status = PENDENTE`, `analista_id`, `iniciada_em`, referência do arquivo. Responde `201` com o id e o status. *(A TSD-004 usa 201: nada assíncrono é disparado na requisição — o worker do RF-005 pega os `PENDENTE` por varredura.)* Erro de validação → `422` sem criar nada; falha ao gravar o PDF → `502` sem criar nada.
+4. Cria `analise` com `status = PENDENTE`, `analista_id`, `iniciada_em`, referência do arquivo e `total_paginas_pdf` (contagem best-effort do PDF via `pdf-lib` — `null` se não parseável, sem falhar a criação; TSD-009 / RF-014). Responde `201` com o id e o status. *(A TSD-004 usa 201: nada assíncrono é disparado na requisição — o worker do RF-005 pega os `PENDENTE` por varredura.)* Erro de validação → `422` sem criar nada; falha ao gravar o PDF → `502` sem criar nada.
 5. Worker seleciona a análise `PENDENTE`, muda para `PROCESSANDO`.
 6. Worker carrega a base de requisitos ativa e chama `AnaliseIaPort` com o PDF + requisitos.
 7. Para cada requisito retornado, cria `avaliacao_requisito` com `status_sugerido_ia` (Conforme | Não conforme | Não se aplica), `pagina_referencia` (ou nulo), `status_final = status_sugerido_ia`, `verificado = false`.
@@ -143,14 +143,15 @@ Não há identidade no MVP: o `AnalistaAtualProvider` devolve sempre o analista 
 
 ### Fluxo - Revisar requisito
 
-**Implementado (TSD-008).** `PATCH /analises/:id/requisitos/:requisitoId` com `{ statusFinal?, verificado?, comentario? }` (ao menos um).
+**Implementado (TSD-008 + TSD-009).** `PATCH /analises/:id/requisitos/:requisitoId` com `{ statusFinal?, verificado?, comentario?, paginaReferencia? }` (ao menos um).
 
 1. `404` se a análise ou a avaliação (par análise+requisito) não existir para o analista; `409` se a análise não está `PRONTA_PARA_REVISAO`.
 2. `statusFinal`, quando presente, deve ser um dos 3 valores (`422` senão).
 3. Alterar `statusFinal` força `verificado = true` (RF-011). `verificado` alterna livre quando o status não muda.
 4. **Comentário obrigatório (P-03 = R-06):** se o estado resultante tiver `statusFinal ≠ statusSugeridoIa` e nenhum comentário → `422` sem gravar. Confirmar a sugestão ou só marcar `verificado` não exigem comentário.
 5. `comentario` vazio/só espaços = limpar (`null`) — mas não pode violar a regra 4.
-6. Grava só os campos que mudam; responde `{ item, resumo }` — `item` no mesmo formato do item de `GET /analises/:id`, `resumo` recalculado.
+6. **`paginaReferencia` (RF-014 / TSD-009):** inteiro `1..total_paginas_pdf` quando o total é conhecido, inteiro `≥ 1` quando é `null`, ou `null` para limpar; fora disso → `422`. **Não** dispara a regra 4 (corrigir a página não é mudar o parecer).
+7. Grava só os campos que mudam; responde `{ item, resumo }` — `item` no mesmo formato do item de `GET /analises/:id`, `resumo` recalculado.
 
 ### Fluxo - Concluir análise
 
@@ -161,8 +162,8 @@ Não há identidade no MVP: o `AnalistaAtualProvider` devolve sempre o analista 
 ### Fluxo - Abrir análise / listar
 
 1. `GET /analises` → **implementado (TSD-005)**. Filtrado por `analista_id`. Query: `q` (busca em `nup`+`objeto`, contém, case-insensitive), `status` (um ou mais, vírgula ou repetição), `ordenarPor` (`iniciadaEm` default | `nup`), `ordem` (`asc`|`desc` default `desc`), `pagina` (1-based, default 1), `tamanho` (default 20, máx 100). Resposta `{ itens, total, pagina, tamanho }`; `itens` com `id`, `nup`, `objeto`, `status`, `iniciadaEm`, `concluidaEm`. Query inválida → `422` sem tocar no banco. (P-06 fechado; contagem de requisitos por linha fica para depois de RF-007.)
-2. `GET /analises/:id` → **implementado (TSD-004 + TSD-007)**. Devolve os campos da análise (`id`, `nup`, `objeto`, `status`, `motivoErro`, `iniciadaEm`, `concluidaEm`), `resumo` (`total`, `conforme`, `naoConforme`, `naoSeAplica`, `verificados`, `obrigatoriosPendentes` — por `statusFinal`) e `avaliacoesPorArea: [{ area, itens: [...] }]` — áreas em ordem alfabética, dentro de cada área os `NAO_CONFORME` (por `statusFinal`) primeiro e depois `requisito.ordem`. Cada item: `id` da avaliação, `requisitoId`, `codigo`, `area`, `titulo`, `descricao`, `obrigatorio`, `ordem`, `norma` (estruturada), `statusSugeridoIa`, `statusFinal`, `verificado`, `comentario`, `paginaReferencia`. Sem avaliações (`PENDENTE`/`PROCESSANDO`) → `avaliacoesPorArea: []` e resumo zerado; `ERRO_PROCESSAMENTO` → idem + `motivoErro`. `404` se o id não existir sob o `analista_id` atual (estrutura que já suporta o `403` de RF-003).
-3. `GET /analises/:id/pdf?pagina=N` → bytes do PDF/da página para o visor e para a referência clicável (RF-014).
+2. `GET /analises/:id` → **implementado (TSD-004 + TSD-007 + TSD-009)**. Devolve os campos da análise (`id`, `nup`, `objeto`, `status`, `motivoErro`, `iniciadaEm`, `concluidaEm`, `totalPaginasPdf` — número ou `null`), `resumo` (`total`, `conforme`, `naoConforme`, `naoSeAplica`, `verificados`, `obrigatoriosPendentes` — por `statusFinal`) e `avaliacoesPorArea: [{ area, itens: [...] }]` — áreas em ordem alfabética, dentro de cada área os `NAO_CONFORME` (por `statusFinal`) primeiro e depois `requisito.ordem`. Cada item: `id` da avaliação, `requisitoId`, `codigo`, `area`, `titulo`, `descricao`, `obrigatorio`, `ordem`, `norma` (estruturada), `statusSugeridoIa`, `statusFinal`, `verificado`, `comentario`, `paginaReferencia`. Sem avaliações (`PENDENTE`/`PROCESSANDO`) → `avaliacoesPorArea: []` e resumo zerado; `ERRO_PROCESSAMENTO` → idem + `motivoErro`. `404` se o id não existir sob o `analista_id` atual (estrutura que já suporta o `403` de RF-003).
+3. `GET /analises/:id/pdf` → **implementado (TSD-004)**. Bytes do PDF **inteiro** (`application/pdf`). A navegação por página (RF-014) é do visor no frontend, via fragmento `#page=N` sobre este mesmo recurso — **não há endpoint/param de página no servidor** (decisão do ciclo RF-014 / TSD-009). O total de páginas para validar o alvo vem de `totalPaginasPdf` em `GET /analises/:id`.
 
 ### Fluxo - Relatório PDF
 
@@ -173,13 +174,13 @@ Não há identidade no MVP: o `AnalistaAtualProvider` devolve sempre o analista 
 
 | Entidade/Contrato | Responsabilidade | Observações |
 |---|---|---|
-| `analise` | Uma análise, sob o analista atual | **Implementada (TSD-004).** Campos: `id`, `nup`, `objeto`, `analista_id`, `arquivo_pdf_ref`, `status` (string validada por `STATUS_ANALISE` em `src/analises/status-analise.ts` — **não** enum de banco: `PENDENTE`, `PROCESSANDO`, `PRONTA_PARA_REVISAO`, `ERRO_PROCESSAMENTO`, `CONCLUIDA`), `motivo_erro`, `iniciada_em`, `concluida_em`, `criado_em`, `atualizado_em`. Índice (`analista_id`, `iniciada_em`) |
+| `analise` | Uma análise, sob o analista atual | **Implementada (TSD-004 + TSD-009).** Campos: `id`, `nup`, `objeto`, `analista_id`, `arquivo_pdf_ref`, `status` (string validada por `STATUS_ANALISE` em `src/analises/status-analise.ts` — **não** enum de banco: `PENDENTE`, `PROCESSANDO`, `PRONTA_PARA_REVISAO`, `ERRO_PROCESSAMENTO`, `CONCLUIDA`), `motivo_erro`, `total_paginas_pdf` (int nulo — contagem best-effort do PDF via `pdf-lib` no `criar`; RF-014), `iniciada_em`, `concluida_em`, `criado_em`, `atualizado_em`. Índice (`analista_id`, `iniciada_em`) |
 | `requisito` | Item da base fixa de verificação | **Implementado (TSD-003).** Campos: `id`, `codigo` (único), `area` (string livre validada por allowlist em `src/requisitos/areas.ts` — **não** enum; começa com `CHECKLIST`/`TECNICA`), `titulo`, `descricao`, `obrigatorio` (bool), `ordem`, `ativo`, referência normativa estruturada (`norma_lei`/`artigo`/`inciso`/`paragrafo`/`alinea`, opcionais), `criado_em`/`atualizado_em`. Sem coluna de versão: texto + `obrigatorio` imutáveis após publicação; mudança normativa = novo `codigo` + antigo `ativo=false`. Populado por importador de CSV externo (`prisma/seed-data/requisitos.csv`). Conteúdo real do 1º subconjunto ainda pendente (P-07) |
-| `avaliacao_requisito` | Avaliação de um requisito dentro de uma análise | **Implementada (TSD-006).** Campos: `id`, `analise_id` (FK `analise` `onDelete: Cascade`), `requisito_id` (FK `requisito` `onDelete: Restrict`), `status_sugerido_ia`, `status_final` (`CONFORME` \| `NAO_CONFORME` \| `NAO_SE_APLICA` — string validada em código), `verificado` (bool, default false), `comentario` (nulo — RF-017), `pagina_referencia` (int nulo), `criado_em`, `atualizado_em`. `@@unique(analise_id, requisito_id)`, índice em `analise_id`. Edição de `status_final`/`verificado`/`comentario`: RF-008/011/017 |
+| `avaliacao_requisito` | Avaliação de um requisito dentro de uma análise | **Implementada (TSD-006).** Campos: `id`, `analise_id` (FK `analise` `onDelete: Cascade`), `requisito_id` (FK `requisito` `onDelete: Restrict`), `status_sugerido_ia`, `status_final` (`CONFORME` \| `NAO_CONFORME` \| `NAO_SE_APLICA` — string validada em código), `verificado` (bool, default false), `comentario` (nulo — RF-017), `pagina_referencia` (int nulo; corrigível pelo analista no PATCH de revisão — RF-014/TSD-009, validado contra `analise.total_paginas_pdf`), `criado_em`, `atualizado_em`. `@@unique(analise_id, requisito_id)`, índice em `analise_id`. Edição de `status_final`/`verificado`/`comentario`/`pagina_referencia`: RF-008/011/017 + RF-014 |
 | Contrato REST LicIA ↔ Frontend | Endpoints de §7 + formato de erro padronizado | Detalhamento fica para a TSD de cada feature, não para o SDD |
 | `AnaliseIaPort` (interno) | `analisar(pdf, requisitos[]) → { requisitoId, statusSugerido, paginaReferencia? }[]` | Forma estável; adapter real mapeia para o contrato externo (A-02). Alvo de teste de contrato |
 | `AnalistaAtualProvider` (interno) | `getAnalistaAtual() → { analistaId, nome }` | MVP: valor de configuração. Futuro: identidade real (P-10) |
-| `ArmazenamentoPdfPort` (interno) | `salvar(bytes) → ref`, `ler(ref) → bytes`, `lerPagina(ref, n) → bytes` | Adapter filesystem no MVP |
+| `ArmazenamentoPdfPort` (interno) | `salvar(bytes) → ref`, `ler(ref) → bytes`, `lerPagina(ref, n) → bytes` | Adapter filesystem no MVP. `lerPagina` é seam **não implementado**: o RF-014 (TSD-009) optou por navegação de página no visor do frontend (`#page=N`), sem extração server-side. Mantido para eventual necessidade futura |
 
 ## 9. Decisões técnicas relevantes
 
@@ -193,6 +194,7 @@ Não há identidade no MVP: o `AnalistaAtualProvider` devolve sempre o analista 
 | Sem identidade no MVP; `AnalistaAtualProvider` devolve analista fixo | Pedido explícito na fundação: MVP sem autenticação nem multiusuário | RF-003 e o estado "sem permissão" ficam pós-MVP (P-10); queries já filtram por `analista_id` para a troca ser barata |
 | Capacidade de IA atrás de `AnaliseIaPort` com stub + adapter real | Contrato externo ainda não fechado; IA é cara/instável | Permite MVP e testes sem a IA real; risco de divergência stub↔real, mitigado por teste de contrato |
 | Relatório PDF gerado sob demanda, não persistido | Simplicidade; sempre reflete o estado concluído | Se exigirem imutabilidade/arquivamento do relatório, revisar (A-04) |
+| RF-014 sem extração de página no servidor; visor do frontend navega via `#page=N` (TSD-009) | Evita depender de lib de render/recorte de PDF e um endpoint de página; o PDF inteiro já é servido | Backend só persiste `total_paginas_pdf` (contagem via `pdf-lib`, best-effort) e deixa o analista corrigir `pagina_referencia`. `lerPagina` fica como seam não implementado |
 
 Decisões que precisarem de alternativas descartadas e análise de reversibilidade em detalhe devem virar decision records em `docs/engineering/decisions/` e ser referenciadas aqui.
 

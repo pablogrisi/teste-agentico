@@ -20,6 +20,22 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 01/09/2026 — RF-014 / TSD-009: referência de página do PDF (backend)
+
+Contexto: usuário mandou "faz o merge e o push pro github; depois começa o ciclo da RF-14" e apontou que **não estava recebendo a User Story do PM nem a TSD para validar antes da implementação**. Ciclo na branch `backend/rf-014-pdf-pagina`, com os dois pontos de aprovação humana restaurados como paradas explícitas.
+
+Ajuste de processo: registrado em `docs/perguntas-e-respostas.md` e no checkpoint §7 — a partir deste ciclo o PM apresenta a User Story e **para**; o Engenheiro apresenta a TSD e **para**; só então o Dev implementa.
+
+Papéis:
+- **PM**: 4 perguntas. Decisões do usuário: (1) visor do frontend navega para a página via `#page=N` contra o PDF inteiro — **sem extração de página no servidor**; `lerPagina` fica como seam; (2) validação de página fora do intervalo passa a ser da `paginaReferencia` no PATCH; (3) correção da página pelo analista **incluída no PATCH de revisão** agora; (4) lib `pdf-lib`, só para contar páginas. User Story validada; recorte backend reduzido no roadmap.
+- **Engenheiro**: `docs/engineering/specs/009-pdf-por-pagina.tsd.md` — apresentada e **aprovada pelo usuário** ("Aprova, pode implementar").
+- **Dev**: `Analise.totalPaginasPdf Int?` + migration `20260901020000_analise_total_paginas` (só `ALTER TABLE ADD COLUMN`, gerada por `prisma migrate diff`); `src/analises/contar-paginas-pdf.ts` (`contarPaginasPdf` best-effort com `pdf-lib`, `null` quando não parseável, nunca lança); `AnalisesService.criar` calcula e persiste `totalPaginasPdf` (não bloqueia a criação); `AnaliseDetalhe`/`montarAnaliseDetalhe` expõem `totalPaginasPdf` no `GET /analises/:id`; `validarEResolverPatch` ganha 3º parâmetro `totalPaginasPdf` e valida `paginaReferencia` (`1..total` | `≥1` | `null` → senão `422`), **sem** disparar a regra R-06; `lerPagina` seam com comentário atualizado (porta + adapter). Dep nova: `pdf-lib` ^1.17.1. +16 unit (contagem + validação de página) + 4 integração (criar→payload; PATCH ok/fora do intervalo/limpar/total desconhecido).
+- **Testes**: `npm run ci` ✅ — lint, typecheck, `prisma:validate`, **91 unit**, build. `npm run test:e2e` ✅ **32/32** (7 suites), migration nova aplicada pelo `embedded-postgres`.
+- **Crítico**: aprovado, sem desvios de escopo. Menores: `contarPaginasPdf` roda no caminho do request de criação (aceitável no MVP, já em TSD §5/§9; move-se para o worker se pesar); `pdf-lib` imprime warnings de parse no console em PDFs malformados (ruído de log, correção tratada pelo `catch`); 3º parâmetro `totalPaginasPdf` com default `null` em vez de obrigatório (mantém call sites internos compilando; o único chamador real passa explícito).
+- **Documentador**: SDD §7 (Criar análise — `total_paginas_pdf`; Revisar requisito — `paginaReferencia`; Abrir análise — `totalPaginasPdf`; `GET /analises/:id/pdf` sem param de página), §8 (`analise`, `avaliacao_requisito`, `ArmazenamentoPdfPort`), §9 (linha de decisão RF-014); `questoes-abertas.md` P-05 → **parcialmente fechada**; checkpoint; roadmap RF-014 → `implementada` (branch).
+
+Estado: ciclo fechado, **branch aguardando merge + push**. Próximo backend: RF-012+RF-013+RF-015 (conclusão da análise), depois RF-016 (relatório), depois a integração da IA real (A-02).
+
 ## 31/08/2026 — RF-008 + RF-011 + RF-017 / TSD-008: revisão de requisito (backend)
 
 Contexto: usuário mandou "faz o merge e abre o ciclo de RF-008+RF-011+RF-017". TSD-007 mergeada na `main` (`b648908` fecha; `96ff8fb` traz o código). Ciclo na branch `backend/rf-008-revisao-requisito`.

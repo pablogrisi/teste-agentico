@@ -3,9 +3,9 @@
 ---
 title: TSD - Referência de página do PDF (RF-014, backend)
 type: tsd
-status: em aprovação
+status: concluída — aguardando merge (branch backend/rf-014-pdf-pagina)
 created: 31/08/2026 // Pablo Grisi (Engenheiro)
-updated: 31/08/2026 // Pablo Grisi
+updated: 01/09/2026 // Pablo Grisi
 related:
 - docs/product/prd.md
 - docs/product/roadmap.md
@@ -190,24 +190,24 @@ npm run build
 
 ## 8. Critérios de aceite
 
-- [ ] `model Analise` tem `totalPaginasPdf Int?`; migration
+- [x] `model Analise` tem `totalPaginasPdf Int?`; migration
       `20260901020000_analise_total_paginas` só com o `ALTER TABLE ... ADD COLUMN`.
-- [ ] Ao criar uma análise com um PDF válido, `totalPaginasPdf` é o número de
+- [x] Ao criar uma análise com um PDF válido, `totalPaginasPdf` é o número de
       páginas do arquivo; com um PDF não parseável, é `null` e a criação retorna
       `201` normalmente.
-- [ ] `GET /analises/:id` inclui `totalPaginasPdf` (número ou `null`).
-- [ ] `PATCH /analises/:id/requisitos/:requisitoId` com `paginaReferencia` inteiro
+- [x] `GET /analises/:id` inclui `totalPaginasPdf` (número ou `null`).
+- [x] `PATCH /analises/:id/requisitos/:requisitoId` com `paginaReferencia` inteiro
       em `1..totalPaginasPdf` → `200`, persistido, refletido em `item.paginaReferencia`.
-- [ ] Mesmo PATCH com `paginaReferencia` `0`, negativo, não-inteiro, string ou
+- [x] Mesmo PATCH com `paginaReferencia` `0`, negativo, não-inteiro, string ou
       `> totalPaginasPdf` (quando conhecido) → `422`, nada gravado.
-- [ ] Com `totalPaginasPdf = null`, `paginaReferencia` de qualquer inteiro `≥ 1` →
+- [x] Com `totalPaginasPdf = null`, `paginaReferencia` de qualquer inteiro `≥ 1` →
       `200`; `≤ 0` ou não-inteiro → `422`.
-- [ ] `PATCH` com `paginaReferencia: null` → `200`, limpa a página.
-- [ ] `PATCH` **só** com `paginaReferencia` não exige comentário (R-06 não é
+- [x] `PATCH` com `paginaReferencia: null` → `200`, limpa a página.
+- [x] `PATCH` **só** com `paginaReferencia` não exige comentário (R-06 não é
       disparada pela página) e não altera `statusFinal` nem `verificado`.
-- [ ] `GET /analises/:id/pdf` (PDF inteiro) inalterado.
-- [ ] `lerPagina` segue como seam; comentário atualizado, sem implementação.
-- [ ] `npm run ci` e `npm run test:e2e` verdes.
+- [x] `GET /analises/:id/pdf` (PDF inteiro) inalterado.
+- [x] `lerPagina` segue como seam; comentário atualizado, sem implementação.
+- [x] `npm run ci` e `npm run test:e2e` verdes.
 
 ## 9. Riscos e decisões abertas
 

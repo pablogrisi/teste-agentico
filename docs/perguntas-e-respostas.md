@@ -312,3 +312,11 @@ Opções: incluir no PATCH agora / não neste slice.
 **R4:** (implícito) `pdf-lib` — usado só para contar páginas do PDF armazenado.
 
 **Decisão:** Aplicado à TSD-009. Nova coluna `Analise.totalPaginasPdf` (calculada no `criar`, best-effort). P-05 parcialmente endereçada (correção + validação); "quando a ausência de página é válida" continua aberta.
+
+---
+
+## 01/09/2026 — Ciclo RF-014 (PDF por página), Agente Engenheiro
+
+**Apresentação da TSD-009** (`docs/engineering/specs/009-pdf-por-pagina.tsd.md`): coluna `Analise.totalPaginasPdf Int?` + migration; `contarPaginasPdf` best-effort com `pdf-lib`; `totalPaginasPdf` no `GET /analises/:id`; `paginaReferencia` no `PATCH .../requisitos/:requisitoId` (`1..total` | `≥1` | `null` → senão `422`), sem disparar a R-06; `lerPagina` mantido como seam.
+**Resposta do usuário:** "Aprova, pode implementar."
+**Decisão:** TSD-009 aprovada; Dev implementou; ciclo fechado (91 unit, 32 e2e, Crítico ✅) na branch `backend/rf-014-pdf-pagina`, aguardando merge.
