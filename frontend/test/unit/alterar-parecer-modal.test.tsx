@@ -2,7 +2,13 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AlterarParecerModal } from "@/components/analise/AlterarParecerModal";
-import { AnaliseConflitoError, AnaliseValidacaoError, FixturesAnalisesGateway } from "@/lib/data";
+import {
+  AnaliseConflitoError,
+  AnaliseNaoEncontradaError,
+  AnalisesGatewayError,
+  AnaliseValidacaoError,
+  FixturesAnalisesGateway,
+} from "@/lib/data";
 import type { AvaliacaoItem, ResumoAnalise } from "@/lib/data";
 
 function item(over: Partial<AvaliacaoItem> = {}): AvaliacaoItem {
@@ -137,6 +143,55 @@ describe("AlterarParecerModal", () => {
     await user.click(screen.getByRole("button", { name: "Confirmar" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/não está mais em revisão/i);
+  });
+
+  it("404 do backend → mensagem de requisito não encontrado", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(FixturesAnalisesGateway.prototype, "revisarRequisito").mockRejectedValue(
+      new AnaliseNaoEncontradaError("1"),
+    );
+    render(
+      <AlterarParecerModal analiseId="1" item={item()} onFechar={vi.fn()} onAlterado={vi.fn()} />,
+    );
+    await user.selectOptions(screen.getByLabelText(/^Parecer/), "CONFORME");
+    await user.type(screen.getByLabelText(/Comentário/), "ok");
+    await user.click(screen.getByRole("button", { name: "Confirmar" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/não encontrado/i);
+  });
+
+  it("erro de rede → mensagem genérica", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(FixturesAnalisesGateway.prototype, "revisarRequisito").mockRejectedValue(
+      new AnalisesGatewayError("Não foi possível contatar o serviço de análises."),
+    );
+    render(
+      <AlterarParecerModal analiseId="1" item={item()} onFechar={vi.fn()} onAlterado={vi.fn()} />,
+    );
+    await user.selectOptions(screen.getByLabelText(/^Parecer/), "CONFORME");
+    await user.type(screen.getByLabelText(/Comentário/), "ok");
+    await user.click(screen.getByRole("button", { name: "Confirmar" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /não foi possível alterar o parecer/i,
+    );
+  });
+
+  it("editar um campo depois de um erro do servidor limpa a faixa de erro", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(FixturesAnalisesGateway.prototype, "revisarRequisito").mockRejectedValue(
+      new AnaliseConflitoError(),
+    );
+    render(
+      <AlterarParecerModal analiseId="1" item={item()} onFechar={vi.fn()} onAlterado={vi.fn()} />,
+    );
+    await user.selectOptions(screen.getByLabelText(/^Parecer/), "CONFORME");
+    await user.type(screen.getByLabelText(/Comentário/), "ok");
+    await user.click(screen.getByRole("button", { name: "Confirmar" }));
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/Comentário/), " mais contexto");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("Escape fecha o modal", async () => {

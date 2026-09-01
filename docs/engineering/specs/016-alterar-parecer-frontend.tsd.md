@@ -125,8 +125,10 @@ Sem mudança de contrato. O endpoint já existe (backend `ad2e8cd`).
     filtro (RF-009 usa `router.replace`, que dispara novo RSC) traz um `detalhe` novo com o
     mesmo id e **não** descarta o que o analista já revisou.
   - `aplicarOverrides(grupos)` mapeia cada item para `overrides.get(item.id) ?? item` antes de
-    `separarPorAba` / `filtrarPorStatus`. As contagens das abas e o progresso passam a sair de
-    `resumo` (estado), não de `detalhe.resumo`.
+    `separarPorAba` / `filtrarPorStatus`. O **progresso** (`verificados/total`) passa a sair de
+    `resumo` (estado), não de `detalhe.resumo`. As **contagens das abas** seguem em
+    `contarItens(...)` sobre as avaliações efetivas — são estruturais (nº de itens), não mudam
+    com o parecer.
   - `const [parecerDe, setParecerDe] = useState<AvaliacaoItem | null>(null)` — item em edição;
     `RequisitoItem` recebe `onAlterarParecer={() => setParecerDe(itemEfetivo)}`.
   - `<AlterarParecerModal>` renderizado quando `parecerDe`; `onAlterado={({item, resumo}) => {
@@ -202,7 +204,7 @@ Ver §7.1.
 |---|---|---|
 | Unitário | Sim | `validarAlteracaoParecer` (parecer vazio / igual ao atual / comentário vazio / caso válido; `divergeDaSugestao` para a mensagem). `resolverAlteracaoParecer` (usa `statusFinal` do patch, liga `verificado`, faz `trim` no comentário; não muta a entrada). `FixturesAnalisesGateway.revisarRequisito` (200 aplica a regra e recalcula `resumo`; `404` avaliação/analise inexistente; `409` fora de `PRONTA_PARA_REVISAO`). Componentes: `AlterarParecerModal` (select sem o status atual; Confirmar desabilitado sem parecer/ comentário; sucesso chama `onAlterado` com `{item,resumo}`; `422` mostra `motivos[0]` e mantém aberto e os dados; `409`/`404` mensagem). `PainelRevisao` (após `onAlterado`: o item mostra o novo badge, o progresso e a contagem de aba mudam pelo `resumo`; se o filtro ativo é "Não conforme" e o item deixou de ser, ele some da lista — RF-009; a legenda/telas de processando/erro seguem iguais). `RequisitoItem` (o botão "Alterar parecer" só aparece com o callback). |
 | Contrato (formato entre serviços) | Sim | `HttpAnalisesGateway.revisarRequisito` com `fetch` dublê: envia `PATCH` na URL certa com `{ statusFinal, comentario }`; parseia `{ item, resumo }` (reusa `lerItem`/`lerResumo`); mapeia `422 → AnaliseValidacaoError` (com `motivos`), `409 → AnaliseConflitoError`, `404 → AnaliseNaoEncontradaError`, JSON inesperado / não-ok → `AnalisesGatewayError`. Espelha o contrato de `PATCH /analises/:id/requisitos/:requisitoId` da TSD-008. |
-| Integração (módulos/camadas reais) | Não nesta slice | Sem backend; a cadeia modal→gateway(fixtures)→painel é coberta pelos testes de componente com o gateway real de fixtures. |
+| Integração (módulos/camadas reais) | Não nesta slice | Sem backend. Cada costura é testada isoladamente: os componentes (`AlterarParecerModal`, `PainelRevisao`) com `vi.spyOn` no `revisarRequisito` do gateway (verificando args enviados e o efeito do `{ item, resumo }` devolvido); a implementação real do `FixturesAnalisesGateway.revisarRequisito` no seu próprio teste unitário (regras + recálculo do resumo + não-persistência). |
 | Smoke/validação manual contra dependência externa real | Não | Sem ambiente conjunto com o backend ainda (segue como follow-up já listado no checkpoint). |
 
 Slice de interface: **screenshots** do modal aberto (parecer atual + novo parecer), do estado

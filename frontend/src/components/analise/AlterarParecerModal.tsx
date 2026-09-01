@@ -68,6 +68,14 @@ export function AlterarParecerModal({
 
   const opcoes = PARECER_OPCOES.filter((s) => s !== item.statusFinal);
 
+  /** Editar qualquer campo descarta o erro do servidor do envio anterior. */
+  function aoEditar<T>(setter: (v: T) => void) {
+    return (valor: T) => {
+      if (erroServidor) setErroServidor(null);
+      setter(valor);
+    };
+  }
+
   async function confirmar() {
     if (!ok || statusFinal === "") return;
 
@@ -152,7 +160,9 @@ export function AlterarParecerModal({
                 ref={selectRef}
                 className={styles.select}
                 value={statusFinal}
-                onChange={(evento) => setStatusFinal(evento.target.value as StatusRequisito)}
+                onChange={(evento) =>
+                  aoEditar(setStatusFinal)(evento.target.value as StatusRequisito)
+                }
                 disabled={enviando}
               >
                 <option value="" disabled>
@@ -180,7 +190,7 @@ export function AlterarParecerModal({
                 id="campo-comentario"
                 className={styles.textarea}
                 value={comentario}
-                onChange={(evento) => setComentario(evento.target.value)}
+                onChange={(evento) => aoEditar(setComentario)(evento.target.value)}
                 placeholder="Justifique o novo parecer"
                 disabled={enviando}
               />
