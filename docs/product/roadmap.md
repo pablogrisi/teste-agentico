@@ -59,7 +59,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 2 | RF-001 | Modal "Nova análise" (NUP, objeto) + validação | Must | implementada (branch `frontend/rf-001-nova-analise`) |
 | 3 | RF-004 | Campo de upload de PDF no modal + estados de erro | Must | implementada com RF-001 (branch `frontend/rf-001-nova-analise`) |
 | 4 | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre | Must | implementada (branch `frontend/rf-010-tela-analise`) |
-| 5 | RF-007 | Exibição dos requisitos com status sugerido pela IA | Must | não iniciada |
+| 5 | RF-007 | Exibição dos requisitos com status sugerido pela IA | Must | user story em aprovação (branch `frontend/rf-007-status-ia`) |
 | 6 | RF-009 | Visão inicial priorizando não conformes + filtros por status | Must | não iniciada |
 | 7 | RF-008 | Modal de alteração de status final ("parecer") | Must | não iniciada |
 | 8 | RF-011 | Controle de "marcar como verificado" | Must | não iniciada |
@@ -251,7 +251,24 @@ Recorte backend deste ciclo:
 
 **Frentes:** Backend · Frontend
 **Status (backend):** coberto no ciclo de RF-005 (ver seção RF-005)
-**Status (frontend):** não iniciada
+**Status (frontend):** user story em aprovação — branch `frontend/rf-007-status-ia`
+
+**User Story (frontend)**
+
+Como analista técnico, quero ver, em cada requisito da tela de análise, qual foi o status **sugerido pela IA** (Conforme / Não conforme / Não se aplica) e distinguir claramente quando o parecer atual difere dessa sugestão, para saber o que a IA propôs e o que já foi alterado na revisão.
+
+Recorte deste ciclo (frontend): o `RequisitoItem` (criado em RF-010) passa a exibir `statusSugeridoIa`, além do `statusFinal` que já mostra. O backend já entrega os dois campos no `GET /analises/:id` — não há mudança de contrato.
+
+- **Recolhido:** quando `statusSugeridoIa === statusFinal` (situação atual, antes de qualquer edição — RF-008), o badge mostra que aquele status **é uma sugestão da IA** (marca/rótulo discreto). Quando diferem, aparece também um indicador secundário "IA sugeriu: X" ao lado do parecer atual.
+- **Expandido:** linha explícita "Sugestão da IA: <status>"; quando `statusFinal` difere, linha "Parecer atual: <status>" e um realce de divergência.
+- Uma nota curta no topo da lista deixando claro que os status são sugestões da IA até a revisão do analista.
+- **Fora do escopo:** editar o parecer / alterar `statusFinal` (RF-008); marcar verificado (RF-011); comentário (RF-017); filtros (RF-009). Nenhuma chamada nova ao backend — só apresentação do dado que já vem no payload.
+
+**Critério de aceite (PRD RF-007):** todo requisito exibido na tela de análise apresenta exatamente um status sugerido pela IA, dentre os três valores permitidos, visualmente identificável como sugestão da IA.
+
+**Contrato consumido:** `GET /analises/:id` (`avaliacoesPorArea[].itens[].statusSugeridoIa` + `.statusFinal`) — já implementado (backend TSD-006/007). Sem mudança.
+
+**TSD associada (frontend):** `docs/engineering/specs/014-status-ia-frontend.tsd.md`.
 
 ### RF-009 — Abertura da análise priorizando requisitos não conformes
 
