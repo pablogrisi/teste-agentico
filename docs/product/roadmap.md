@@ -44,7 +44,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 9 | RF-008 | Endpoint de definição do status final do requisito | Must | implementada |
 | 10 | RF-011 | Endpoint de marcação de "verificado" | Must | implementada com RF-008 |
 | 11 | RF-017 | Validação de comentário obrigatório nas ações de revisão | Must | implementada com RF-008 |
-| 12 | RF-014 | Referência de página + entrega do PDF por página | Must | user story em aprovação |
+| 12 | RF-014 | Referência de página + entrega do PDF por página | Must | user story aprovada |
 | 13 | RF-012 | Endpoint de conclusão global com trava por obrigatórios | Must | não iniciada |
 | 14 | RF-013 | Registro de responsável, datas e status final | Must | não iniciada |
 | 15 | RF-015 | Conclusão interna sem aprovação/assinatura/dupla revisão | Must | não iniciada |
@@ -309,36 +309,36 @@ Recorte backend deste ciclo: `PATCH /analises/:id/requisitos/:requisitoId` que a
 ### RF-014 — Rastreabilidade documental por referência de página do PDF
 
 **Frentes:** Backend · Frontend
-**Status (backend):** user story em aprovação
+**Status (backend):** user story aprovada
 **Status (frontend):** não iniciada
 
-**User Story**
+**User Story** — *validada em 31/08/2026*
 
 Como analista técnico, quero, a partir de um requisito, abrir a página do PDF que sustenta o parecer — e ver claramente quando não há página associada — para conferir a evidência sem folhear o documento inteiro.
 
-Recorte backend deste ciclo:
-- `GET /analises/:id/pdf?pagina=N` — devolve só a página N do PDF de entrada (implementa `ArmazenamentoPdfPort.lerPagina`).
-- `PATCH /analises/:id/requisitos/:requisitoId` passa a aceitar `paginaReferencia` (corrigir a página sugerida pela IA, ou limpar).
-- A ausência de página já é explícita no payload (`paginaReferencia: null` — vindo de RF-009).
-- Sem tela / visor (frontend), sem destaque de trecho.
+Recorte backend deste ciclo (reduzido após as decisões — o visor do frontend navega para a página via `#page=N` contra o PDF inteiro que já existe; **não há extração de página no servidor**):
+- Persistir o **total de páginas** do PDF de entrada (nova coluna `Analise.totalPaginasPdf`, calculada no `criar` com `pdf-lib`, best-effort).
+- Expor `totalPaginasPdf` no `GET /analises/:id`.
+- `PATCH /analises/:id/requisitos/:requisitoId` passa a aceitar `paginaReferencia` (corrigir/limpar a página sugerida).
+- A ausência de página já é explícita no payload (`paginaReferencia: null`).
+- Sem endpoint `?pagina=N`, sem visor, sem destaque de trecho.
 
 **Critérios de aceite**
 
-- `GET /analises/:id/pdf?pagina=N` com `N` válido → `200`, `Content-Type: application/pdf`, um PDF de **uma página** (a N-ésima do documento de entrada).
-- `N` fora do intervalo (`< 1` ou `> total de páginas`) ou não-inteiro → `422` com a mensagem informando o total de páginas.
-- `GET /analises/:id/pdf` **sem** `pagina` continua devolvendo o PDF inteiro (contrato da TSD-004 preservado).
-- `404` se a análise não existir para o analista, ou se o arquivo não puder ser lido.
-- `PATCH .../requisitos/:requisitoId` aceita `paginaReferencia` (inteiro `1..total` ou `null` para limpar); fora disso → `422`. Não conta como "alterar a sugestão da IA" para a regra do comentário (R-06).
-- Testes: unit (`lerPagina` extrai a página certa; validação de intervalo; PATCH de `paginaReferencia`) e integração (criar → processar → `GET ?pagina=N` ok e fora do intervalo; `PATCH paginaReferencia`).
+- Ao criar uma análise, `totalPaginasPdf` é calculado do PDF e persistido; PDF não parseável → `null` (sem falhar a criação).
+- `GET /analises/:id` inclui `totalPaginasPdf`.
+- `PATCH .../requisitos/:requisitoId` aceita `paginaReferencia`: inteiro entre `1` e `totalPaginasPdf` (quando conhecido) ou `≥ 1` (quando `null`), **ou** `null` para limpar; fora disso → `422`. Definir `paginaReferencia` **não** dispara a regra de comentário (R-06).
+- `GET /analises/:id/pdf` (inteiro) segue igual — o frontend usa `#page=N`.
+- Testes: unit (contagem de páginas com `pdf-lib`; validação de `paginaReferencia` no PATCH) e integração (criar → `totalPaginasPdf` no payload; `PATCH paginaReferencia` ok e fora do intervalo).
 
-**Perguntas em aberto (para o usuário antes do Engenheiro)**
+**Decisões do ciclo (respostas do usuário — 31/08/2026)**
 
-1. **Formato de `?pagina=N`:** um **PDF de 1 página** (extraído do original com `pdf-lib` — puro JS, texto preservado, o frontend embute num visor) ou uma **imagem PNG** renderizada da página (mais leve, sem texto selecionável, exige renderização)?
-2. **`pagina` fora do intervalo do documento (P-05):** `422` com "o documento tem X páginas" (proposta), ou outra coisa (ex.: 404, ou devolver a última página)?
-3. **Correção da página pelo analista (P-05):** incluir `paginaReferencia` no `PATCH` de revisão agora (analista corrige/limpa a página sugerida), ou deixar para depois (no MVP só a IA/stub define)?
-4. **Biblioteca:** ok usar **`pdf-lib`** (MIT, sem dependência nativa, CJS)? Alternativa seria `pdfjs-dist` (mais pesado, foco em renderização).
+1. **Navegação no visor** (`#page=N`) em vez de extração no servidor. `lerPagina` da porta fica como seam não implementado, documentado.
+2. Validação de página fora do intervalo passa a ser da `paginaReferencia` no PATCH (`1..totalPaginasPdf` ou `≥ 1` ou `null`) → `422`.
+3. **Correção da página pelo analista incluída** no `PATCH` de revisão.
+4. Lib: **`pdf-lib`**, só para contar páginas.
 
-**TSD associada:** `docs/engineering/specs/009-pdf-por-pagina.tsd.md` (a redigir pelo Engenheiro **após** a validação desta User Story).
+**TSD associada:** `docs/engineering/specs/009-pdf-por-pagina.tsd.md` (a redigir pelo Engenheiro).
 
 ### RF-012 — Conclusão global da análise
 

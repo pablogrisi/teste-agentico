@@ -279,3 +279,36 @@ Opções: sim / só o item.
 **Decisão da IA:** **`{ item, resumo }`** — evita um GET extra pra atualizar contadores.
 
 **Decisão:** Tudo aplicado à TSD-008. P-03 fechado.
+
+---
+
+## 31/08/2026 — Ajuste de processo
+
+**Observação do usuário:** "Você está fazendo o ciclo completo do método agêntico? Não estou recebendo a feature e user stories do agente PM para validar antes da implementação."
+**Resposta:** Correto — nos ciclos RF-002 a RF-008/011/017 os pontos de aprovação PM→Engenheiro e Engenheiro→Dev foram absorvidos nas perguntas do PM; a User Story e a TSD foram escritas e implementadas sem parada explícita para validação. As User Stories estão no roadmap e as TSDs em `docs/engineering/specs/` (003–008), tudo com testes + Crítico e mergeado.
+**Decisão:** A partir de RF-014, o PM apresenta a User Story e **para** para validação; o Engenheiro apresenta a TSD e **para** para aprovação; só então o Dev implementa.
+
+---
+
+## 31/08/2026 — Ciclo RF-014 (PDF por página), Agente PM
+
+**Validação da User Story:** aprovada ("Sim, pode seguir").
+
+**P1 — formato de `GET /analises/:id/pdf?pagina=N`:**
+Opções: PDF de 1 página (pdf-lib) / imagem PNG / você decide.
+**R1:** "Se tiver como, só leva o visualizador do PDF para a página. Se não, extrai a N-ésima página para um novo PDF."
+**Interpretação/decisão:** o frontend **navega o visor para a página** via fragmento `#page=N` contra o `GET /analises/:id/pdf` inteiro (que já existe). **Não há endpoint `?pagina=N` nem extração no servidor.** O `lerPagina` da porta fica como seam não implementado, documentado. Recorte backend de RF-014 encolhe para: total de páginas + correção da `paginaReferencia`.
+
+**P2 — `pagina` fora do intervalo (P-05):**
+Opções: 422 com total / 404 / devolver última página.
+**R2:** Você decide.
+**Decisão da IA:** como não há mais endpoint de página, a regra vira validação da `paginaReferencia` no PATCH: inteiro `1..totalPaginasPdf` (quando conhecido) ou `≥ 1` (quando não), ou `null`; fora disso → `422`.
+
+**P3 — correção da página pelo analista (P-05):**
+Opções: incluir no PATCH agora / não neste slice.
+**R3:** **Incluir no PATCH de revisão agora** — `paginaReferencia` (1..total ou null). Não conta como "alterar a sugestão da IA" para a regra do comentário (R-06).
+
+**P4 — biblioteca:**
+**R4:** (implícito) `pdf-lib` — usado só para contar páginas do PDF armazenado.
+
+**Decisão:** Aplicado à TSD-009. Nova coluna `Analise.totalPaginasPdf` (calculada no `criar`, best-effort). P-05 parcialmente endereçada (correção + validação); "quando a ausência de página é válida" continua aberta.
