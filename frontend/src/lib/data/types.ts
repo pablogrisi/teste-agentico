@@ -60,6 +60,66 @@ export interface AnaliseCriada {
   iniciadaEm: string;
 }
 
+/** Referência normativa estruturada de um requisito (campos opcionais). */
+export interface NormaReferencia {
+  lei: string | null;
+  artigo: string | null;
+  inciso: string | null;
+  paragrafo: string | null;
+  alinea: string | null;
+}
+
+/** Uma avaliação de requisito dentro de uma análise (`avaliacoesPorArea[].itens[]`). */
+export interface AvaliacaoItem {
+  /** id da avaliação. */
+  id: string;
+  requisitoId: string;
+  codigo: string;
+  area: string;
+  titulo: string;
+  descricao: string;
+  obrigatorio: boolean;
+  ordem: number;
+  norma: NormaReferencia;
+  statusSugeridoIa: StatusRequisito;
+  statusFinal: StatusRequisito;
+  verificado: boolean;
+  comentario: string | null;
+  paginaReferencia: number | null;
+}
+
+/** Grupo de avaliações de uma área. */
+export interface AreaComItens {
+  area: string;
+  itens: AvaliacaoItem[];
+}
+
+/** Contagens da análise (`resumo` de `GET /analises/:id`). */
+export interface ResumoAnalise {
+  total: number;
+  conforme: number;
+  naoConforme: number;
+  naoSeAplica: number;
+  verificados: number;
+  obrigatoriosPendentes: number;
+}
+
+/** Payload de `GET /analises/:id` (SDD §7 — TSD-004 + TSD-007 + TSD-009 + TSD-010). */
+export interface AnaliseDetalhe {
+  id: string;
+  nup: string;
+  objeto: string;
+  status: StatusAnalise;
+  motivoErro: string | null;
+  analistaId: string;
+  analistaNome: string;
+  iniciadaEm: string;
+  concluidaEm: string | null;
+  totalPaginasPdf: number | null;
+  resumo: ResumoAnalise;
+  avaliacoesPorArea: AreaComItens[];
+}
+
 /** Parâmetros de consulta de `GET /analises` (TSD-005). */
 export interface ListarAnalisesQuery {
   /** Busca em `nup` + `objeto`, contém, case/acento-insensitive. */

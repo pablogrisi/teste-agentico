@@ -1,0 +1,203 @@
+/* Adaptado de AnalysisPanel.module.css do protótipo (.panel / .tabs / .progress / .list / .group). */
+.painel {
+  flex-shrink: 0;
+  width: 596px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-default);
+  border-right: none;
+  border-radius: var(--radius-8) 0 0 var(--radius-8);
+  overflow: hidden;
+}
+
+/* ── Abas ── */
+.abas {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-16);
+  padding: 0 var(--spacing-32) 0 var(--spacing-16);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.aba {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  height: 44px;
+  padding: var(--spacing-10) var(--spacing-8);
+  margin-bottom: -1px;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  font-family: var(--font-family-base);
+  font-size: var(--text-small-semibold-size);
+  font-weight: var(--text-small-semibold-weight);
+  line-height: var(--text-small-semibold-line-height);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.abaAtiva {
+  border-bottom-color: var(--color-brand-default);
+  color: var(--color-brand-default);
+}
+
+.abaDesabilitada {
+  color: var(--color-text-disabled);
+  cursor: default;
+}
+
+.abaBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 var(--spacing-4);
+  border-radius: var(--radius-12);
+  background: var(--color-bg-hover);
+  color: var(--color-text-secondary);
+  font-size: var(--text-caption-size);
+  line-height: var(--line-height-16);
+}
+
+.abaAtiva .abaBadge {
+  background: var(--color-brand-muted);
+  color: var(--color-brand-default);
+}
+
+/* ── Progresso ── */
+.progresso {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  padding: var(--spacing-12) var(--spacing-32) var(--spacing-12) var(--spacing-16);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.progressoLinha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-16);
+}
+
+.progressoLabel {
+  font-size: var(--text-small-semibold-size);
+  font-weight: var(--text-small-semibold-weight);
+  line-height: var(--text-small-semibold-line-height);
+  color: var(--color-text-secondary);
+}
+
+.progressoContador {
+  font-size: var(--text-caption-size);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--text-caption-line-height);
+  color: var(--color-text-title);
+}
+
+.progressoBarra {
+  height: 4px;
+  border-radius: 3px;
+  background: var(--color-border-default);
+  overflow: hidden;
+}
+
+.progressoFill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--color-brand-default);
+  transition: width 0.3s ease;
+}
+
+/* ── Conteúdo ── */
+.conteudo {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--color-bg-page);
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-12);
+  padding: var(--spacing-12) var(--spacing-32) var(--spacing-16) var(--spacing-16);
+}
+
+.grupo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+
+.grupoHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+
+.grupoLabel {
+  font-size: var(--text-caption-size);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--text-caption-line-height);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-body);
+}
+
+.grupoBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 var(--spacing-4);
+  border-radius: var(--radius-12);
+  background: var(--color-bg-hover);
+  color: var(--color-text-secondary);
+  font-size: var(--text-caption-size);
+  line-height: var(--line-height-16);
+}
+
+.grupoItens {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+
+.vazio,
+.estado {
+  padding: var(--spacing-32) var(--spacing-24);
+  text-align: center;
+}
+
+.vazio {
+  font-size: var(--text-small-size);
+  color: var(--color-text-secondary);
+}
+
+.estado {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+
+.estadoTitulo {
+  font-size: var(--text-small-semibold-size);
+  font-weight: var(--text-small-semibold-weight);
+  line-height: var(--text-small-semibold-line-height);
+  color: var(--color-text-title);
+}
+
+.estadoTexto {
+  max-width: 40ch;
+  margin: 0 auto;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-line-height);
+  color: var(--color-text-secondary);
+}

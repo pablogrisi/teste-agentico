@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { AnaliseValidacaoError, AnalisesGatewayError, HttpAnalisesGateway } from "@/lib/data";
+import {
+  AnaliseNaoEncontradaError,
+  AnaliseValidacaoError,
+  AnalisesGatewayError,
+  HttpAnalisesGateway,
+} from "@/lib/data";
 
 /**
  * Teste de contrato: o formato consumido de `GET /analises` (TSD-005 / SDD §7).
@@ -241,5 +246,138 @@ describe("HttpAnalisesGateway.criarAnalise (contrato POST /analises — TSD-004)
     await expect(
       new HttpAnalisesGateway(BASE).criarAnalise({ nup: "n", objeto: "o", arquivo: pdf() }),
     ).rejects.toBeInstanceOf(AnalisesGatewayError);
+  });
+});
+
+describe("HttpAnalisesGateway.abrirAnalise (contrato GET /analises/:id — TSD-007)", () => {
+  const NORMA = {
+    lei: "Lei 14.133/2021",
+    artigo: "18",
+    inciso: "I",
+    paragrafo: null,
+    alinea: null,
+  };
+  const ITEM = {
+    id: "av-1",
+    requisitoId: "req-1",
+    codigo: "CHK-001",
+    area: "CHECKLIST_DADOS_GERAIS",
+    titulo: "Contém a CI do setor?",
+    descricao: "…",
+    obrigatorio: true,
+    ordem: 1,
+    norma: NORMA,
+    statusSugeridoIa: "NAO_CONFORME",
+    statusFinal: "NAO_CONFORME",
+    verificado: false,
+    comentario: null,
+    paginaReferencia: 3,
+  };
+  const DETALHE_OK = {
+    id: "a1",
+    nup: "74037.000634/2024-22",
+    objeto: "Aquisição",
+    status: "PRONTA_PARA_REVISAO",
+    motivoErro: null,
+    analistaId: "u1",
+    analistaNome: "Usuário Analista",
+    iniciadaEm: "2024-03-20T14:30:00.000Z",
+    concluidaEm: null,
+    totalPaginasPdf: 24,
+    resumo: {
+      total: 1,
+      conforme: 0,
+      naoConforme: 1,
+      naoSeAplica: 0,
+      verificados: 0,
+      obrigatoriosPendentes: 1,
+    },
+    avaliacoesPorArea: [{ area: "CHECKLIST_DADOS_GERAIS", itens: [ITEM] }],
+  };
+
+  function stubFetch(resposta: { ok?: boolean; status?: number; jsonData?: unknown }) {
+    const fn = vi.fn(async (_url: string) => ({
+      ok: resposta.ok ?? true,
+      status: resposta.status ?? 200,
+      json: async () => resposta.jsonData,
+    }));
+    vi.stubGlobal("fetch", fn);
+    return fn;
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("faz GET para {base}/analises/{id} (id encodado)", async () => {
+    const fetchSpy = stubFetch({ jsonData: DETALHE_OK });
+    await new HttpAnalisesGateway(`${BASE}/`).abrirAnalise("74037.000634/2024-22");
+    expect(fetchSpy.mock.calls[0][0]).toBe(`${BASE}/analises/74037.000634%2F2024-22`);
+  });
+
+  it("mapeia um payload completo para AnaliseDetalhe", async () => {
+    stubFetch({ jsonData: DETALHE_OK });
+    const detalhe = await new HttpAnalisesGateway(BASE).abrirAnalise("a1");
+    expect(detalhe).toEqual(DETALHE_OK);
+    expect(detalhe.avaliacoesPorArea[0].itens[0].statusFinal).toBe("NAO_CONFORME");
+  });
+
+  it("404 vira AnaliseNaoEncontradaError", async () => {
+    stubFetch({ ok: false, status: 404, jsonData: {} });
+    await expect(new HttpAnalisesGateway(BASE).abrirAnalise("x")).rejects.toBeInstanceOf(
+      AnaliseNaoEncontradaError,
+    );
+  });
+
+  it("500 vira AnalisesGatewayError (não NaoEncontrada)", async () => {
+    stubFetch({ ok: false, status: 500, jsonData: {} });
+    const erro = await new HttpAnalisesGateway(BASE).abrirAnalise("x").catch((e) => e);
+    expect(erro).toBeInstanceOf(AnalisesGatewayError);
+    expect(erro).not.toBeInstanceOf(AnaliseNaoEncontradaError);
+  });
+
+  it("payload sem avaliacoesPorArea é rejeitado", async () => {
+    const semGrupos = { ...DETALHE_OK } as Record<string, unknown>;
+    delete semGrupos.avaliacoesPorArea;
+    stubFetch({ jsonData: semGrupos });
+    await expect(new HttpAnalisesGateway(BASE).abrirAnalise("a1")).rejects.toThrow(
+      /formato inesperado/i,
+    );
+  });
+
+  it("item com statusFinal fora da allowlist é rejeitado", async () => {
+    stubFetch({
+      jsonData: {
+        ...DETALHE_OK,
+        avaliacoesPorArea: [
+          { area: "CHECKLIST_X", itens: [{ ...ITEM, statusFinal: "COM_RESSALVA" }] },
+        ],
+      },
+    });
+    await expect(new HttpAnalisesGateway(BASE).abrirAnalise("a1")).rejects.toBeInstanceOf(
+      AnalisesGatewayError,
+    );
+  });
+
+  it("payload sem resumo é rejeitado", async () => {
+    const semResumo = { ...DETALHE_OK } as Record<string, unknown>;
+    delete semResumo.resumo;
+    stubFetch({ jsonData: semResumo });
+    await expect(new HttpAnalisesGateway(BASE).abrirAnalise("a1")).rejects.toBeInstanceOf(
+      AnalisesGatewayError,
+    );
+  });
+
+  it("falha de rede vira AnalisesGatewayError", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new TypeError("network down");
+      }),
+    );
+    await expect(new HttpAnalisesGateway(BASE).abrirAnalise("a1")).rejects.toBeInstanceOf(
+      AnalisesGatewayError,
+    );
   });
 });

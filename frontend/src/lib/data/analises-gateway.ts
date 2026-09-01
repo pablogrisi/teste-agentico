@@ -1,4 +1,10 @@
-import type { AnaliseCriada, AnalisesPagina, ListarAnalisesQuery, NovaAnaliseInput } from "./types";
+import type {
+  AnaliseCriada,
+  AnaliseDetalhe,
+  AnalisesPagina,
+  ListarAnalisesQuery,
+  NovaAnaliseInput,
+} from "./types";
 
 /** Erro de qualquer implementação de `AnalisesGateway` (transporte, contrato, formato). */
 export class AnalisesGatewayError extends Error {
@@ -19,12 +25,20 @@ export class AnaliseValidacaoError extends AnalisesGatewayError {
   }
 }
 
+/** A análise não existe para o analista atual (`404` de `GET /analises/:id`). */
+export class AnaliseNaoEncontradaError extends AnalisesGatewayError {
+  constructor(readonly analiseId: string) {
+    super(`Análise ${analiseId} não encontrada.`);
+    this.name = "AnaliseNaoEncontradaError";
+  }
+}
+
 /**
  * Seam de dados do frontend. Todo acesso a dados de análise passa por esta interface —
  * nenhum componente de tela fala HTTP direto.
  *
  * Implementações: `FixturesAnalisesGateway` (sem backend) e `HttpAnalisesGateway`
- * (contrato REST das TSD-004/005). O módulo de composição (./index.ts) escolhe qual usar.
+ * (contrato REST das TSD-004/005/007). O módulo de composição (./index.ts) escolhe qual usar.
  */
 export interface AnalisesGateway {
   /** Lista as análises do analista atual, com busca/filtro/ordenação/paginação (TSD-005). */
@@ -32,4 +46,7 @@ export interface AnalisesGateway {
 
   /** Cria uma análise (multipart NUP + objeto + PDF) — TSD-004. */
   criarAnalise(input: NovaAnaliseInput): Promise<AnaliseCriada>;
+
+  /** Abre uma análise: detalhe + resumo + avaliações por área (TSD-007). `404` → `AnaliseNaoEncontradaError`. */
+  abrirAnalise(id: string): Promise<AnaliseDetalhe>;
 }

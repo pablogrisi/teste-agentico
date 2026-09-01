@@ -4,10 +4,11 @@ App **Next.js (App Router) + TypeScript** da LicIA Analisadora. Frente `frontend
 monorepo; a frente `backend/` (NestJS) roda isolada. Método e docs de produto/arquitetura
 vivem na raiz.
 
-> **Estado:** fundação técnica (TSD-002) + **RF-002** (listagem, TSD-011) + **RF-001/RF-004**
-> (modal "Nova análise" + upload de PDF, TSD-012). `/` é uma tela funcional (tabela, busca,
-> filtro por status, ordenação, paginação, estados vazio/carregando/erro) e o botão "Nova
-> análise" abre o modal de criação. `/analise/[id]` ainda é casca (RF-010+).
+> **Estado:** fundação (TSD-002) + **RF-002** (listagem, TSD-011) + **RF-001/RF-004** (modal
+> "Nova análise", TSD-012) + **RF-010** (tela de análise, TSD-013). `/` lista as análises e
+> abre o modal de criação; `/analise/[id]` mostra o cabeçalho + as abas Checklist/Técnica
+> (navegação livre) com os requisitos avaliados em acordeão **somente leitura** (filtros,
+> edição de parecer, verificado interativo e visor de PDF entram em RF-009/008/011/014).
 
 ## Pré-requisitos
 
@@ -30,7 +31,9 @@ Rotas:
 - `/` — lista de análises (RF-002) + modal "Nova análise" (RF-001/RF-004): tabela + busca +
   filtro por status + ordenação + paginação; "Nova análise" cria via `POST /analises` e navega
   para a análise.
-- `/analise/<id>` — casca da tela de análise (frame visor de PDF + painel de revisão).
+- `/analise/<id>` — tela de análise (RF-010): cabeçalho + abas Checklist/Técnica + lista de
+  requisitos avaliados (read-only); polling enquanto a análise está processando; visor de PDF
+  é placeholder (RF-014).
 
 ## Scripts
 

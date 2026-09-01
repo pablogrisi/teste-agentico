@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { AnaliseValidacaoError, FixturesAnalisesGateway } from "@/lib/data";
+import {
+  AnaliseNaoEncontradaError,
+  AnaliseValidacaoError,
+  calcularResumo,
+  FixturesAnalisesGateway,
+} from "@/lib/data";
 import type { AnaliseResumo } from "@/lib/data";
 import { ANALISES_FIXTURE } from "@/lib/data/fixtures";
 
@@ -108,6 +113,46 @@ describe("FixturesAnalisesGateway", () => {
           arquivo: new File(["x"], "nota.txt", { type: "text/plain" }),
         }),
       ).rejects.toBeInstanceOf(AnaliseValidacaoError);
+    });
+  });
+
+  describe("abrirAnalise", () => {
+    it("devolve o detalhe de uma análise pronta, com avaliações por área e resumo coerente", async () => {
+      const detalhe = await new FixturesAnalisesGateway().abrirAnalise("1");
+      expect(detalhe.id).toBe("1");
+      expect(detalhe.status).toBe("PRONTA_PARA_REVISAO");
+      expect(detalhe.analistaNome).toBeTruthy();
+      expect(detalhe.avaliacoesPorArea.length).toBeGreaterThan(0);
+      expect(detalhe.resumo).toEqual(calcularResumo(detalhe.avaliacoesPorArea));
+    });
+
+    it("sintetiza a partir da listagem para ids sem fixture explícita", async () => {
+      const detalhe = await new FixturesAnalisesGateway().abrirAnalise("4"); // CONCLUIDA na listagem
+      expect(detalhe.id).toBe("4");
+      expect(detalhe.status).toBe("CONCLUIDA");
+      expect(detalhe.avaliacoesPorArea.length).toBeGreaterThan(0);
+    });
+
+    it("análise em processamento vem sem avaliações", async () => {
+      const detalhe = await new FixturesAnalisesGateway().abrirAnalise("2"); // PROCESSANDO
+      expect(detalhe.avaliacoesPorArea).toEqual([]);
+      expect(detalhe.resumo.total).toBe(0);
+    });
+
+    it("id inexistente → AnaliseNaoEncontradaError", async () => {
+      await expect(new FixturesAnalisesGateway().abrirAnalise("zzz")).rejects.toBeInstanceOf(
+        AnaliseNaoEncontradaError,
+      );
+    });
+
+    it("não vaza a referência da fixture entre chamadas", async () => {
+      const gw = new FixturesAnalisesGateway();
+      const primeira = await gw.abrirAnalise("1");
+      primeira.avaliacoesPorArea[0].itens.pop();
+      const segunda = await gw.abrirAnalise("1");
+      expect(segunda.avaliacoesPorArea[0].itens.length).toBeGreaterThan(
+        primeira.avaliacoesPorArea[0].itens.length,
+      );
     });
   });
 });

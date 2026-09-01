@@ -1,9 +1,19 @@
-import { AnaliseValidacaoError, type AnalisesGateway } from "./analises-gateway";
+import {
+  AnaliseNaoEncontradaError,
+  AnaliseValidacaoError,
+  type AnalisesGateway,
+} from "./analises-gateway";
 import { TAMANHO_MAX, TAMANHO_PADRAO } from "./analises-query";
 import { ANALISES_FIXTURE } from "./fixtures";
+import {
+  ANALISES_DETALHE_FIXTURE,
+  clonarDetalhe,
+  sintetizarDetalhe,
+} from "./fixtures-analise-detalhe";
 import { validarNovaAnalise } from "./nova-analise";
 import type {
   AnaliseCriada,
+  AnaliseDetalhe,
   AnaliseResumo,
   AnalisesPagina,
   ListarAnalisesQuery,
@@ -74,5 +84,14 @@ export class FixturesAnalisesGateway implements AnalisesGateway {
       status: "PENDENTE",
       iniciadaEm: new Date().toISOString(),
     };
+  }
+
+  async abrirAnalise(id: string): Promise<AnaliseDetalhe> {
+    const explicito = ANALISES_DETALHE_FIXTURE[id];
+    if (explicito) return clonarDetalhe(explicito);
+
+    const linha = this.fonte.find((a) => a.id === id);
+    if (!linha) throw new AnaliseNaoEncontradaError(id);
+    return sintetizarDetalhe(linha);
   }
 }
