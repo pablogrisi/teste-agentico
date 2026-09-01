@@ -60,7 +60,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 3 | RF-004 | Campo de upload de PDF no modal + estados de erro | Must | implementada com RF-001 (branch `frontend/rf-001-nova-analise`) |
 | 4 | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre | Must | implementada (branch `frontend/rf-010-tela-analise`) |
 | 5 | RF-007 | Exibição dos requisitos com status sugerido pela IA | Must | implementada (branch `frontend/rf-007-status-ia`) |
-| 6 | RF-009 | Visão inicial priorizando não conformes + filtros por status | Must | não iniciada |
+| 6 | RF-009 | Visão inicial priorizando não conformes + filtros por status | Must | user story em aprovação (branch `frontend/rf-009-filtros`) |
 | 7 | RF-008 | Modal de alteração de status final ("parecer") | Must | não iniciada |
 | 8 | RF-011 | Controle de "marcar como verificado" | Must | não iniciada |
 | 9 | RF-017 | Campo de comentário obrigatório nas ações de revisão | Must | não iniciada |
@@ -274,11 +274,29 @@ Recorte deste ciclo (frontend): o `RequisitoItem` (criado em RF-010) passa a exi
 
 **Frentes:** Backend · Frontend
 **Status (backend):** implementada (mergeada no `main` `96ff8fb`)
-**Status (frontend):** não iniciada
+**Status (frontend):** user story em aprovação — branch `frontend/rf-009-filtros`
 
 **User Story**
 
 Como analista técnico, quero abrir uma análise e ver os requisitos avaliados — com os não conformes em primeiro plano e um resumo do estado — para começar a revisão pelo que mais importa.
+
+**User Story (frontend — RF-009)**
+
+Como analista técnico, quero que a tela de análise já abra mostrando primeiro os requisitos **não conformes** e ter chips para filtrar a lista por status (Não conforme / Conforme / Não se aplica / Todos), para começar a revisão pelo que mais importa e navegar rápido entre os grupos.
+
+Recorte deste ciclo (frontend), em cima do painel do RF-010:
+
+- **Chips de filtro por status** no `PainelRevisao` (adiados do RF-010): 4 opções, colorindo quando ativas (padrão do protótipo). O filtro é por `statusFinal` (parecer atual) e vale para a aba corrente; trocar de aba mantém o filtro.
+- **Visão inicial:** o filtro abre em **"Não conforme"**.
+- **Estado "nenhum não conforme"** (PRD §9): quando o filtro "Não conforme" está ativo e a aba não tem itens nesse status, mostrar mensagem clara + atalho "Ver todos" (troca o filtro para "Todos").
+- Grupos de área sem itens visíveis no filtro atual ficam ocultos; contagem do grupo reflete os itens visíveis.
+- **Fora do escopo:** ordenação alternativa / reordenar (o backend já entrega não conformes primeiro); busca textual dentro da análise; filtro por "verificado/pendente" (pode virar refinamento); edição de parecer (RF-008), verificado interativo (RF-011), comentário (RF-017), visor de PDF (RF-014), conclusão (RF-012).
+
+**Critério de aceite (PRD RF-009 + §9):** ao abrir a análise, a primeira visão destaca/filtra os não conformes; quando não houver nenhum, isso é informado claramente e o acesso aos demais requisitos é fácil.
+
+**Contrato consumido:** `GET /analises/:id` — sem mudança (o backend já ordena não conformes primeiro e manda o `resumo`; TSD-007).
+
+**TSD associada (frontend):** `docs/engineering/specs/015-filtros-status-frontend.tsd.md`.
 
 Recorte backend deste ciclo: o endpoint de leitura da análise passa a devolver as avaliações (avaliação + dados do requisito), agrupadas por área e ordenadas priorizando não conformes, mais um resumo de contagens. Sem edição de parecer (RF-008/011/017), sem tela (frontend), sem entrega do PDF por página (RF-014).
 
