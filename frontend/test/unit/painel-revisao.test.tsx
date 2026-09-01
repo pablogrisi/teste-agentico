@@ -1,8 +1,8 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PainelRevisao } from "@/components/analise/PainelRevisao";
-import { calcularResumo } from "@/lib/data";
+import { calcularResumo, FixturesAnalisesGateway } from "@/lib/data";
 import type { AnaliseDetalhe, AreaComItens, AvaliacaoItem } from "@/lib/data";
 
 const replace = vi.fn();
@@ -17,6 +17,10 @@ vi.mock("next/navigation", () => ({
 beforeEach(() => {
   replace.mockClear();
   searchParamsString = "";
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 function item(id: string, over: Partial<AvaliacaoItem> = {}): AvaliacaoItem {
@@ -228,6 +232,68 @@ describe("PainelRevisao", () => {
       render(<PainelRevisao detalhe={detalhe("PRONTA_PARA_REVISAO", COM_CONFORMES)} />);
       await user.click(screen.getByRole("button", { name: "Não conforme" }));
       expect(replace).toHaveBeenCalledWith("/analise/1", { scroll: false });
+    });
+  });
+
+  describe("alterar parecer (RF-008)", () => {
+    async function alterarC1ParaConforme(user: ReturnType<typeof userEvent.setup>) {
+      const c1Novo = item("c1", {
+        statusFinal: "CONFORME",
+        verificado: true,
+        comentario: "revisado",
+      });
+      const resumoNovo = calcularResumo([
+        { area: "CHECKLIST_DADOS_GERAIS", itens: [c1Novo, item("c2", { verificado: true })] },
+        { area: "TECNICA_ESPEC", itens: [item("t1", { statusFinal: "NAO_CONFORME" })] },
+      ]);
+      const spy = vi
+        .spyOn(FixturesAnalisesGateway.prototype, "revisarRequisito")
+        .mockResolvedValue({ item: c1Novo, resumo: resumoNovo });
+
+      await user.click(screen.getByRole("button", { name: /Requisito c1/ })); // abre c1
+      await user.click(screen.getByRole("button", { name: "Alterar parecer" }));
+      await user.selectOptions(await screen.findByLabelText(/^Parecer/), "CONFORME");
+      await user.type(screen.getByLabelText(/Comentário/), "revisado");
+      await user.click(screen.getByRole("button", { name: "Confirmar" }));
+      return spy;
+    }
+
+    it("aplica o parecer devolvido: o item sai do filtro 'Não conforme' e o progresso sobe", async () => {
+      const user = userEvent.setup();
+      render(<PainelRevisao detalhe={detalhe("PRONTA_PARA_REVISAO", GRUPOS)} />);
+      expect(screen.getByText("1/3 verificados")).toBeInTheDocument();
+
+      const spy = await alterarC1ParaConforme(user);
+
+      expect(spy).toHaveBeenCalledWith("1", "r-c1", {
+        statusFinal: "CONFORME",
+        comentario: "revisado",
+      });
+      await waitFor(() => expect(screen.queryByText("Requisito c1")).not.toBeInTheDocument());
+      expect(screen.getByText("2/3 verificados")).toBeInTheDocument();
+    });
+
+    it("com o filtro 'Todos', o item alterado permanece na lista com o novo badge", async () => {
+      const user = userEvent.setup();
+      render(<PainelRevisao detalhe={detalhe("PRONTA_PARA_REVISAO", GRUPOS)} />);
+      await user.click(screen.getByRole("button", { name: "Todos" }));
+
+      await alterarC1ParaConforme(user);
+
+      await waitFor(() =>
+        expect(screen.queryByRole("dialog", { name: "Alterar parecer" })).not.toBeInTheDocument(),
+      );
+      // c1 continua na lista (filtro "Todos") e agora exibe o badge "Conforme"
+      const c1Toggle = screen.getByRole("button", { name: /Requisito c1/ });
+      expect(within(c1Toggle).getByText("Conforme", { selector: "span" })).toBeInTheDocument();
+    });
+
+    it("não mostra 'Alterar parecer' numa análise CONCLUIDA", async () => {
+      const user = userEvent.setup();
+      render(<PainelRevisao detalhe={detalhe("CONCLUIDA", GRUPOS)} />);
+      await user.click(screen.getByRole("button", { name: "Todos" }));
+      await user.click(screen.getAllByRole("button", { expanded: false })[0]);
+      expect(screen.queryByRole("button", { name: "Alterar parecer" })).not.toBeInTheDocument();
     });
   });
 });

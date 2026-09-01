@@ -120,6 +120,18 @@ export interface AnaliseDetalhe {
   avaliacoesPorArea: AreaComItens[];
 }
 
+/** Corpo enviado no fluxo "alterar parecer" da tela de análise (RF-008 — subset do PATCH da TSD-008). */
+export interface AlteracaoParecerInput {
+  statusFinal: StatusRequisito;
+  comentario: string;
+}
+
+/** Resposta de `PATCH /analises/:id/requisitos/:requisitoId` (TSD-008): item atualizado + resumo recalculado. */
+export interface RevisaoRequisitoResultado {
+  item: AvaliacaoItem;
+  resumo: ResumoAnalise;
+}
+
 /** Parâmetros de consulta de `GET /analises` (TSD-005). */
 export interface ListarAnalisesQuery {
   /** Busca em `nup` + `objeto`, contém, case/acento-insensitive. */

@@ -3,6 +3,7 @@ import { FixturesAnalisesGateway } from "./fixtures-analises-gateway";
 import { HttpAnalisesGateway } from "./http-analises-gateway";
 
 export {
+  AnaliseConflitoError,
   AnaliseNaoEncontradaError,
   AnaliseValidacaoError,
   AnalisesGatewayError,
@@ -45,6 +46,12 @@ export {
 } from "./filtro-requisito";
 export type { FiltroRequisito } from "./filtro-requisito";
 export {
+  PARECER_OPCOES,
+  resolverAlteracaoParecer,
+  validarAlteracaoParecer,
+} from "./alterar-parecer";
+export type { EntradaAlteracaoParecer, ErrosAlteracaoParecer } from "./alterar-parecer";
+export {
   ANALISE_PDF_TAMANHO_MAX_MB,
   formatarTamanho,
   NUP_MAX,
@@ -62,6 +69,7 @@ export {
 } from "./status-analise";
 export type { StatusTone } from "./status-analise";
 export type {
+  AlteracaoParecerInput,
   AnaliseCriada,
   AnaliseDetalhe,
   AnaliseResumo,
@@ -74,6 +82,7 @@ export type {
   OrdemListagem,
   OrdenarAnalisesPor,
   ResumoAnalise,
+  RevisaoRequisitoResultado,
   StatusAnalise,
   StatusRequisito,
 } from "./types";

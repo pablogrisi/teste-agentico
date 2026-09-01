@@ -61,7 +61,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 4 | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre | Must | implementada (branch `frontend/rf-010-tela-analise`) |
 | 5 | RF-007 | Exibição dos requisitos com status sugerido pela IA | Must | implementada (branch `frontend/rf-007-status-ia`) |
 | 6 | RF-009 | Visão inicial priorizando não conformes + filtros por status | Must | implementada — Crítico ✅ (branch `frontend/rf-009-filtros`) |
-| 7 | RF-008 | Modal de alteração de status final ("parecer") | Must | não iniciada |
+| 7 | RF-008 | Modal de alteração de status final ("parecer") | Must | implementada — Crítico ✅ (branch `frontend/rf-008-parecer`) |
 | 8 | RF-011 | Controle de "marcar como verificado" | Must | não iniciada |
 | 9 | RF-017 | Campo de comentário obrigatório nas ações de revisão | Must | não iniciada |
 | 10 | RF-014 | Visor de PDF + referência de página clicável / ausência explícita | Must | não iniciada |
@@ -356,7 +356,7 @@ Recorte deste ciclo (frontend):
 
 **Frentes:** Backend · Frontend
 **Status (backend):** implementada (mergeada no `main` `ad2e8cd`)
-**Status (frontend):** não iniciada
+**Status (frontend):** implementada — Crítico ✅ (01/09/2026), branch `frontend/rf-008-parecer`; `npm run ci` verde (164 testes). Aguardando push + merge.
 
 > Ciclo backend agrupado: **RF-008 + RF-011 + RF-017** = "revisar um requisito" (um endpoint de PATCH). User Story e critérios abaixo cobrem os três.
 
@@ -365,6 +365,29 @@ Recorte deste ciclo (frontend):
 Como analista técnico, quero, ao revisar um requisito, definir o parecer final (podendo alterar a sugestão da IA), marcá-lo como verificado e registrar um comentário quando exigido, para consolidar minha avaliação daquele item.
 
 Recorte backend deste ciclo: `PATCH /analises/:id/requisitos/:requisitoId` que atualiza `statusFinal`, `verificado` e/ou `comentario` de uma avaliação; alterar `statusFinal` marca `verificado = true`; comentário obrigatório conforme a regra de P-03. Sem tela (frontend), sem conclusão da análise (RF-012).
+
+**User Story (frontend — RF-008)**
+
+Como analista técnico, quero, a partir de um requisito na tela de análise, abrir um modal "Alterar parecer" para escolher o novo `statusFinal` e escrever o comentário que o justifica, e ver a lista e o progresso se atualizarem na hora — para consolidar minha decisão sobre aquele item quando discordo da sugestão da IA (ou quando quero corrigir).
+
+Recorte deste ciclo (frontend), em cima do painel do RF-010/RF-007/RF-009:
+
+- **Botão "Alterar parecer"** em cada `RequisitoItem` (o item deixa de ser 100% read-only). Abre um modal.
+- **Modal "Alterar parecer"** (padrão do protótipo `ChangeOpinionModal`, simplificado): bloco "Parecer atual" (só leitura, com o requisito e o `statusFinal` de agora); bloco "Novo parecer" com **select de parecer** (os 3 status, exceto o atual) e **textarea de comentário obrigatório**. Sem o campo "Página no documento" (isso é RF-014).
+- **Confirmar** chama `PATCH /analises/:id/requisitos/:requisitoId` com `{ statusFinal, comentario }` e recebe `{ item, resumo }`. O painel aplica o item atualizado e o novo `resumo` **na hora** (sem recarregar a página): a lista, os badges "IA"/divergência (RF-007), os filtros (RF-009) e a barra de progresso refletem a mudança.
+- **Erros do backend:** `422` (ex.: comentário obrigatório não atendido) → mensagem no modal, sem fechar; `409` (análise não está `PRONTA_PARA_REVISAO`) e `404` → mensagem clara. Validação client-side espelha a regra R-06 (comentário obrigatório quando o novo parecer difere da sugestão da IA) para não depender só do 422.
+- **Alterar `statusFinal` marca `verificado = true`** (o backend faz; o frontend só reflete). O check de "verificado" segue **desabilitado** para toggle manual — isso é o RF-011.
+- **Fora do escopo:** marcar/desmarcar "verificado" manualmente (RF-011); campo de comentário fora do fluxo de alterar parecer / edição de página (RF-017 amplo + RF-014); concluir a análise (RF-012); baixar relatório (RF-016); histórico de alterações do parecer.
+
+**Critério de aceite (frontend)**
+
+- Cada requisito tem uma ação "Alterar parecer" que abre o modal com o parecer atual visível.
+- O modal exige um novo parecer (≠ atual) e um comentário não vazio; "Confirmar" fica desabilitado até os dois estarem preenchidos.
+- Ao confirmar, a chamada ao gateway é feita; no sucesso o modal fecha, o item some/aparece conforme o filtro ativo (RF-009), o badge de status muda, a marca de divergência da IA (RF-007) reavalia, o progresso (`verificados/total`) e as contagens das abas se ajustam pelo `resumo` devolvido.
+- `422`/`409`/`404` são mostrados no modal (ou como aviso) sem perder o que o usuário digitou; `422` mantém o modal aberto.
+- Nenhuma mudança no contrato; a tela continua consumindo `GET /analises/:id` e agora também `PATCH /analises/:id/requisitos/:requisitoId` (TSD-008).
+
+**TSD associada (frontend):** `docs/engineering/specs/016-alterar-parecer-frontend.tsd.md`.
 
 **Critérios de aceite**
 

@@ -1,8 +1,11 @@
 import {
+  AnaliseConflitoError,
   AnaliseNaoEncontradaError,
   AnaliseValidacaoError,
   type AnalisesGateway,
 } from "./analises-gateway";
+import { calcularResumo } from "./analise-detalhe";
+import { resolverAlteracaoParecer, validarAlteracaoParecer } from "./alterar-parecer";
 import { TAMANHO_MAX, TAMANHO_PADRAO } from "./analises-query";
 import { ANALISES_FIXTURE } from "./fixtures";
 import {
@@ -12,12 +15,14 @@ import {
 } from "./fixtures-analise-detalhe";
 import { validarNovaAnalise } from "./nova-analise";
 import type {
+  AlteracaoParecerInput,
   AnaliseCriada,
   AnaliseDetalhe,
   AnaliseResumo,
   AnalisesPagina,
   ListarAnalisesQuery,
   NovaAnaliseInput,
+  RevisaoRequisitoResultado,
 } from "./types";
 
 /** Remove acentos e caixa para comparação de busca (equivale ao "insensitive" do backend). */
@@ -93,5 +98,40 @@ export class FixturesAnalisesGateway implements AnalisesGateway {
     const linha = this.fonte.find((a) => a.id === id);
     if (!linha) throw new AnaliseNaoEncontradaError(id);
     return sintetizarDetalhe(linha);
+  }
+
+  /**
+   * Sem backend: aplica a regra de alteração de parecer (TSD-008) sobre o detalhe das
+   * fixtures e devolve `{ item, resumo }`. **Não persiste** — a próxima `abrirAnalise`
+   * volta ao estado das fixtures (andaime; ver TSD-016 §9).
+   */
+  async revisarRequisito(
+    analiseId: string,
+    requisitoId: string,
+    patch: AlteracaoParecerInput,
+  ): Promise<RevisaoRequisitoResultado> {
+    const detalhe = await this.abrirAnalise(analiseId);
+    if (detalhe.status !== "PRONTA_PARA_REVISAO") throw new AnaliseConflitoError();
+
+    const grupos = detalhe.avaliacoesPorArea;
+    const atual = grupos.flatMap((g) => g.itens).find((i) => i.requisitoId === requisitoId);
+    if (!atual) throw new AnaliseNaoEncontradaError(analiseId);
+
+    const { ok, erros } = validarAlteracaoParecer({
+      statusFinal: patch.statusFinal,
+      statusAtual: atual.statusFinal,
+      statusSugeridoIa: atual.statusSugeridoIa,
+      comentario: patch.comentario,
+    });
+    if (!ok) {
+      throw new AnaliseValidacaoError(Object.values(erros).filter(Boolean) as string[]);
+    }
+
+    const item = resolverAlteracaoParecer(atual, patch);
+    const gruposAtualizados = grupos.map((g) => ({
+      area: g.area,
+      itens: g.itens.map((i) => (i.id === item.id ? item : i)),
+    }));
+    return { item, resumo: calcularResumo(gruposAtualizados) };
   }
 }

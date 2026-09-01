@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  AnaliseConflitoError,
   AnaliseNaoEncontradaError,
   AnaliseValidacaoError,
   AnalisesGatewayError,
@@ -379,5 +380,126 @@ describe("HttpAnalisesGateway.abrirAnalise (contrato GET /analises/:id — TSD-0
     await expect(new HttpAnalisesGateway(BASE).abrirAnalise("a1")).rejects.toBeInstanceOf(
       AnalisesGatewayError,
     );
+  });
+});
+
+describe("HttpAnalisesGateway.revisarRequisito (contrato PATCH /analises/:id/requisitos/:requisitoId — TSD-008)", () => {
+  const ITEM = {
+    id: "av-1",
+    requisitoId: "req-1",
+    codigo: "CHK-001",
+    area: "CHECKLIST_DADOS_GERAIS",
+    titulo: "Contém a CI do setor?",
+    descricao: "…",
+    obrigatorio: true,
+    ordem: 1,
+    norma: { lei: null, artigo: null, inciso: null, paragrafo: null, alinea: null },
+    statusSugeridoIa: "NAO_CONFORME",
+    statusFinal: "CONFORME",
+    verificado: true,
+    comentario: "Revisado: consta à fl. 2.",
+    paginaReferencia: null,
+  };
+  const RESUMO = {
+    total: 1,
+    conforme: 1,
+    naoConforme: 0,
+    naoSeAplica: 0,
+    verificados: 1,
+    obrigatoriosPendentes: 0,
+  };
+  const RESPOSTA_OK = { item: ITEM, resumo: RESUMO };
+
+  function stubFetch(resposta: { ok?: boolean; status?: number; jsonData?: unknown }) {
+    const fn = vi.fn(async (_url: string, _init?: RequestInit) => ({
+      ok: resposta.ok ?? true,
+      status: resposta.status ?? 200,
+      json: async () => resposta.jsonData,
+    }));
+    vi.stubGlobal("fetch", fn);
+    return fn;
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("faz PATCH na URL certa com { statusFinal, comentario } em JSON", async () => {
+    const fetchSpy = stubFetch({ jsonData: RESPOSTA_OK });
+    await new HttpAnalisesGateway(`${BASE}/`).revisarRequisito("a 1", "req-1", {
+      statusFinal: "CONFORME",
+      comentario: "  ok  ",
+    });
+    const [url, init] = fetchSpy.mock.calls[0];
+    expect(url).toBe(`${BASE}/analises/a%201/requisitos/req-1`);
+    expect(init?.method).toBe("PATCH");
+    expect(JSON.parse(String(init?.body))).toEqual({
+      statusFinal: "CONFORME",
+      comentario: "  ok  ",
+    });
+  });
+
+  it("mapeia { item, resumo } para RevisaoRequisitoResultado", async () => {
+    stubFetch({ jsonData: RESPOSTA_OK });
+    const r = await new HttpAnalisesGateway(BASE).revisarRequisito("a1", "req-1", {
+      statusFinal: "CONFORME",
+      comentario: "ok",
+    });
+    expect(r).toEqual(RESPOSTA_OK);
+  });
+
+  it("422 vira AnaliseValidacaoError com os motivos", async () => {
+    stubFetch({ ok: false, status: 422, jsonData: { message: ["comentário obrigatório"] } });
+    const erro = await new HttpAnalisesGateway(BASE)
+      .revisarRequisito("a1", "req-1", { statusFinal: "CONFORME", comentario: "" })
+      .catch((e) => e);
+    expect(erro).toBeInstanceOf(AnaliseValidacaoError);
+    expect(erro.motivos).toEqual(["comentário obrigatório"]);
+  });
+
+  it("409 vira AnaliseConflitoError", async () => {
+    stubFetch({ ok: false, status: 409, jsonData: {} });
+    await expect(
+      new HttpAnalisesGateway(BASE).revisarRequisito("a1", "req-1", {
+        statusFinal: "CONFORME",
+        comentario: "ok",
+      }),
+    ).rejects.toBeInstanceOf(AnaliseConflitoError);
+  });
+
+  it("404 vira AnaliseNaoEncontradaError", async () => {
+    stubFetch({ ok: false, status: 404, jsonData: {} });
+    await expect(
+      new HttpAnalisesGateway(BASE).revisarRequisito("a1", "req-1", {
+        statusFinal: "CONFORME",
+        comentario: "ok",
+      }),
+    ).rejects.toBeInstanceOf(AnaliseNaoEncontradaError);
+  });
+
+  it("payload de resposta fora do formato é rejeitado", async () => {
+    stubFetch({ jsonData: { item: { ...ITEM, statusFinal: "COM_RESSALVA" }, resumo: RESUMO } });
+    await expect(
+      new HttpAnalisesGateway(BASE).revisarRequisito("a1", "req-1", {
+        statusFinal: "CONFORME",
+        comentario: "ok",
+      }),
+    ).rejects.toBeInstanceOf(AnalisesGatewayError);
+  });
+
+  it("falha de rede vira AnalisesGatewayError", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new TypeError("network down");
+      }),
+    );
+    await expect(
+      new HttpAnalisesGateway(BASE).revisarRequisito("a1", "req-1", {
+        statusFinal: "CONFORME",
+        comentario: "ok",
+      }),
+    ).rejects.toBeInstanceOf(AnalisesGatewayError);
   });
 });

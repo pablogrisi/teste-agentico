@@ -1,9 +1,11 @@
 import type {
+  AlteracaoParecerInput,
   AnaliseCriada,
   AnaliseDetalhe,
   AnalisesPagina,
   ListarAnalisesQuery,
   NovaAnaliseInput,
+  RevisaoRequisitoResultado,
 } from "./types";
 
 /** Erro de qualquer implementação de `AnalisesGateway` (transporte, contrato, formato). */
@@ -33,6 +35,14 @@ export class AnaliseNaoEncontradaError extends AnalisesGatewayError {
   }
 }
 
+/** A análise não está mais editável (`409` — fora de `PRONTA_PARA_REVISAO`). */
+export class AnaliseConflitoError extends AnalisesGatewayError {
+  constructor(message = "Esta análise não está mais em revisão.") {
+    super(message);
+    this.name = "AnaliseConflitoError";
+  }
+}
+
 /**
  * Seam de dados do frontend. Todo acesso a dados de análise passa por esta interface —
  * nenhum componente de tela fala HTTP direto.
@@ -49,4 +59,15 @@ export interface AnalisesGateway {
 
   /** Abre uma análise: detalhe + resumo + avaliações por área (TSD-007). `404` → `AnaliseNaoEncontradaError`. */
   abrirAnalise(id: string): Promise<AnaliseDetalhe>;
+
+  /**
+   * Altera o parecer (`statusFinal` + `comentario`) de um requisito e devolve o item
+   * atualizado + o `resumo` recalculado — `PATCH /analises/:id/requisitos/:requisitoId` (TSD-008).
+   * `422` → `AnaliseValidacaoError`; `409` → `AnaliseConflitoError`; `404` → `AnaliseNaoEncontradaError`.
+   */
+  revisarRequisito(
+    analiseId: string,
+    requisitoId: string,
+    patch: AlteracaoParecerInput,
+  ): Promise<RevisaoRequisitoResultado>;
 }

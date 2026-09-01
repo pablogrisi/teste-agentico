@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  AnaliseConflitoError,
   AnaliseNaoEncontradaError,
   AnaliseValidacaoError,
   calcularResumo,
@@ -153,6 +154,71 @@ describe("FixturesAnalisesGateway", () => {
       expect(segunda.avaliacoesPorArea[0].itens.length).toBeGreaterThan(
         primeira.avaliacoesPorArea[0].itens.length,
       );
+    });
+  });
+
+  describe("revisarRequisito", () => {
+    async function requisitoNaoConforme() {
+      const gw = new FixturesAnalisesGateway();
+      const detalhe = await gw.abrirAnalise("1");
+      const alvo = detalhe.avaliacoesPorArea
+        .flatMap((g) => g.itens)
+        .find((i) => i.statusFinal === "NAO_CONFORME")!;
+      return { gw, alvo, detalhe };
+    }
+
+    it("aplica o novo parecer, liga verificado e recalcula o resumo", async () => {
+      const { gw, alvo, detalhe } = await requisitoNaoConforme();
+      const naoConformeAntes = detalhe.resumo.naoConforme;
+
+      const { item, resumo } = await gw.revisarRequisito("1", alvo.requisitoId, {
+        statusFinal: "CONFORME",
+        comentario: "  revisado: consta à fl. 2  ",
+      });
+
+      expect(item.statusFinal).toBe("CONFORME");
+      expect(item.verificado).toBe(true);
+      expect(item.comentario).toBe("revisado: consta à fl. 2");
+      expect(resumo.naoConforme).toBe(naoConformeAntes - 1);
+      expect(resumo.conforme).toBe(detalhe.resumo.conforme + 1);
+    });
+
+    it("não persiste — a próxima abrirAnalise volta ao estado das fixtures", async () => {
+      const { gw, alvo } = await requisitoNaoConforme();
+      await gw.revisarRequisito("1", alvo.requisitoId, {
+        statusFinal: "CONFORME",
+        comentario: "x",
+      });
+      const depois = await gw.abrirAnalise("1");
+      const mesmo = depois.avaliacoesPorArea
+        .flatMap((g) => g.itens)
+        .find((i) => i.requisitoId === alvo.requisitoId)!;
+      expect(mesmo.statusFinal).toBe("NAO_CONFORME");
+    });
+
+    it("comentário vazio quando diverge da IA → AnaliseValidacaoError", async () => {
+      const { gw, alvo } = await requisitoNaoConforme();
+      await expect(
+        gw.revisarRequisito("1", alvo.requisitoId, { statusFinal: "CONFORME", comentario: "" }),
+      ).rejects.toBeInstanceOf(AnaliseValidacaoError);
+    });
+
+    it("análise fora de PRONTA_PARA_REVISAO → AnaliseConflitoError", async () => {
+      await expect(
+        new FixturesAnalisesGateway().revisarRequisito("2", "req-1", {
+          statusFinal: "CONFORME",
+          comentario: "x",
+        }),
+      ).rejects.toBeInstanceOf(AnaliseConflitoError);
+    });
+
+    it("requisito inexistente → AnaliseNaoEncontradaError", async () => {
+      await expect(
+        new FixturesAnalisesGateway().revisarRequisito("1", "req-inexistente", {
+          statusFinal: "CONFORME",
+          comentario: "x",
+        }),
+      ).rejects.toBeInstanceOf(AnaliseNaoEncontradaError);
     });
   });
 });
