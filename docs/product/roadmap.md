@@ -61,7 +61,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 4 | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre | Must | implementada (branch `frontend/rf-010-tela-analise`) |
 | 5 | RF-007 | Exibição dos requisitos com status sugerido pela IA | Must | implementada (branch `frontend/rf-007-status-ia`) |
 | 6 | RF-009 | Visão inicial priorizando não conformes + filtros por status | Must | implementada — Crítico ✅ (branch `frontend/rf-009-filtros`) |
-| 7 | RF-008 | Modal de alteração de status final ("parecer") | Must | user story + TSD-016 em aprovação (branch `frontend/rf-008-parecer`) |
+| 7 | RF-008 | Modal de alteração de status final ("parecer") | Must | implementada — Crítico ✅ (branch `frontend/rf-008-parecer`) |
 | 8 | RF-011 | Controle de "marcar como verificado" | Must | não iniciada |
 | 9 | RF-017 | Campo de comentário obrigatório nas ações de revisão | Must | não iniciada |
 | 10 | RF-014 | Visor de PDF + referência de página clicável / ausência explícita | Must | não iniciada |
@@ -356,7 +356,7 @@ Recorte deste ciclo (frontend):
 
 **Frentes:** Backend · Frontend
 **Status (backend):** implementada (mergeada no `main` `ad2e8cd`)
-**Status (frontend):** user story + TSD-016 em aprovação — branch `frontend/rf-008-parecer`
+**Status (frontend):** implementada — Crítico ✅ (01/09/2026), branch `frontend/rf-008-parecer`; `npm run ci` verde (164 testes). Aguardando push + merge.
 
 > Ciclo backend agrupado: **RF-008 + RF-011 + RF-017** = "revisar um requisito" (um endpoint de PATCH). User Story e critérios abaixo cobrem os três.
 

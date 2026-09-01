@@ -7,12 +7,14 @@ vivem na raiz.
 > **Estado:** fundação (TSD-002) + **RF-002** (listagem, TSD-011) + **RF-001/RF-004** (modal
 > "Nova análise", TSD-012) + **RF-010** (tela de análise, TSD-013) + **RF-007** (status
 > sugerido pela IA, TSD-014) + **RF-009** (visão inicial priorizando não conformes + filtros
-> por status, TSD-015). `/` lista as análises e abre o modal de criação; `/analise/[id]`
-> mostra cabeçalho + abas Checklist/Técnica (navegação livre) com os requisitos em acordeão
-> **somente leitura**, cada um indicando o status **sugerido pela IA** e a divergência quando
-> o parecer atual difere; a lista abre filtrada por **não conformes** e tem chips de filtro
-> por status (persistidos na URL). Edição de parecer, verificado interativo e visor de PDF
-> entram em RF-008/011/014.
+> por status, TSD-015) + **RF-008** (modal "Alterar parecer", TSD-016). `/` lista as análises
+> e abre o modal de criação; `/analise/[id]` mostra cabeçalho + abas Checklist/Técnica
+> (navegação livre) com os requisitos em acordeão, cada um indicando o status **sugerido pela
+> IA** e a divergência quando o parecer atual difere; a lista abre filtrada por **não
+> conformes** com chips de filtro por status (persistidos na URL), e cada requisito tem
+> **"Alterar parecer"** — um modal que grava o novo `statusFinal` + comentário
+> (`PATCH /analises/:id/requisitos/:requisitoId`) e atualiza a lista e o progresso na hora.
+> Marcar "verificado" manualmente e o visor de PDF entram em RF-011/014.
 
 ## Pré-requisitos
 
@@ -36,9 +38,10 @@ Rotas:
   filtro por status + ordenação + paginação; "Nova análise" cria via `POST /analises` e navega
   para a análise.
 - `/analise/<id>` — tela de análise (RF-010): cabeçalho + abas Checklist/Técnica + lista de
-  requisitos avaliados (read-only); chips de filtro por status (RF-009 — abre em "Não
-  conforme", `?requisitos=<slug>` na URL); polling enquanto a análise está processando; visor
-  de PDF é placeholder (RF-014).
+  requisitos avaliados; chips de filtro por status (RF-009 — abre em "Não conforme",
+  `?requisitos=<slug>` na URL); **"Alterar parecer"** em cada requisito (RF-008 — modal com
+  select de `statusFinal` + comentário obrigatório; aplica `{ item, resumo }` sem recarregar);
+  polling enquanto a análise está processando; visor de PDF é placeholder (RF-014).
 
 ## Scripts
 
