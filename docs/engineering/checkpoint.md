@@ -16,7 +16,8 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 - **`main` `ad2e8cd`**: TSD-001 + RF-006 + RF-001/004/018 + RF-002 + RF-005/RF-007 + RF-009 + RF-008/011/017 integradas.
 - **RF-014 / TSD-009** (referência de página + entrega do PDF por página, backend) — **ciclo aberto** na branch `backend/rf-014-pdf-pagina`. PM aguardando validação da User Story + decisões.
-- **TSD-002** (`frontend/`) — aprovada; **não implementada**. Por Vinicius, em branch a partir da `main`.
+- **TSD-002** (`frontend/`) — **implementada** na branch `frontend/tsd-002-fundacao` (a partir de `main` `fb4cd8e`); aguardando revisão + merge. App Next.js 15 com cascas de `/` e `/analise/[id]`, tema portado, camada de dados atrás de seam (fixtures), gates verdes.
+- **RF-002 / TSD-010** (`frontend/`) — **implementada** na branch `frontend/rf-002-listagem` (a partir de `frontend/tsd-002-fundacao`); aguardando revisão + merge. Tela de listagem real (`/`): tabela, busca/filtro/ordenação/paginação na URL, estados vazio/carregando/erro; `HttpAnalisesGateway` consome o contrato TSD-005 + teste de contrato. Follow-up incluído: `next lint` → `eslint .`.
 - Infra de teste: `test:e2e` sobe/derruba um PostgreSQL embutido (`embedded-postgres`) — sem Docker.
 - Integração com o serviço de IA real (`HttpAdapter` da `AnaliseIaPort` + A-02) foi **adiada para o fim do MVP** por decisão do responsável (31/08/2026); até lá o `StubAdapter` sustenta os ciclos.
 - **Modelo de branch:** uma branch curta por ciclo/TSD, merge na `main` quando o Documentador fecha.
@@ -25,7 +26,8 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 
 - Branch `backend/rf-014-pdf-pagina`: ciclo de RF-014 aberto pelo PM. **User Story + critérios rascunhados, aguardando validação humana e decisões (lib de PDF, comportamento de página fora do intervalo) antes do Engenheiro.**
 - A partir deste ciclo, os pontos de aprovação PM→Engenheiro e Engenheiro→Dev voltam a ser paradas explícitas (ver observação no §7).
-- Frontend: `docs/engineering/specs/002-fundacao-frontend.tsd.md` aguardando o Vinicius.
+- **Frontend: TSD-002 implementada** na branch `frontend/tsd-002-fundacao` (01/09/2026). §10 inspecionada e revisada; gate do `visual-reference-workflow` cumprido (evidência em `frontend/docs/visual-reference/`). Decisões na TSD-002 §9: Next.js 15 App Router + React 19, CSS Modules + tokens CSS, Vitest+RTL+jsdom, Node 20+npm, Kanit via `next/font`, brasão do Ceará como placeholder local. `npm run ci` verde. Aguardando revisão (Crítico) + merge.
+- **Frontend: RF-002 / TSD-010 implementada** na branch `frontend/rf-002-listagem` (01/09/2026, a partir de `frontend/tsd-002-fundacao`). Tela `/` real: `AnalisesTable` + `AnalisesToolbar` (busca debounced + chips de status) + `Paginator`, tudo na URL; `AnalisesListaVazia` (sem-analises / sem-resultado); `loading.tsx` + `error.tsx`. Camada de dados: `analises-query.ts` (parser tolerante), `status-analise.ts`, `HttpAnalisesGateway` (contrato TSD-005 + validação de formato), `getAnalisesGateway()` por `NEXT_PUBLIC_API_BASE_URL`; `FixturesAnalisesGateway` passou a aplicar busca/filtro/ordenação/paginação (24 fixtures). Migração `next lint` → `eslint .` (flat `eslint.config.mjs`, `@eslint/eslintrc`; `next build` com `eslint.ignoreDuringBuilds`). `npm run ci` verde: `eslint .` + prettier, typecheck, **43 testes / 9 arquivos** (inclui contrato do `HttpAnalisesGateway`), build. Evidência visual em `frontend/docs/visual-reference/rf-002/`. Aguardando revisão (Crítico) + merge.
 
 ## 3. Specs concluídas
 
@@ -89,9 +91,13 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 - [x] P-03 (quando exigir comentário) fechado — R-06.
 - [x] RF-008/011/017/TSD-008 mergeada na `main` (`ad2e8cd`).
 - [ ] **RF-014 / TSD-009** — ciclo aberto; PM aguardando validação da User Story + decisões.
-- [ ] Implementar a TSD-002 (frontend) — aprovada; por Vinicius, em branch a partir da `main`.
+- [x] Implementar a TSD-002 (frontend) — feito na branch `frontend/tsd-002-fundacao` (01/09/2026); aguardando revisão + merge.
+- [x] RF-002 / TSD-010 (frontend) — tela de listagem implementada na branch `frontend/rf-002-listagem` (01/09/2026); `npm run ci` verde; aguardando revisão + merge.
+- [x] Follow-up (frontend): `next lint` → `eslint .` (feito no ciclo de RF-002).
+- [ ] **Frontend:** revisão (Crítico) + merge de `frontend/tsd-002-fundacao` e, na sequência, `frontend/rf-002-listagem` na `main`.
 - [ ] Integração com o serviço de IA real (`HttpAdapter` + A-02) — **adiada para o fim do MVP**.
 - [ ] Follow-up: migrar `package.json#prisma` para `prisma.config.ts` antes do Prisma 7.
+- [ ] Follow-up (frontend): smoke de `/` contra o backend real quando houver ambiente conjunto (o `HttpAnalisesGateway` só passou por teste de contrato).
 - [ ] Questões abertas: P-07 (lista real de requisitos), P-05 (ausência de página — RF-014), A-05/P-09 (armazenamento do PDF), P-11 (máscara do NUP), A-07 (re-seleção de `PROCESSANDO` preso), A-02 (contrato da IA — para o fim). Ver `docs/product/questoes-abertas.md`.
 - [ ] Confirmar se `docs/licia-analisadora-product-discovery.md` está versionado neste repo (citado no PRD).
 - [ ] Limpar branches já mergeadas (`backend/tsd-001-fundacao-tecnica`, `backend/rf-001-criar-analise`, `backend/rf-002-listagem`, `backend/rf-005-processamento`, `backend/rf-009-abrir-analise`, `backend/rf-008-revisao-requisito`) — local + remota.
@@ -106,7 +112,7 @@ Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJ
 ## 7. Próximo passo recomendado
 
 1. **Backend (Pablo):** ciclo RF-014 aberto (`backend/rf-014-pdf-pagina`). PM apresentou a User Story + critérios — **validar antes do Engenheiro escrever a TSD-009**. Decisões pendentes: lib de extração de página de PDF; comportamento quando `pagina` está fora do intervalo do documento (P-05).
-2. **Frontend (Vinicius):** branch `frontend/tsd-002-fundacao` a partir do `main`; implementar a TSD-002.
+2. **Frontend (Vinicius):** TSD-002 (fundação) e RF-002/TSD-010 (listagem) implementadas em branches encadeadas (`frontend/tsd-002-fundacao` ← `frontend/rf-002-listagem`), ambas com `npm run ci` verde. Próximo: revisão (Crítico) das duas + merge na `main` (fundação primeiro). Depois, 2º ciclo de RF do frontend — **RF-001** (modal "Nova análise" + validação) / **RF-004** (upload de PDF), linhas 2–3 da tabela de sequenciamento do frontend.
 3. Cada ciclo mergeia no `main` quando o Documentador fecha.
 4. Restam **2 ciclos** de backend depois de RF-014: RF-012+RF-013+RF-015, RF-016 — mais a integração da IA real no fim.
 

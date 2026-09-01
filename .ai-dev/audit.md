@@ -20,6 +20,57 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 01/09/2026 — RF-002 / TSD-010: tela de listagem de análises (frontend)
+
+Contexto: usuário (Vinicius) pediu para abrir o 1º ciclo de RF do frontend a partir da fundação (TSD-002 não mergeada), sem merge na `main`, e incluir o follow-up de migração do `next lint`. Branch `frontend/rf-002-listagem` a partir de `frontend/tsd-002-fundacao`.
+
+Papéis (executados em sequência pela mesma sessão — feature pequena, sem subagentes):
+- **PM**: User Story do recorte frontend de RF-002 escrita em `docs/product/roadmap.md` (RF-002), com escopo, fora do escopo e divergências protótipo × PRD.
+- **Engenheiro**: `docs/engineering/specs/010-listagem-analises-frontend.tsd.md` — escopo, estratégia de testes (inclui **contrato** do `HttpAnalisesGateway`), decisões (URL como estado, chips de status, coluna Status, "Nova análise" desabilitado), §10 (REF-03 inspecionada) e divergências.
+- **Dev**:
+  - Camada de dados (`src/lib/data/`): `types.ts` (+`ListarAnalisesQuery`), `analises-query.ts` (`parseListarAnalisesQuery` tolerante + `queryParaString` omitindo defaults; `TAMANHO_PADRAO=20`/`MAX=100`), `status-analise.ts` (label/tone/allowlist), `analises-gateway.ts` (`listarAnalises(query?)` + `AnalisesGatewayError`), `fixtures-analises-gateway.ts` (aplica busca acento-insensitive/filtro multi-status/ordenação/paginação; fixtures ampliadas p/ 24), `http-analises-gateway.ts` (contrato TSD-005 + `validarAnalisesPagina`), `index.ts` (`getAnalisesGateway` → HTTP se `NEXT_PUBLIC_API_BASE_URL`).
+  - UI (`src/components/analises/`): `StatusBadge`, `AnalisesTable` (tabela real; cabeçalhos NUP/"Iniciada em" ordenáveis via `<Link>`; linha clicável por link estendido na 1ª célula), `AnalisesToolbar` (+`SearchField` client debounced, `StatusFilter` client chips), `Paginator` (links; disabled = `<span>`), `AnalisesListaVazia` (sem-analises / sem-resultado). Ícones novos.
+  - Rotas: `src/app/page.tsx` reescrita como Server Component (`dynamic = "force-dynamic"`, lê `searchParams`, redireciona página fora do intervalo), `loading.tsx` (skeleton), `error.tsx` ("tentar novamente").
+  - **Migração `next lint` → `eslint .`**: removido `.eslintrc.json`; criado `eslint.config.mjs` (flat, `FlatCompat` + `next/core-web-vitals` + `prettier`); dep `@eslint/eslintrc`; scripts `lint`/`lint:fix` (`eslint .` / `eslint . --fix`); `next.config.mjs` com `eslint.ignoreDuringBuilds: true` (lint roda no `npm run ci`).
+  - Testes (Vitest + RTL): `analises-query`, `status-analise`, `fixtures-analises-gateway` (busca/filtro/ordenação/paginação/clamp/imutabilidade), `http-analises-gateway` (**contrato**: URL, mapeamento, rejeição de payload sem `total` / status inválido / item sem `nup` / não-OK / erro de rede), `analises-table`, `analises-lista-vazia`, `paginator`, `search-field` (`next/navigation` mockado). `vitest.setup.ts` ganhou mock de `next/link` e `cleanup` por teste.
+- **Testes (mecânico)**: `npm run ci` ✅ — `eslint .` + `prettier --check` limpos, `tsc --noEmit` ✅, **vitest 43/43 (9 arquivos)**, `next build` ✅ (`/` dinâmica, First Load ~108 kB). Percalços resolvidos no ciclo: (a) CSS Modules rejeita seletores "impuros" (`thead`/`td` nus) → escopados sob `.tabela`; (b) coluna "objeto" colapsava com `max-width:0` → `<span>` com `-webkit-line-clamp` e `td` auto; (c) `userEvent` + fake timers travava → teste do `SearchField` usa timers reais + `waitFor`; (d) tipagem de `vi.fn` sem args no teste de contrato → `vi.fn((_url: string) => …)`.
+- **Visual**: screenshots 1440×900 (lista, página 2, busca+filtro+ordenação, vazio-sem-resultado) em `frontend/docs/visual-reference/rf-002/` + `README.md` com a comparação de enquadramento vs REF-03 (ok; divergências intencionais registradas).
+
+Docs: `roadmap.md` (RF-002 frontend — User Story + status + TSD-010), `docs/engineering/specs/010-*.tsd.md` (novo), checkpoint §1/§2/§5/§7, este arquivo.
+
+Estado: ciclo implementado, `npm run ci` verde, **branch aguardando revisão (Crítico) + merge** (fundação primeiro). Próximo frontend: RF-001/RF-004 (modal "Nova análise" + upload de PDF). Follow-up: smoke de `/` contra o backend real quando houver ambiente conjunto (o `HttpAnalisesGateway` só passou por teste de contrato).
+
+## 01/09/2026 — TSD-002: implementação da fundação técnica do frontend
+
+Contexto: usuário (Vinicius) pediu para trabalhar no frontend seguindo o método. TSD-002 estava `aprovada — não implementada`; §10 (Referências visuais) com inspeção `Pendente` (gate do `visual-reference-workflow`). Ciclo na branch `frontend/tsd-002-fundacao` (a partir do `main` `fb4cd8e`). Não é ciclo de 6 papéis — é fundação (§0 do workflow): implementar a TSD, rodar gates, atualizar checkpoint + audit.
+
+Etapas:
+- **Inspeção visual + §10**: lidos `Prototipo Licia Analisadora/src/theme/*`, `Topbar`, `HomePage`, `AnalysisPage` (+ `PdfPanel`/`AnalysisPanel` CSS). Preenchida a §10 da TSD-002 (§10.1 observações por REF-01..04; §10.2 chrome/divergências a não implementar). 4 `Status de inspeção` → `Inspecionado`. **Parada para revisão humana → aprovada pelo usuário.**
+- **Decisões** (registradas na TSD §9): Next.js 15 App Router + React 19 + TS estrito; Node 20 + npm; **CSS Modules + CSS custom properties** (tokens portados por valor para `src/app/theme/`); **Vitest + RTL + jsdom**; Kanit via `next/font/google`; brasão = placeholder SVG local (`CearaLogo.tsx`), não a URL do Figma MCP; sem trava `min-width: 1440px`.
+
+Alterações:
+- **`frontend/`** (novo): projeto Next.js. `package.json` (scripts `dev/build/start/lint/typecheck/test/test:watch/ci`), `tsconfig.json` (strict, alias `@/*`), `next.config.mjs`, `.eslintrc.json` (`next/core-web-vitals` + `prettier`), `.prettierrc.json`, `vitest.config.ts` (alias via `resolve.alias` — sem `vite-tsconfig-paths`, ESM-only quebrava o config `.ts`), `vitest.setup.ts` (mock de `next/font/google`), `.env.example` (`NEXT_PUBLIC_API_BASE_URL`), `.nvmrc` (20), `.gitignore`, `README.md`.
+- `src/app/`: `layout.tsx` (Kanit + `globals.css`), `globals.css` (importa tokens + reset), `theme/*.css` (6 arquivos de token portados do protótipo), `page.tsx` (rota `/` — casca lista; server component que exercita o seam), `analise/[id]/page.tsx` (rota dinâmica — casca: visor à esquerda, painel de revisão 596px à direita).
+- `src/components/`: `topbar/Topbar.tsx` (+ `.module.css`), `layout/PageShell.tsx` (frame base Topbar + conteúdo; prop `fill`), `brand/CearaLogo.tsx` (placeholder), `icons/index.tsx` (`ChevronDownIcon`).
+- `src/lib/data/`: `types.ts` (`StatusAnalise`, `StatusRequisito` com 3 valores, `AnaliseResumo`, `AnalisesPagina`), `analises-gateway.ts` (interface), `fixtures.ts` (3 análises derivadas do protótipo, sem "responsável"), `fixtures-analises-gateway.ts`, `index.ts` (`getAnalisesGateway()` — fixtures hoje; erro explícito se `NEXT_PUBLIC_API_BASE_URL` definida).
+- `test/unit/`: `page-shell.test.tsx` (2 casos), `fixtures-analises-gateway.test.ts` (2 casos).
+- `frontend/docs/visual-reference/`: 4 screenshots (casca × protótipo, `/` e `/analise`) + `README.md` com o resultado da comparação de frame.
+- Raiz: `README.md` — seção "Frontend" com instruções de execução. `docs/engineering/checkpoint.md` — slice ativada e fechada. `docs/engineering/specs/002-fundacao-frontend.tsd.md` — §8 (critérios marcados), §9 (decisões), §10, frontmatter.
+
+Validações (rodadas de `frontend/`, 01/09/2026):
+- `npm run lint` ✅ (ESLint `next/core-web-vitals` sem erros + Prettier `--check` limpo)
+- `npm run typecheck` ✅ (`tsc --noEmit`)
+- `npm run test` ✅ **4/4** (2 arquivos — `page-shell`, `fixtures-analises-gateway`)
+- `npm run build` ✅ — 4 rotas (`/` estática, `/analise/[id]` dinâmica, `/_not-found`), First Load JS ~103 kB
+- `npm run ci` ✅ (encadeia os 4)
+- **Visual**: screenshots 1440×900 via Chrome (playwright-core) da casca (`npm run build && start`) e do protótipo (`npm run dev`). Frame de REF-02 (Topbar 64px verde-gov), REF-03 (cabeçalho + regra de marca) e REF-04 (visor à esquerda + painel 596px à direita, altura `calc(100vh - 64px)`) confere. Sem gaps de enquadramento. Evidência em `frontend/docs/visual-reference/`.
+
+Percalços resolvidos: (1) `vite-tsconfig-paths` ESM-only quebrava o carregamento de `vitest.config.ts` → trocado por `resolve.alias` manual, dep removida. (2) Painéis da tela de análise não esticavam na vertical (`height: 100%` em item de flex-grow não resolve) → contêiner `align-items: stretch` + `min-height: 0` e remoção do `height: 100%` dos painéis. (3) Ordem dos painéis invertida vs. protótipo → visor à esquerda, revisão à direita. (4) `npm 11` bloqueia install scripts → `package.json#allowScripts` para `esbuild`/`unrs-resolver` (documentado no README). O `package.json` do protótipo, tocado por `npm approve-scripts` durante as screenshots de referência, foi restaurado (`git checkout`).
+
+Decisões: ver TSD-002 §9. Nenhuma questão de `questoes-abertas.md` fechada (fundação só cria seams).
+
+Pendências: revisão (Crítico) + merge da branch na `main`. Follow-up: migrar `next lint` → ESLint CLI (deprecado no Next 15). Depois: abrir o 1º ciclo de RF do frontend (RF-002 — tela de listagem + estado vazio).
+
 ## 31/08/2026 — RF-008 + RF-011 + RF-017 / TSD-008: revisão de requisito (backend)
 
 Contexto: usuário mandou "faz o merge e abre o ciclo de RF-008+RF-011+RF-017". TSD-007 mergeada na `main` (`b648908` fecha; `96ff8fb` traz o código). Ciclo na branch `backend/rf-008-revisao-requisito`.
