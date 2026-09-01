@@ -132,6 +132,72 @@ const AVALIACOES_EXEMPLO: AreaComItens[] = [
   },
 ];
 
+/**
+ * Variante sem nenhum requisito não conforme — exercita o estado "nenhum não conforme"
+ * do RF-009 (PRD §9): a tela abre no filtro "Não conforme" sem itens e oferece "Ver todos".
+ */
+const AVALIACOES_SEM_NAO_CONFORME: AreaComItens[] = [
+  {
+    area: "CHECKLIST_DADOS_GERAIS",
+    itens: [
+      {
+        id: "avs-1",
+        requisitoId: "req-1",
+        codigo: "CHK-001",
+        area: "CHECKLIST_DADOS_GERAIS",
+        titulo: "O processo contém a solicitação (CI) do setor interessado?",
+        descricao: "Deve constar comunicação interna do setor demandante.",
+        obrigatorio: true,
+        ordem: 1,
+        norma: norma({ lei: "Lei 14.133/2021", artigo: "18", inciso: "I" }),
+        statusSugeridoIa: "CONFORME",
+        statusFinal: "CONFORME",
+        verificado: true,
+        comentario: "CI localizada à fl. 2.",
+        paginaReferencia: 2,
+      },
+      {
+        id: "avs-2",
+        requisitoId: "req-2",
+        codigo: "CHK-002",
+        area: "CHECKLIST_DADOS_GERAIS",
+        titulo: "Há designação de fiscal para contratos de execução continuada?",
+        descricao: "Aplica-se apenas a contratos de execução continuada.",
+        obrigatorio: false,
+        ordem: 2,
+        norma: norma(),
+        statusSugeridoIa: "NAO_SE_APLICA",
+        statusFinal: "NAO_SE_APLICA",
+        verificado: false,
+        comentario: null,
+        paginaReferencia: null,
+      },
+    ],
+  },
+  {
+    area: "TECNICA_ESPECIFICACOES",
+    itens: [
+      {
+        id: "avs-3",
+        requisitoId: "req-6",
+        codigo: "TEC-001",
+        area: "TECNICA_ESPECIFICACOES",
+        titulo: "A especificação técnica é compatível com o objeto?",
+        descricao:
+          "As características exigidas devem guardar pertinência com a necessidade descrita.",
+        obrigatorio: false,
+        ordem: 1,
+        norma: norma(),
+        statusSugeridoIa: "CONFORME",
+        statusFinal: "CONFORME",
+        verificado: true,
+        comentario: "Especificação aderente ao objeto.",
+        paginaReferencia: 12,
+      },
+    ],
+  },
+];
+
 function detalheBase(resumoLista: AnaliseResumo, avaliacoes: AreaComItens[]): AnaliseDetalhe {
   return {
     id: resumoLista.id,
@@ -160,12 +226,23 @@ export function sintetizarDetalhe(resumoLista: AnaliseResumo): AnaliseDetalhe {
   return detalheBase(resumoLista, avaliacoes);
 }
 
-/** Fixtures explícitas por id (batem com `ANALISES_FIXTURE` da listagem). */
+/**
+ * Fixtures explícitas por id (batem com `ANALISES_FIXTURE` da listagem).
+ * Ids "1"/"3"/"2"/"5" seguem a síntese padrão (respeitando o status da linha);
+ * a id "7" (PRONTA_PARA_REVISAO) usa uma variante sem não conformes — estado do RF-009 (PRD §9).
+ */
 export const ANALISES_DETALHE_FIXTURE: Record<string, AnaliseDetalhe> = Object.fromEntries(
-  ["1", "3", "2", "5"]
-    .map((id) => ANALISES_FIXTURE.find((a) => a.id === id))
-    .filter((a): a is AnaliseResumo => a !== undefined)
-    .map((a) => [a.id, sintetizarDetalhe(a)]),
+  ["1", "3", "2", "5", "7"]
+    .map((id) => {
+      const linha = ANALISES_FIXTURE.find((a) => a.id === id);
+      if (!linha) return null;
+      const detalhe =
+        id === "7"
+          ? detalheBase(linha, clonarGrupos(AVALIACOES_SEM_NAO_CONFORME))
+          : sintetizarDetalhe(linha);
+      return [id, detalhe] as const;
+    })
+    .filter((par): par is readonly [string, AnaliseDetalhe] => par !== null),
 );
 
 function clonarGrupos(grupos: AreaComItens[]): AreaComItens[] {

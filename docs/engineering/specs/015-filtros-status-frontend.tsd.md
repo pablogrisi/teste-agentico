@@ -3,7 +3,7 @@
 ---
 title: TSD - Filtros por status na tela de análise (RF-009, frontend)
 type: tsd
-status: aprovada
+status: implementada
 created: 01/09/2026 // Vinicius
 updated: 01/09/2026 // Vinicius (decisões da slice validadas pelo usuário)
 related:
@@ -156,17 +156,17 @@ npm run ci
 
 ## 8. Critérios de aceite
 
-- [ ] O `PainelRevisao` mostra os 4 chips de filtro (Não conforme, Conforme, Não se aplica, Todos), com o ativo colorido.
-- [ ] Ao abrir a tela sem query, o filtro está em **"Não conforme"** e a lista mostra só os requisitos com `statusFinal = NAO_CONFORME`.
-- [ ] Grupos de área sem itens no filtro atual **continuam visíveis** (cabeçalho + linha "Nenhum requisito neste grupo com o filtro atual"); a contagem do cabeçalho reflete os itens visíveis.
-- [ ] Clicar num chip troca o recorte, atualiza `?requisitos=<slug>` na URL (param omitido quando `= Não conforme`), e "Todos" mostra todos os requisitos da aba.
-- [ ] Abrir a tela com `?requisitos=conforme` (etc.) já aplica esse filtro; recarregar a página / o polling do `AutoRefreshAnalise` preserva o filtro.
-- [ ] Trocar de aba (Checklist ↔ Técnica) mantém o filtro selecionado.
-- [ ] Aba corrente inteira sem não conformes com o filtro "Não conforme" ativo → mensagem clara ("Nenhum requisito não conforme nesta aba.") + botão "Ver todos os requisitos" que passa o filtro para "Todos" (PRD §9).
-- [ ] Estados `PROCESSANDO`/`ERRO_PROCESSAMENTO`/sem itens continuam como no RF-010 (sem chips, sem filtro).
-- [ ] Nenhuma chamada nova ao backend; nenhum campo/tipo do contrato muda.
-- [ ] `npm run ci` verde: `eslint .` + prettier, `tsc --noEmit`, testes, `next build`.
-- [ ] §10 revisada; screenshots (Não conforme / Todos / aba sem não conformes) comparados com o protótipo — `frontend/docs/visual-reference/rf-009/`.
+- [x] O `PainelRevisao` mostra os 4 chips de filtro (Não conforme, Conforme, Não se aplica, Todos), com o ativo colorido.
+- [x] Ao abrir a tela sem query, o filtro está em **"Não conforme"** e a lista mostra só os requisitos com `statusFinal = NAO_CONFORME`.
+- [x] Grupos de área sem itens no filtro atual **continuam visíveis** (cabeçalho + linha "Nenhum requisito neste grupo com o filtro atual"); a contagem do cabeçalho reflete os itens visíveis.
+- [x] Clicar num chip troca o recorte, atualiza `?requisitos=<slug>` na URL (param omitido quando `= Não conforme`), e "Todos" mostra todos os requisitos da aba.
+- [x] Abrir a tela com `?requisitos=conforme` (etc.) já aplica esse filtro; recarregar a página / o polling do `AutoRefreshAnalise` preserva o filtro.
+- [x] Trocar de aba (Checklist ↔ Técnica) mantém o filtro selecionado.
+- [x] Aba corrente inteira sem não conformes com o filtro "Não conforme" ativo → mensagem clara ("Nenhum requisito não conforme nesta aba.") + botão "Ver todos os requisitos" que passa o filtro para "Todos" (PRD §9).
+- [x] Estados `PROCESSANDO`/`ERRO_PROCESSAMENTO`/sem itens continuam como no RF-010 (sem chips, sem filtro).
+- [x] Nenhuma chamada nova ao backend; nenhum campo/tipo do contrato muda.
+- [x] `npm run ci` verde: `eslint .` + prettier, `tsc --noEmit`, testes, `next build`.
+- [x] §10 revisada; screenshots (Não conforme / Todos / aba sem não conformes) comparados com o protótipo — `frontend/docs/visual-reference/rf-009/`.
 
 ## 9. Riscos e decisões abertas
 
