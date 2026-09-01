@@ -74,7 +74,13 @@ export function PainelRevisao({ detalhe }: { detalhe: AnaliseDetalhe }) {
         {semAvaliacoes ? (
           <PainelSemAvaliacoes status={detalhe.status} motivoErro={detalhe.motivoErro} />
         ) : (
-          <ListaAba grupos={aba === "checklist" ? checklist : tecnica} />
+          <>
+            <p className={styles.legenda}>
+              Os status abaixo são <strong>sugestões da IA</strong>; o parecer final é definido na
+              revisão.
+            </p>
+            <ListaAba grupos={aba === "checklist" ? checklist : tecnica} />
+          </>
         )}
       </div>
     </section>

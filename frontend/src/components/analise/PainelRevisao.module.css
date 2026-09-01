@@ -122,11 +122,22 @@
   background: var(--color-bg-page);
 }
 
+.legenda {
+  padding: var(--spacing-8) var(--spacing-32) 0 var(--spacing-16);
+  font-size: var(--text-caption-size);
+  line-height: var(--line-height-16);
+  color: var(--color-text-secondary);
+}
+
+.legenda strong {
+  color: var(--color-text-title);
+}
+
 .lista {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-12);
-  padding: var(--spacing-12) var(--spacing-32) var(--spacing-16) var(--spacing-16);
+  padding: var(--spacing-8) var(--spacing-32) var(--spacing-16) var(--spacing-16);
 }
 
 .grupo {

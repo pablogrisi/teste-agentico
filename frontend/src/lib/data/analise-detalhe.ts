@@ -1,8 +1,15 @@
-import type { AreaComItens, ResumoAnalise } from "./types";
+import type { AreaComItens, AvaliacaoItem, ResumoAnalise } from "./types";
 
 /** Prefixos de `area` definidos pelo backend (RF-006 / `src/requisitos/areas.ts`). */
 export const AREA_CHECKLIST_PREFIXO = "CHECKLIST";
 export const AREA_TECNICA_PREFIXO = "TECNICA";
+
+/** O parecer atual do analista já difere da sugestão da IA (RF-007; passa a ocorrer com RF-008). */
+export function divergeDaIa(
+  item: Pick<AvaliacaoItem, "statusFinal" | "statusSugeridoIa">,
+): boolean {
+  return item.statusFinal !== item.statusSugeridoIa;
+}
 
 /** Intervalo de re-busca da tela de análise enquanto o status está em processamento. */
 export const ANALISE_POLL_MS = 4000;

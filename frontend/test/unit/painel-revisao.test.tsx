@@ -92,14 +92,21 @@ describe("PainelRevisao", () => {
     expect(screen.getByText("Não conforme")).toBeInTheDocument();
   });
 
-  it("PROCESSANDO → mensagem de processamento, sem lista nem progresso", () => {
+  it("mostra a legenda de que os status são sugestões da IA quando há itens (RF-007)", () => {
+    render(<PainelRevisao detalhe={detalhe("PRONTA_PARA_REVISAO", GRUPOS)} />);
+    expect(screen.getByText(/sugestões da IA/)).toBeInTheDocument();
+  });
+
+  it("PROCESSANDO → mensagem de processamento, sem lista, sem progresso, sem legenda", () => {
     render(<PainelRevisao detalhe={detalhe("PROCESSANDO", [])} />);
     expect(screen.getByText(/Processando a análise/)).toBeInTheDocument();
     expect(screen.queryByText(/verificados/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/sugestões da IA/)).not.toBeInTheDocument();
   });
 
-  it("ERRO_PROCESSAMENTO → mostra o motivo do erro", () => {
+  it("ERRO_PROCESSAMENTO → mostra o motivo do erro, sem legenda de sugestões da IA", () => {
     render(<PainelRevisao detalhe={detalhe("ERRO_PROCESSAMENTO", [])} />);
     expect(screen.getByRole("alert")).toHaveTextContent("IA fora do ar.");
+    expect(screen.queryByText(/sugestões da IA/)).not.toBeInTheDocument();
   });
 });

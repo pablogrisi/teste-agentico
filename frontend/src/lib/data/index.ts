@@ -23,6 +23,7 @@ export {
   AREA_TECNICA_PREFIXO,
   calcularResumo,
   contarItens,
+  divergeDaIa,
   normaTexto,
   rotuloArea,
   separarPorAba,

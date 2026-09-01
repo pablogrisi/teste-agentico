@@ -26,6 +26,11 @@
   border-color: var(--accent);
 }
 
+/* Parecer atual diverge da sugestão da IA (RF-007). */
+.divergente .inner {
+  border-color: var(--color-warning-default);
+}
+
 .header {
   display: flex;
   align-items: center;
@@ -103,6 +108,29 @@
   align-items: center;
   gap: var(--spacing-8);
   flex-shrink: 0;
+}
+
+/* Marca de "sugestão da IA" quando o parecer atual = sugestão. */
+.marcaIa {
+  padding: 0 var(--spacing-4);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-2);
+  font-size: var(--text-caption-xs-size);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.04em;
+  color: var(--color-text-disabled);
+}
+
+/* Sugestão da IA divergente do parecer atual. */
+.chipIa {
+  padding: var(--spacing-2) var(--spacing-8);
+  border-radius: var(--radius-full);
+  background: var(--color-warning-subtle);
+  color: var(--color-warning-text);
+  font-size: var(--text-caption-size);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-16);
+  white-space: nowrap;
 }
 
 .chevron {

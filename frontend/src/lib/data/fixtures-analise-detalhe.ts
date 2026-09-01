@@ -121,10 +121,11 @@ const AVALIACOES_EXEMPLO: AreaComItens[] = [
         obrigatorio: false,
         ordem: 2,
         norma: norma(),
-        statusSugeridoIa: "CONFORME",
+        // A IA apontou não conformidade; o analista revisou e considerou conforme (RF-007/RF-008).
+        statusSugeridoIa: "NAO_CONFORME",
         statusFinal: "CONFORME",
         verificado: true,
-        comentario: null,
+        comentario: "Especificação adequada após leitura do anexo técnico (fl. 21).",
         paginaReferencia: 21,
       },
     ],

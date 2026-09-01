@@ -57,4 +57,48 @@ describe("RequisitoItem", () => {
     expect(cb).toBeDisabled();
     expect(cb).toBeChecked();
   });
+
+  describe("status sugerido pela IA (RF-007)", () => {
+    it("parecer = sugestão: marca 'IA' no recolhido, sem chip de divergência", () => {
+      render(
+        <RequisitoItem item={item({ statusSugeridoIa: "CONFORME", statusFinal: "CONFORME" })} />,
+      );
+      expect(screen.getByText("IA")).toBeInTheDocument();
+      expect(screen.queryByText(/^IA:/)).not.toBeInTheDocument();
+    });
+
+    it("parecer ≠ sugestão: chip 'IA: <sugestão>' + badge principal segue o parecer atual", () => {
+      render(
+        <RequisitoItem
+          item={item({ statusSugeridoIa: "CONFORME", statusFinal: "NAO_CONFORME" })}
+        />,
+      );
+      expect(screen.getByText("IA: Conforme")).toBeInTheDocument();
+      // o badge grande continua sendo o statusFinal (TSD-014 §9)
+      expect(screen.getByText("Não conforme")).toBeInTheDocument();
+    });
+
+    it("expandido, parecer = sugestão: mostra só 'Sugestão da IA'", async () => {
+      const user = userEvent.setup();
+      render(
+        <RequisitoItem item={item({ statusSugeridoIa: "CONFORME", statusFinal: "CONFORME" })} />,
+      );
+      await user.click(screen.getByRole("button", { expanded: false }));
+      expect(screen.getByText("Sugestão da IA:")).toBeInTheDocument();
+      expect(screen.queryByText("Parecer atual:")).not.toBeInTheDocument();
+    });
+
+    it("expandido, parecer ≠ sugestão: mostra 'Sugestão da IA' e 'Parecer atual'", async () => {
+      const user = userEvent.setup();
+      render(
+        <RequisitoItem
+          item={item({ statusSugeridoIa: "CONFORME", statusFinal: "NAO_CONFORME" })}
+        />,
+      );
+      await user.click(screen.getByRole("button", { expanded: false }));
+      expect(screen.getByText("Sugestão da IA:")).toBeInTheDocument();
+      expect(screen.getByText("Parecer atual:")).toBeInTheDocument();
+      expect(screen.getByText("alterado na revisão")).toBeInTheDocument();
+    });
+  });
 });

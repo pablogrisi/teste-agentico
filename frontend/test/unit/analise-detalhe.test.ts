@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { calcularResumo, contarItens, normaTexto, rotuloArea, separarPorAba } from "@/lib/data";
+import {
+  calcularResumo,
+  contarItens,
+  divergeDaIa,
+  normaTexto,
+  rotuloArea,
+  separarPorAba,
+} from "@/lib/data";
 import type { AreaComItens, AvaliacaoItem } from "@/lib/data";
 
 function item(over: Partial<AvaliacaoItem> & { id: string }): AvaliacaoItem {
@@ -108,5 +115,14 @@ describe("calcularResumo / contarItens", () => {
       verificados: 1,
       obrigatoriosPendentes: 2,
     });
+  });
+});
+
+describe("divergeDaIa", () => {
+  it("false quando o parecer atual é igual à sugestão da IA", () => {
+    expect(divergeDaIa({ statusFinal: "CONFORME", statusSugeridoIa: "CONFORME" })).toBe(false);
+  });
+  it("true quando o parecer atual difere da sugestão da IA", () => {
+    expect(divergeDaIa({ statusFinal: "CONFORME", statusSugeridoIa: "NAO_CONFORME" })).toBe(true);
   });
 });

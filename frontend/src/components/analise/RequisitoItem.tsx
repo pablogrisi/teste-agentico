@@ -2,9 +2,10 @@
 
 import { useId, useState } from "react";
 import { ChevronDownIcon } from "@/components/icons";
-import { normaTexto } from "@/lib/data";
+import { divergeDaIa, normaTexto, STATUS_REQUISITO_LABEL } from "@/lib/data";
 import type { AvaliacaoItem } from "@/lib/data";
 import { StatusBadgeRequisito } from "./StatusBadgeRequisito";
+import { StatusIaResumo } from "./StatusIaResumo";
 import styles from "./RequisitoItem.module.css";
 
 const ACCENT: Record<AvaliacaoItem["statusFinal"], string> = {
@@ -15,15 +16,21 @@ const ACCENT: Record<AvaliacaoItem["statusFinal"], string> = {
 
 /**
  * Um requisito avaliado, em acordeão — SOMENTE LEITURA nesta slice.
+ * Mostra o status sugerido pela IA (RF-007) e o parecer atual.
  * O checkbox de "verificado" aparece desabilitado (fica interativo no RF-011).
  */
 export function RequisitoItem({ item }: { item: AvaliacaoItem }) {
   const [aberto, setAberto] = useState(false);
   const detalheId = useId();
   const norma = normaTexto(item.norma);
+  const diverge = divergeDaIa(item);
 
   return (
-    <div className={`${styles.item} ${ACCENT[item.statusFinal]} ${aberto ? styles.aberto : ""}`}>
+    <div
+      className={`${styles.item} ${ACCENT[item.statusFinal]} ${aberto ? styles.aberto : ""} ${
+        diverge ? styles.divergente : ""
+      }`}
+    >
       <div className={styles.inner}>
         <div className={styles.header}>
           <input
@@ -47,6 +54,15 @@ export function RequisitoItem({ item }: { item: AvaliacaoItem }) {
               {item.obrigatorio && <span className={styles.obrigatorio}> *</span>}
             </span>
             <span className={styles.direita}>
+              {diverge ? (
+                <span className={styles.chipIa}>
+                  IA: {STATUS_REQUISITO_LABEL[item.statusSugeridoIa]}
+                </span>
+              ) : (
+                <span className={styles.marcaIa} title="Status sugerido pela IA">
+                  IA
+                </span>
+              )}
               <StatusBadgeRequisito status={item.statusFinal} />
               <ChevronDownIcon className={styles.chevron} />
             </span>
@@ -55,6 +71,7 @@ export function RequisitoItem({ item }: { item: AvaliacaoItem }) {
 
         {aberto && (
           <div className={styles.detalhe} id={detalheId}>
+            <StatusIaResumo item={item} />
             <p className={styles.descricao}>{item.descricao}</p>
             {norma && (
               <p className={styles.linha}>
