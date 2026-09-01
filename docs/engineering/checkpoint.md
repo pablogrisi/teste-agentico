@@ -14,7 +14,7 @@ Fundação percorrida (`.ai-dev/bootstrap.md`): PRD e SDD aprovados, `questoes-a
 
 Projeto organizado em **duas frentes paralelas num monorepo**: `backend/` (NestJS, Pablo) e `frontend/` (Next.js, Vinicius), método e docs compartilhados na raiz. Cada frente roda seu próprio ciclo de seis papéis.
 
-- **`main` `19f308b`** (push feito): TSD-001 + RF-006 + RF-001/004/018 + RF-002 + RF-005/RF-007 + RF-009 + RF-008/011/017 + **RF-014/TSD-009** integradas.
+- **`main` `56f83bd`** (push feito): fecha o backend até RF-012/RF-013/RF-015 (conclusão da análise). Falta RF-016 (relatório) + integração da IA real.
 - **RF-012 + RF-013 + RF-015 / TSD-010** (conclusão global da análise, backend) — **ciclo fechado** na branch `backend/rf-012-conclusao` (6 papéis, gates cumpridos). `npm run ci` ✅ (97 unit) · `test:e2e` ✅ 36/36. **Aguardando merge + push.**
 - **TSD-002** (`frontend/`) — aprovada; **não implementada**. Por Vinicius, em branch a partir da `main`.
 - Infra de teste: `test:e2e` sobe/derruba um PostgreSQL embutido (`embedded-postgres`) — sem Docker.

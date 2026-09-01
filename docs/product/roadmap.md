@@ -48,7 +48,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 13 | RF-012 | Endpoint de conclusão global com trava por obrigatórios | Must | implementada |
 | 14 | RF-013 | Registro de responsável, datas e status final | Must | implementada (com RF-012) |
 | 15 | RF-015 | Conclusão interna sem aprovação/assinatura/dupla revisão | Must | implementada (com RF-012) |
-| 16 | RF-016 | Geração sob demanda do relatório PDF final | Must | não iniciada |
+| 16 | RF-016 | Geração sob demanda do relatório PDF final | Must | user story em aprovação |
 | 17 | RF-003 | Escopo de acesso por analista | Must (fase com identidade) | não iniciada — pós-MVP (P-10) |
 
 ## Tabela de sequenciamento — Frente Frontend (`frontend/`)
@@ -407,8 +407,33 @@ Recorte backend deste ciclo:
 ### RF-016 — Relatório PDF final da análise concluída
 
 **Frentes:** Backend · Frontend
-**Status (backend):** não iniciada
+**Status (backend):** user story em aprovação
 **Status (frontend):** não iniciada
+
+**User Story** — *aguardando validação*
+
+Como analista técnico, quero gerar, para uma análise concluída, um relatório PDF com a identificação da análise, o responsável, as datas e o parecer final de cada requisito, para arquivar e compartilhar o resultado da verificação fora do sistema.
+
+Recorte backend deste ciclo:
+- `GET /analises/:id/relatorio` → `application/pdf`, gerado **sob demanda** com `pdfkit` (não persiste — A-04).
+- `409` se a análise não está `CONCLUIDA`; `404` se não existe para o analista atual.
+- Conteúdo mínimo (PRD RF-016): NUP, objeto, responsável (`analistaId` + `analistaNome`), data/hora de início e de conclusão, e o `statusFinal` de cada requisito.
+- Reaproveita `montarAnaliseDetalhe` (mesmos dados de `GET /analises/:id`).
+- Novo `RelatorioModule` com a rota; sem mudança de modelo; sem persistência do arquivo.
+
+**Critérios de aceite**
+
+- `GET /analises/:id/relatorio` numa análise `CONCLUIDA` → `200`, `Content-Type: application/pdf`, corpo com bytes de PDF válido (`%PDF-`).
+- O PDF contém, no mínimo: NUP, objeto, nome do responsável, data/hora de início, data/hora de conclusão, e a lista de requisitos com o `statusFinal` de cada um.
+- Análise fora de `CONCLUIDA` → `409`; análise inexistente para o analista → `404`.
+- Nada é gravado em disco/banco (relatório é efêmero — A-04).
+- Testes: unit da composição do relatório (dado um `AnaliseDetalhe`, o documento tem as seções/campos exigidos) e integração (criar → processar → verificar tudo → concluir → baixar relatório `200 application/pdf`; `409` antes de concluir; `404`).
+
+**Decisões do ciclo (respostas do usuário)**
+
+*(a preencher após a validação da User Story)*
+
+**TSD associada:** `docs/engineering/specs/011-relatorio-pdf.tsd.md` (a redigir pelo Engenheiro após a validação).
 
 ### RF-003 — Restrição de visualização das análises ao analista que as iniciou
 
