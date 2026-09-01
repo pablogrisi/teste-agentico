@@ -3,9 +3,9 @@
 ---
 title: TSD - Filtros por status na tela de análise (RF-009, frontend)
 type: tsd
-status: em aprovação
+status: aprovada
 created: 01/09/2026 // Vinicius
-updated: 01/09/2026 // Vinicius
+updated: 01/09/2026 // Vinicius (decisões da slice validadas pelo usuário)
 related:
 - docs/product/prd.md
 - docs/architecture/sdd.md
@@ -22,6 +22,9 @@ por status** (adiados do RF-010) e faz a tela abrir já **priorizando os não co
 filtro inicia em "Não conforme". Quando a aba corrente não tem nenhum item nesse status,
 mostra uma mensagem clara e um atalho para "Todos" (PRD §9 — "nenhum item não conforme").
 
+O filtro escolhido é **persistido na URL** (`?requisitos=<filtro>`): sobrevive a recarregar a
+página, ao polling de `router.refresh()` e é compartilhável por link.
+
 Sem mudança de contrato — o backend já entrega `avaliacoesPorArea` com os não conformes
 primeiro e o `resumo` (TSD-007). Nenhuma chamada nova.
 
@@ -31,13 +34,16 @@ primeiro e o `resumo` (TSD-007). Nenhuma chamada nova.
 
 - `FiltroStatus` (client) — 4 chips: **Não conforme** (padrão), Conforme, Não se aplica, Todos;
   cor de ativo por status (padrão do protótipo).
-- `filtrarPorStatus(grupos, filtro)` puro na camada de dados: mantém só os itens cujo
-  `statusFinal` casa com o filtro; descarta grupos que ficam sem itens; ajusta a contagem do grupo.
-- `PainelRevisao`: estado `filtro` (default `"NAO_CONFORME"`), compartilhado entre as abas;
-  aplica o filtro na lista da aba corrente; estado "nenhum não conforme" com atalho "Ver todos".
+- `filtrarPorStatus(grupos, filtro)` puro na camada de dados: para cada grupo mantém só os itens
+  cujo `statusFinal` casa com o filtro; **preserva todos os grupos** (mesmo os que ficam sem
+  itens no filtro); não muta a entrada.
+- `PainelRevisao`: estado `filtro` (default `"NAO_CONFORME"`), **compartilhado entre as abas** e
+  **espelhado na URL** (`?requisitos=`); aplica o filtro na lista da aba corrente; grupo sem
+  itens visíveis mostra uma linha discreta ("Nenhum requisito neste grupo com o filtro atual");
+  estado "nenhum não conforme" (aba inteira sem não conformes) com atalho "Ver todos".
 - Testes: unit de `filtrarPorStatus`; componente de `FiltroStatus` e do `PainelRevisao`
-  (filtro inicial, troca de filtro, grupos ocultos, estado "nenhum não conforme", filtro
-  mantido ao trocar de aba).
+  (filtro inicial, troca de filtro, grupos permanecem visíveis com placeholder, estado
+  "nenhum não conforme", filtro mantido ao trocar de aba, filtro lido/escrito na URL).
 - `npm run ci` verde; screenshots (filtro "Não conforme" ativo; "Todos"; aba sem não conformes)
   vs painel do protótipo.
 
@@ -48,22 +54,34 @@ primeiro e o `resumo` (TSD-007). Nenhuma chamada nova.
 - `src/lib/data/filtro-requisito.ts` (novo):
   - `type FiltroRequisito = "NAO_CONFORME" | "CONFORME" | "NAO_SE_APLICA" | "TODOS"`.
   - `FILTRO_REQUISITO_OPCOES` (ordem dos chips) + `FILTRO_REQUISITO_LABEL`.
+  - `FILTRO_REQUISITO_PADRAO = "NAO_CONFORME"`.
+  - `parseFiltroRequisito(valor: string | null | undefined): FiltroRequisito` — mapeia o
+    slug da URL (`nao-conforme` / `conforme` / `nao-se-aplica` / `todos`) para o tipo; valor
+    ausente ou inválido → `FILTRO_REQUISITO_PADRAO`. `filtroParaSlug(filtro)` faz o inverso.
   - `filtrarPorStatus(grupos: AreaComItens[], filtro: FiltroRequisito): AreaComItens[]` — puro;
-    `"TODOS"` devolve os grupos como estão; senão filtra `itens` por `statusFinal === filtro`,
-    remove grupos vazios, não muta a entrada.
-  - `contarPorFiltro(grupos, filtro): number` — total de itens que passam (para o estado vazio / evitar recontar).
+    `"TODOS"` devolve os grupos como estão; senão devolve **os mesmos grupos**, cada um com
+    `itens` reduzido a `statusFinal === filtro` (grupo pode ficar com `itens: []`);
+    não muta a entrada.
+  - `contarPorFiltro(grupos, filtro): number` — total de itens que passam (para o estado
+    "nenhum não conforme" / evitar recontar).
 - `src/components/analise/FiltroStatus.tsx` (+ `.module.css`, client) — `role="group"`, um
   `<button>` por opção, `aria-pressed`; ativo colorido (Não conforme = erro, Conforme = marca,
   Não se aplica = neutro, Todos = info); `onChange(filtro)`.
 - `src/components/analise/PainelRevisao.tsx` (+ `.module.css`):
-  - `useState<FiltroRequisito>("NAO_CONFORME")` — **compartilhado entre as abas** (trocar de aba
-    não reseta o filtro).
+  - Filtro em `useState<FiltroRequisito>` inicializado de `useSearchParams()` via
+    `parseFiltroRequisito`; **compartilhado entre as abas** (trocar de aba não reseta).
+  - Ao trocar o filtro: `setFiltro(...)` **e** `router.replace(pathname + ?requisitos=slug, { scroll: false })`
+    (omitir o param quando `= padrão`, para manter a URL limpa). Sobrevive ao `router.refresh()`
+    do `AutoRefreshAnalise`.
   - Renderiza `FiltroStatus` abaixo da barra de progresso (posição do protótipo).
   - Aplica `filtrarPorStatus` à lista da aba ativa antes de passar para `ListaAba`.
-  - **Estado "nenhum não conforme":** quando `filtro === "NAO_CONFORME"` e a aba ativa não tem
-    itens não conformes → mensagem "Nenhum requisito não conforme nesta aba." + botão
-    "Ver todos os requisitos" que faz `setFiltro("TODOS")`. (Para os outros filtros sem
-    resultado: "Nenhum requisito neste filtro." — sem atalho.)
+  - **Grupos permanecem visíveis** mesmo sem itens no filtro atual: cabeçalho + contagem dos
+    itens visíveis; quando `itens` vazio, uma linha discreta "Nenhum requisito neste grupo com
+    o filtro atual".
+  - **Estado "nenhum não conforme":** quando `filtro === "NAO_CONFORME"` e a aba ativa inteira
+    não tem itens não conformes → mensagem "Nenhum requisito não conforme nesta aba." + botão
+    "Ver todos os requisitos" que faz `setFiltro("TODOS")` (e limpa o param). (Para os outros
+    filtros sem nenhum resultado na aba: "Nenhum requisito neste filtro." — sem atalho.)
   - A legenda de "sugestões da IA" (RF-007) e o progresso continuam iguais.
 - `src/lib/data/index.ts` — exporta os novos símbolos.
 - Testes (Vitest + RTL): ver §7.1.
@@ -72,7 +90,6 @@ primeiro e o `resumo` (TSD-007). Nenhuma chamada nova.
 
 - Reordenar a lista / ordenação alternativa — o backend já entrega não conformes primeiro (TSD-007).
 - Busca textual dentro da análise; filtro por "verificado" / "pendente" (possível refinamento futuro).
-- Persistir o filtro na URL — decisão da slice é **estado de client** (ver §9); trivial mudar depois.
 - Contadores numéricos nos chips (o protótipo não tem).
 - Edição de parecer (RF-008), verificado interativo (RF-011), comentário (RF-017), visor de PDF
   (RF-014), conclusão + modais de "etapa concluída" (RF-012).
@@ -102,10 +119,12 @@ primeiro e o `resumo` (TSD-007). Nenhuma chamada nova.
 
 ## 6. Plano de implementação
 
-1. `filtro-requisito.ts` (tipo, opções, `filtrarPorStatus`, `contarPorFiltro`) + export.
+1. `filtro-requisito.ts` (tipo, opções, `parseFiltroRequisito`/`filtroParaSlug`,
+   `filtrarPorStatus`, `contarPorFiltro`) + export.
 2. `FiltroStatus` (+ CSS) — portar `.filters`/`.chip`/`.chipActive*` do protótipo.
-3. `PainelRevisao` — estado `filtro` (default `NAO_CONFORME`), renderizar `FiltroStatus`,
-   aplicar filtro, estado "nenhum não conforme" com atalho.
+3. `PainelRevisao` — filtro em `useState` lido de `useSearchParams`, escrito com
+   `router.replace`; renderizar `FiltroStatus`; aplicar filtro; grupos vazios com placeholder;
+   estado "nenhum não conforme" com atalho.
 4. Testes (unit + componente).
 5. `npm run ci`; screenshots (filtro Não conforme; Todos; aba sem não conformes) vs protótipo.
 6. Atualizar roadmap, checkpoint, `.ai-dev/audit.md`, evidência visual.
@@ -116,7 +135,7 @@ primeiro e o `resumo` (TSD-007). Nenhuma chamada nova.
 
 | Tipo | Aplica-se? | Justificativa |
 |---|---|---|
-| Unitário | Sim | `filtrarPorStatus`: `"TODOS"` devolve tudo; cada status filtra por `statusFinal`; grupos que ficam vazios somem; não muta a entrada. `contarPorFiltro`. Componentes: `FiltroStatus` (4 chips, `aria-pressed`, `onChange` dispara com o valor certo, classe de ativo por status); `PainelRevisao` (abre em "Não conforme" mostrando só não conformes e ocultando grupos sem eles; clicar "Todos" mostra o resto; filtro mantido ao trocar de aba; aba sem não conformes no filtro padrão → mensagem + "Ver todos" leva a "TODOS"; estado processando/erro inalterado). |
+| Unitário | Sim | `filtrarPorStatus`: `"TODOS"` devolve tudo; cada status reduz `itens` por `statusFinal`; **todos os grupos permanecem** (grupo pode vir com `itens: []`); não muta a entrada. `parseFiltroRequisito` (slug válido → tipo; ausente/inválido → padrão) e `filtroParaSlug`. `contarPorFiltro`. Componentes: `FiltroStatus` (4 chips, `aria-pressed`, `onChange` dispara com o valor certo, classe de ativo por status); `PainelRevisao` (abre em "Não conforme" mostrando só não conformes, grupos sem não conformes ainda visíveis com a linha de placeholder; clicar "Todos" mostra o resto; filtro mantido ao trocar de aba; filtro inicial lido de `?requisitos=` e escrito na URL ao trocar; aba inteira sem não conformes no filtro padrão → mensagem + "Ver todos" leva a "TODOS"; estado processando/erro inalterado). |
 | Integração (módulos/camadas reais) | Não nesta slice | Sem backend/dado novo; a cadeia é render + filtro puro, coberta no unitário. |
 | Contrato (formato entre serviços) | Não nesta slice | Nenhum campo novo — `avaliacoesPorArea`/`statusFinal` já validados no contrato de `GET /analises/:id` (TSD-013). |
 | Smoke/validação manual contra dependência externa real | Não | Sem chamada ao backend. |
@@ -138,10 +157,12 @@ npm run ci
 ## 8. Critérios de aceite
 
 - [ ] O `PainelRevisao` mostra os 4 chips de filtro (Não conforme, Conforme, Não se aplica, Todos), com o ativo colorido.
-- [ ] Ao abrir a tela, o filtro está em **"Não conforme"** e a lista mostra só os requisitos com `statusFinal = NAO_CONFORME`; grupos de área sem não conformes ficam ocultos.
-- [ ] Clicar num chip troca o recorte; "Todos" mostra todos os requisitos da aba.
+- [ ] Ao abrir a tela sem query, o filtro está em **"Não conforme"** e a lista mostra só os requisitos com `statusFinal = NAO_CONFORME`.
+- [ ] Grupos de área sem itens no filtro atual **continuam visíveis** (cabeçalho + linha "Nenhum requisito neste grupo com o filtro atual"); a contagem do cabeçalho reflete os itens visíveis.
+- [ ] Clicar num chip troca o recorte, atualiza `?requisitos=<slug>` na URL (param omitido quando `= Não conforme`), e "Todos" mostra todos os requisitos da aba.
+- [ ] Abrir a tela com `?requisitos=conforme` (etc.) já aplica esse filtro; recarregar a página / o polling do `AutoRefreshAnalise` preserva o filtro.
 - [ ] Trocar de aba (Checklist ↔ Técnica) mantém o filtro selecionado.
-- [ ] Aba corrente sem não conformes com o filtro "Não conforme" ativo → mensagem clara ("Nenhum requisito não conforme nesta aba.") + botão "Ver todos os requisitos" que passa o filtro para "Todos" (PRD §9).
+- [ ] Aba corrente inteira sem não conformes com o filtro "Não conforme" ativo → mensagem clara ("Nenhum requisito não conforme nesta aba.") + botão "Ver todos os requisitos" que passa o filtro para "Todos" (PRD §9).
 - [ ] Estados `PROCESSANDO`/`ERRO_PROCESSAMENTO`/sem itens continuam como no RF-010 (sem chips, sem filtro).
 - [ ] Nenhuma chamada nova ao backend; nenhum campo/tipo do contrato muda.
 - [ ] `npm run ci` verde: `eslint .` + prettier, `tsc --noEmit`, testes, `next build`.
@@ -149,20 +170,25 @@ npm run ci
 
 ## 9. Riscos e decisões abertas
 
-### Decisões da slice (a validar)
+### Decisões da slice (validadas pelo usuário — 01/09/2026)
 
-- **Filtro = estado de client**, não URL. É uma preferência de visualização transitória, como as
-  abas do RF-010. Trivial migrar para `?filtro=` depois se o produto quiser links compartilháveis
-  de "análise filtrada".
+- **Filtro persistido na URL** (`?requisitos=<slug>`). O usuário pediu que a escolha não se
+  perca ("caso eu marque não conforme, não tire"). Espelhado com `router.replace(..., { scroll: false })`;
+  param omitido quando `= padrão` para manter a URL limpa; sobrevive a F5, ao `router.refresh()`
+  do polling e é compartilhável. As abas do RF-010 continuam em estado de client.
 - **Filtro compartilhado entre as abas** (igual ao protótipo): trocar de aba não reseta o filtro.
-- **Filtro por `statusFinal`** (parecer atual), não `statusSugeridoIa` — consistente com a
-  ordenação do backend e com o badge principal do `RequisitoItem` (RF-007).
-- **"Não se aplica" é um chip próprio** (o protótipo separa "Conforme" de "Não se aplica"); o MVP
-  tem 3 status, então são 3 chips + "Todos". Sem chip de "Com ressalva" (não existe no MVP).
-- **Grupos vazios somem** no filtro (comportamento do protótipo). A contagem do cabeçalho do
-  grupo passa a ser a dos itens visíveis.
-- **Estado vazio para filtros não-padrão** (ex.: "Conforme" sem resultado): mensagem simples, sem
-  o atalho "Ver todos" (o atalho é a resposta ao caso do PRD §9, que é sobre não conformes).
+- **Filtro por `statusFinal`** (parecer atual / decisão do humano), não `statusSugeridoIa` —
+  a IA só sugere; consistente com a ordenação do backend e com o badge principal do
+  `RequisitoItem` (RF-007).
+- **3 chips de status + "Todos"** — o contrato do backend (feito em paralelo pelo colega) tem
+  3 status de requisito; sem chip de "Com ressalva". Divergência intencional vs. protótipo,
+  registrada na §10.
+- **Grupos permanecem visíveis** mesmo sem itens no filtro atual (o usuário pediu "pode deixar
+  aparecendo"). Cabeçalho + contagem dos itens visíveis + linha discreta de placeholder quando
+  o grupo fica sem itens. Diverge do protótipo (que oculta), registrado na §10.
+- **Estado vazio para filtros não-padrão** (ex.: "Conforme" sem resultado na aba inteira):
+  mensagem simples, sem o atalho "Ver todos" (o atalho responde ao caso do PRD §9, que é sobre
+  não conformes).
 
 ### Riscos remanescentes
 
@@ -189,9 +215,11 @@ cinza forte, `chipActiveTodos` azul) e texto inverso. Default `"nao-conforme"`.
 
 **Divergências intencionais a registrar:** o protótipo tem 4 chips porque separa
 "Conforme"/"Com ressalva"; aqui são Não conforme / Conforme / Não se aplica / Todos (3 status
-do MVP + Todos). O protótipo esconde grupos sem itens visíveis — mantido. O estado
+do MVP + Todos). O protótipo **oculta** grupos sem itens visíveis; aqui os grupos
+**permanecem visíveis** com uma linha de placeholder (decisão do usuário). O estado
 "nenhum não conforme" + atalho "Ver todos" é acréscimo desta slice (PRD §9), não existe no
-protótipo. Os modais de "etapa concluída" do protótipo não entram (RF-012).
+protótipo. O filtro é **persistido na URL** (o protótipo usa só estado de client). Os modais
+de "etapa concluída" do protótipo não entram (RF-012).
 
 Screenshots obrigatórios: painel com filtro "Não conforme" (padrão), com "Todos", e uma aba
 sem não conformes (mensagem + atalho). Evidência em `frontend/docs/visual-reference/rf-009/`.
@@ -207,10 +235,12 @@ Só `frontend/`. Rollback = reverter `PainelRevisao` ao estado do RF-007/RF-010,
 Leia START_HERE.md, .ai-dev/context-map.md, esta TSD (015), a TSD-013/014 e o checkpoint.
 Implemente só o escopo, em frontend/, na branch frontend/rf-009-filtros. Não faça merge sem
 instrução. Traz de volta os chips de filtro por status no PainelRevisao (adiados do RF-010),
-default "Não conforme"; filtrarPorStatus puro; filtro compartilhado entre abas; estado
-"nenhum não conforme" com atalho "Ver todos" (PRD §9). Nenhuma chamada nova ao backend,
-nenhum tipo do contrato muda. Escreva os testes previstos. Rode npm run ci e registre a
-saída real. Screenshots (Não conforme / Todos / aba sem não conformes) vs protótipo.
+default "Não conforme"; filtrarPorStatus puro que preserva todos os grupos; filtro
+compartilhado entre abas e persistido na URL (?requisitos=<slug>, param omitido no padrão);
+grupos sem itens no filtro continuam visíveis com placeholder; estado "nenhum não conforme"
+com atalho "Ver todos" (PRD §9). Nenhuma chamada nova ao backend, nenhum tipo do contrato
+muda. Escreva os testes previstos. Rode npm run ci e registre a saída real. Screenshots
+(Não conforme / Todos / aba sem não conformes) vs protótipo.
 Rode o Agente Crítico. Atualize roadmap, checkpoint e .ai-dev/audit.md.
 Push da branch + merge na main + push da main.
 ```
