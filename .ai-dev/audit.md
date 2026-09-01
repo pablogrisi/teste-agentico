@@ -20,6 +20,20 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 01/09/2026 — RF-012 + RF-013 + RF-015 / TSD-010: conclusão da análise (backend)
+
+Contexto: usuário mandou "faz o merge e o push, e abre o ciclo de RF-012+RF-013+RF-015" logo após o fechamento de RF-014. Ciclo agrupado ("concluir a análise") na branch `backend/rf-012-conclusao`, com as duas paradas de aprovação humana explícitas.
+
+Papéis:
+- **PM**: 4 perguntas. Decisões do usuário: (1) reconclusão de análise já `CONCLUIDA` → `200` idempotente; (2) resposta de sucesso = payload completo (`GET /analises/:id`); (3) responsável → *"você decide"* → expor `analistaId` **e** `analistaNome` (relatório RF-016 vai precisar do nome); (4) trava fiel ao PRD — só `verificado` (não exige `statusFinal` editado). User Story validada; roadmap RF-012/013/015 → `user story aprovada`.
+- **Engenheiro**: `docs/engineering/specs/010-conclusao-analise.tsd.md` — apresentada e **aprovada** ("Aprova, pode implementar"). Sem migration (`concluida_em`/`CONCLUIDA` já existiam).
+- **Dev**: `src/analises/conclusao-analise.ts` (`requisitosObrigatoriosPendentes` — obrigatórios com `verificado=false`, ordenado por área/ordem); `AnalisesService.concluir(id)` (`404`; `CONCLUIDA` → `200` via `abrir`; fora de `PRONTA_PARA_REVISAO` → `409`; pendentes → `422 { requisitosPendentes }`; senão `updateMany where status=PRONTA_PARA_REVISAO set CONCLUIDA + concluidaEm` e devolve `abrir(id)`); `AnaliseDetalhe`/`montarAnaliseDetalhe` ganham `analistaId` + `analistaNome` (3º parâmetro, default `''`); `abrir` resolve o nome via `AnalistaAtualProvider`; `POST /analises/:id/concluir` `@HttpCode(200)`. +11 unit (`conclusao-analise.spec` + `analise-detalhe` responsável) + 1 suite de integração (`conclusao-analise.integration-spec`: `422`+lista / `200`+`CONCLUIDA`+`concluidaEm`+responsável / idempotente / não-obrigatório não bloqueia / `409` / `404`).
+- **Testes**: `npm run ci` ✅ — lint, typecheck, `prisma:validate`, **97 unit**, build. `npm run test:e2e` ✅ **36/36** (8 suites).
+- **Crítico**: aprovado, sem desvios de escopo. Menores: `concluir` faz 3 idas ao banco no caminho feliz (`buscarPorId` + `findMany` + `updateMany` + o `abrir` relê tudo) — barato no MVP; `analistaNome` de análises antigas mostra sempre o analista corrente (analista único — P-10); sem `updatedAt`-check entre a checagem de pendentes e o `updateMany` (a transição condicional cobre a corrida de status, não a de conteúdo — aceitável).
+- **Documentador**: SDD §7 ("Concluir análise" — contrato final) e §8 (`analise`: `analista_id`/`concluida_em` expostos, transição condicional); `questoes-abertas.md` P-01/P-02 anotadas (conclusão interna, auditoria mínima); checkpoint; roadmap RF-012/013/015 → `implementada` (branch).
+
+Estado: ciclo fechado, **branch aguardando merge + push**. Próximo backend: RF-016 (relatório PDF final), depois a integração da IA real (A-02).
+
 ## 01/09/2026 — RF-014 / TSD-009: referência de página do PDF (backend)
 
 Contexto: usuário mandou "faz o merge e o push pro github; depois começa o ciclo da RF-14" e apontou que **não estava recebendo a User Story do PM nem a TSD para validar antes da implementação**. Ciclo na branch `backend/rf-014-pdf-pagina`, com os dois pontos de aprovação humana restaurados como paradas explícitas.

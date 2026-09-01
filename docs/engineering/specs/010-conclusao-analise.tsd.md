@@ -3,7 +3,7 @@
 ---
 title: TSD - Conclusão da análise (RF-012/013/015, backend)
 type: tsd
-status: em aprovação
+status: concluída — aguardando merge (branch backend/rf-012-conclusao)
 created: 01/09/2026 // Pablo Grisi (Engenheiro)
 updated: 01/09/2026 // Pablo Grisi
 related:
@@ -160,20 +160,20 @@ npm run build
 
 ## 8. Critérios de aceite
 
-- [ ] `POST /analises/:id/concluir` numa análise `PRONTA_PARA_REVISAO` sem
+- [x] `POST /analises/:id/concluir` numa análise `PRONTA_PARA_REVISAO` sem
       obrigatórios pendentes → `200`, `status = CONCLUIDA`, `concluidaEm` gravado,
       payload no formato de `GET /analises/:id`.
-- [ ] Mesma chamada com ≥ 1 obrigatório não verificado → `422` com
+- [x] Mesma chamada com ≥ 1 obrigatório não verificado → `422` com
       `requisitosPendentes: [{ requisitoId, codigo, titulo, area }]`; nada gravado;
       status segue `PRONTA_PARA_REVISAO`.
-- [ ] Requisito **não** obrigatório não verificado não bloqueia a conclusão.
-- [ ] Requisito obrigatório com `statusFinal = NAO_SE_APLICA` e `verificado = false`
+- [x] Requisito **não** obrigatório não verificado não bloqueia a conclusão.
+- [x] Requisito obrigatório com `statusFinal = NAO_SE_APLICA` e `verificado = false`
       **bloqueia** (entra na lista).
-- [ ] Análise já `CONCLUIDA` → `200` idempotente, `concluidaEm` inalterado.
-- [ ] Análise fora de `PRONTA_PARA_REVISAO` (não `CONCLUIDA`) → `409`.
-- [ ] Análise inexistente para o analista → `404`.
-- [ ] `GET /analises/:id` inclui `analistaId` e `analistaNome`.
-- [ ] `npm run ci` e `npm run test:e2e` verdes.
+- [x] Análise já `CONCLUIDA` → `200` idempotente, `concluidaEm` inalterado.
+- [x] Análise fora de `PRONTA_PARA_REVISAO` (não `CONCLUIDA`) → `409`.
+- [x] Análise inexistente para o analista → `404`.
+- [x] `GET /analises/:id` inclui `analistaId` e `analistaNome`.
+- [x] `npm run ci` e `npm run test:e2e` verdes.
 
 ## 9. Riscos e decisões abertas
 

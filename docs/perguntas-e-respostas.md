@@ -345,3 +345,11 @@ Opções: só `verificado` (fiel ao PRD) / também exigir `statusFinal` decidido
 **R4:** **Só `verificado`** — basta que todo requisito obrigatório esteja verificado; o analista pode verificar aceitando a sugestão da IA.
 
 **Decisão:** vai para a TSD-010. `POST /analises/:id/concluir` com trava por `resumo.obrigatoriosPendentes`; `422` com lista de pendentes; `409` fora de `PRONTA_PARA_REVISAO`; `200` idempotente; payload completo; `analistaId`+`analistaNome` no detalhe.
+
+---
+
+## 01/09/2026 — Ciclo RF-012 + RF-013 + RF-015 (conclusão da análise), Agente Engenheiro
+
+**Apresentação da TSD-010** (`docs/engineering/specs/010-conclusao-analise.tsd.md`): `POST /analises/:id/concluir` (`200` idempotente se `CONCLUIDA` | `409` fora de `PRONTA_PARA_REVISAO` | `422` com `requisitosPendentes` | transição atômica `updateMany`); `conclusao-analise.ts` com a regra pura de pendências; `AnaliseDetalhe` ganha `analistaId` + `analistaNome`; sem migration.
+**Resposta do usuário:** "Aprova, pode implementar."
+**Decisão:** TSD-010 aprovada; Dev implementou; ciclo fechado (97 unit, 36 e2e, Crítico ✅) na branch `backend/rf-012-conclusao`, aguardando merge.
