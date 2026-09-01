@@ -36,6 +36,16 @@ export {
 } from "./status-requisito";
 export type { StatusRequisitoTone } from "./status-requisito";
 export {
+  contarPorFiltro,
+  FILTRO_REQUISITO_LABEL,
+  FILTRO_REQUISITO_OPCOES,
+  FILTRO_REQUISITO_PADRAO,
+  filtrarPorStatus,
+  filtroParaSlug,
+  parseFiltroRequisito,
+} from "./filtro-requisito";
+export type { FiltroRequisito } from "./filtro-requisito";
+export {
   ANALISE_PDF_TAMANHO_MAX_MB,
   formatarTamanho,
   NUP_MAX,

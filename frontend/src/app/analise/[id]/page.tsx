@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/layout/PageShell";
 import { AnaliseHeader } from "@/components/analise/AnaliseHeader";
@@ -30,7 +31,9 @@ export default async function AnalisePage({ params }: { params: Promise<{ id: st
         <AnaliseHeader detalhe={detalhe} />
         <div className={styles.paineis}>
           <AnaliseVisorPlaceholder totalPaginas={detalhe.totalPaginasPdf} />
-          <PainelRevisao detalhe={detalhe} />
+          <Suspense fallback={null}>
+            <PainelRevisao detalhe={detalhe} />
+          </Suspense>
         </div>
       </div>
     </PageShell>

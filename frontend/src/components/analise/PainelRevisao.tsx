@@ -1,16 +1,44 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { contarItens, rotuloArea, separarPorAba } from "@/lib/data";
-import type { AbaAnalise, AnaliseDetalhe, AreaComItens } from "@/lib/data";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  contarItens,
+  FILTRO_REQUISITO_PADRAO,
+  filtrarPorStatus,
+  filtroParaSlug,
+  parseFiltroRequisito,
+  rotuloArea,
+  separarPorAba,
+} from "@/lib/data";
+import type { AbaAnalise, AnaliseDetalhe, AreaComItens, FiltroRequisito } from "@/lib/data";
+import { FiltroStatus } from "./FiltroStatus";
 import { RequisitoItem } from "./RequisitoItem";
 import styles from "./PainelRevisao.module.css";
 
 const EM_PROCESSAMENTO = new Set(["PENDENTE", "PROCESSANDO"]);
 
-/** Painel de revisão: abas Checklist/Técnica (navegação livre), progresso e lista de requisitos. */
+/** Painel de revisão: abas Checklist/Técnica (navegação livre), progresso, filtro por status e lista. */
 export function PainelRevisao({ detalhe }: { detalhe: AnaliseDetalhe }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [aba, setAba] = useState<AbaAnalise>("checklist");
+  // Filtro é compartilhado entre as abas e espelhado na URL (`?requisitos=`),
+  // para sobreviver a recarregar a página e ao polling de `router.refresh()`.
+  const [filtro, setFiltro] = useState<FiltroRequisito>(() =>
+    parseFiltroRequisito(searchParams.get("requisitos")),
+  );
+
+  function trocarFiltro(proximo: FiltroRequisito) {
+    setFiltro(proximo);
+    const sp = new URLSearchParams(searchParams.toString());
+    if (proximo === FILTRO_REQUISITO_PADRAO) sp.delete("requisitos");
+    else sp.set("requisitos", filtroParaSlug(proximo));
+    const qs = sp.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }
 
   const { checklist, tecnica } = useMemo(() => {
     const separado = separarPorAba(detalhe.avaliacoesPorArea);
@@ -21,9 +49,13 @@ export function PainelRevisao({ detalhe }: { detalhe: AnaliseDetalhe }) {
     };
   }, [detalhe.avaliacoesPorArea]);
 
+  const gruposAba = aba === "checklist" ? checklist : tecnica;
+  const gruposFiltrados = useMemo(() => filtrarPorStatus(gruposAba, filtro), [gruposAba, filtro]);
+
   const { resumo } = detalhe;
   const progresso = resumo.total > 0 ? Math.round((resumo.verificados / resumo.total) * 100) : 0;
   const semAvaliacoes = detalhe.avaliacoesPorArea.length === 0;
+  const temItensVisiveis = contarItens(gruposFiltrados) > 0;
 
   return (
     <section className={styles.painel} aria-label="Painel de revisão">
@@ -70,16 +102,24 @@ export function PainelRevisao({ detalhe }: { detalhe: AnaliseDetalhe }) {
         </div>
       )}
 
+      {!semAvaliacoes && <FiltroStatus valor={filtro} onChange={trocarFiltro} />}
+
       <div className={styles.conteudo}>
         {semAvaliacoes ? (
           <PainelSemAvaliacoes status={detalhe.status} motivoErro={detalhe.motivoErro} />
         ) : (
           <>
-            <p className={styles.legenda}>
-              Os status abaixo são <strong>sugestões da IA</strong>; o parecer final é definido na
-              revisão.
-            </p>
-            <ListaAba grupos={aba === "checklist" ? checklist : tecnica} />
+            {temItensVisiveis && (
+              <p className={styles.legenda}>
+                Os status abaixo são <strong>sugestões da IA</strong>; o parecer final é definido na
+                revisão.
+              </p>
+            )}
+            <ConteudoAba
+              grupos={gruposFiltrados}
+              filtro={filtro}
+              onVerTodos={() => trocarFiltro("TODOS")}
+            />
           </>
         )}
       </div>
@@ -87,10 +127,44 @@ export function PainelRevisao({ detalhe }: { detalhe: AnaliseDetalhe }) {
   );
 }
 
-function ListaAba({ grupos }: { grupos: AreaComItens[] }) {
+function ConteudoAba({
+  grupos,
+  filtro,
+  onVerTodos,
+}: {
+  grupos: AreaComItens[];
+  filtro: FiltroRequisito;
+  onVerTodos: () => void;
+}) {
   if (grupos.length === 0) {
     return <p className={styles.vazio}>Nenhum requisito nesta aba.</p>;
   }
+
+  if (contarItens(grupos) === 0) {
+    if (filtro === "NAO_CONFORME") {
+      return (
+        <div className={styles.estado} role="status">
+          <p className={styles.estadoTitulo}>Nenhum requisito não conforme nesta aba.</p>
+          <p className={styles.estadoTexto}>
+            Nenhum item desta aba está marcado como não conforme no parecer atual.
+          </p>
+          <button type="button" className={styles.verTodos} onClick={onVerTodos}>
+            Ver todos os requisitos
+          </button>
+        </div>
+      );
+    }
+    return (
+      <div className={styles.estado} role="status">
+        <p className={styles.estadoTitulo}>Nenhum requisito neste filtro.</p>
+      </div>
+    );
+  }
+
+  return <ListaAba grupos={grupos} />;
+}
+
+function ListaAba({ grupos }: { grupos: AreaComItens[] }) {
   return (
     <div className={styles.lista}>
       {grupos.map((grupo) => (
@@ -99,11 +173,15 @@ function ListaAba({ grupos }: { grupos: AreaComItens[] }) {
             <span className={styles.grupoLabel}>{rotuloArea(grupo.area)}</span>
             <span className={styles.grupoBadge}>{grupo.itens.length}</span>
           </div>
-          <div className={styles.grupoItens}>
-            {grupo.itens.map((item) => (
-              <RequisitoItem key={item.id} item={item} />
-            ))}
-          </div>
+          {grupo.itens.length === 0 ? (
+            <p className={styles.grupoVazio}>Nenhum requisito neste grupo com o filtro atual.</p>
+          ) : (
+            <div className={styles.grupoItens}>
+              {grupo.itens.map((item) => (
+                <RequisitoItem key={item.id} item={item} />
+              ))}
+            </div>
+          )}
         </div>
       ))}
     </div>

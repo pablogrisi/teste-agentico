@@ -1,9 +1,23 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PainelRevisao } from "@/components/analise/PainelRevisao";
 import { calcularResumo } from "@/lib/data";
 import type { AnaliseDetalhe, AreaComItens, AvaliacaoItem } from "@/lib/data";
+
+const replace = vi.fn();
+let searchParamsString = "";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace, push: vi.fn(), prefetch: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/analise/1",
+  useSearchParams: () => new URLSearchParams(searchParamsString),
+}));
+
+beforeEach(() => {
+  replace.mockClear();
+  searchParamsString = "";
+});
 
 function item(id: string, over: Partial<AvaliacaoItem> = {}): AvaliacaoItem {
   return {
@@ -89,7 +103,8 @@ describe("PainelRevisao", () => {
     const user = userEvent.setup();
     render(<PainelRevisao detalhe={detalhe("PRONTA_PARA_REVISAO", GRUPOS)} />);
     await user.click(screen.getByRole("tab", { name: /Técnica/ }));
-    expect(screen.getByText("Não conforme")).toBeInTheDocument();
+    // o badge do requisito (span), não o chip de filtro (button) de mesmo texto
+    expect(screen.getByText("Não conforme", { selector: "span" })).toBeInTheDocument();
   });
 
   it("mostra a legenda de que os status são sugestões da IA quando há itens (RF-007)", () => {
@@ -108,5 +123,104 @@ describe("PainelRevisao", () => {
     render(<PainelRevisao detalhe={detalhe("ERRO_PROCESSAMENTO", [])} />);
     expect(screen.getByRole("alert")).toHaveTextContent("IA fora do ar.");
     expect(screen.queryByText(/sugestões da IA/)).not.toBeInTheDocument();
+  });
+
+  describe("filtro por status (RF-009)", () => {
+    const COM_CONFORMES: AreaComItens[] = [
+      {
+        area: "CHECKLIST_DADOS_GERAIS",
+        itens: [
+          item("c1", { statusFinal: "NAO_CONFORME" }),
+          item("c2", { statusFinal: "CONFORME" }),
+        ],
+      },
+      {
+        area: "CHECKLIST_ORCAMENTO",
+        itens: [item("c3", { area: "CHECKLIST_ORCAMENTO", statusFinal: "CONFORME" })],
+      },
+    ];
+
+    it("abre com o chip 'Não conforme' ativo e esconde os itens conformes", () => {
+      render(<PainelRevisao detalhe={detalhe("PRONTA_PARA_REVISAO", COM_CONFORMES)} />);
+      expect(screen.getByRole("button", { name: "Não conforme" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      expect(screen.getByText("Requisito c1")).toBeInTheDocument();
+      expect(screen.queryByText("Requisito c2")).not.toBeInTheDocument();
+    });
+
+    it("grupo sem itens no filtro atual continua visível com uma linha de placeholder", () => {
+      render(<PainelRevisao detalhe={detalhe("PRONTA_PARA_REVISAO", COM_CONFORMES)} />);
+      // "Orcamento" só tem conforme → o grupo aparece, mas sem itens
+      expect(screen.getByText("Orcamento")).toBeInTheDocument();
+      expect(
+        screen.getByText("Nenhum requisito neste grupo com o filtro atual."),
+      ).toBeInTheDocument();
+    });
+
+    it("clicar em 'Todos' revela todos os requisitos e grava ?requisitos=todos na URL", async () => {
+      const user = userEvent.setup();
+      render(<PainelRevisao detalhe={detalhe("PRONTA_PARA_REVISAO", COM_CONFORMES)} />);
+      await user.click(screen.getByRole("button", { name: "Todos" }));
+
+      expect(screen.getByText("Requisito c1")).toBeInTheDocument();
+      expect(screen.getByText("Requisito c2")).toBeInTheDocument();
+      expect(screen.getByText("Requisito c3")).toBeInTheDocument();
+      expect(replace).toHaveBeenCalledWith("/analise/1?requisitos=todos", { scroll: false });
+    });
+
+    it("lê o filtro inicial de ?requisitos= na URL", () => {
+      searchParamsString = "requisitos=conforme";
+      render(<PainelRevisao detalhe={detalhe("PRONTA_PARA_REVISAO", COM_CONFORMES)} />);
+      expect(screen.getByRole("button", { name: "Conforme" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      expect(screen.getByText("Requisito c2")).toBeInTheDocument();
+      expect(screen.queryByText("Requisito c1")).not.toBeInTheDocument();
+    });
+
+    it("mantém o filtro ao trocar de aba", async () => {
+      const user = userEvent.setup();
+      render(<PainelRevisao detalhe={detalhe("PRONTA_PARA_REVISAO", GRUPOS)} />);
+      await user.click(screen.getByRole("button", { name: "Conforme" }));
+      await user.click(screen.getByRole("tab", { name: /Técnica/ }));
+      expect(screen.getByRole("button", { name: "Conforme" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      // t1 é NAO_CONFORME → nada passa no filtro "Conforme" na aba Técnica
+      expect(screen.getByText("Nenhum requisito neste filtro.")).toBeInTheDocument();
+    });
+
+    it("aba sem não conformes no filtro padrão → mensagem + 'Ver todos os requisitos'", async () => {
+      const user = userEvent.setup();
+      const soConformes: AreaComItens[] = [
+        {
+          area: "CHECKLIST_DADOS_GERAIS",
+          itens: [
+            item("k1", { statusFinal: "CONFORME" }),
+            item("k2", { statusFinal: "NAO_SE_APLICA" }),
+          ],
+        },
+      ];
+      render(<PainelRevisao detalhe={detalhe("PRONTA_PARA_REVISAO", soConformes)} />);
+
+      expect(screen.getByText("Nenhum requisito não conforme nesta aba.")).toBeInTheDocument();
+      expect(screen.queryByText("Requisito k1")).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: "Ver todos os requisitos" }));
+      expect(screen.getByText("Requisito k1")).toBeInTheDocument();
+      expect(replace).toHaveBeenCalledWith("/analise/1?requisitos=todos", { scroll: false });
+    });
+
+    it("voltar ao filtro padrão remove o ?requisitos= da URL", async () => {
+      const user = userEvent.setup();
+      searchParamsString = "requisitos=conforme";
+      render(<PainelRevisao detalhe={detalhe("PRONTA_PARA_REVISAO", COM_CONFORMES)} />);
+      await user.click(screen.getByRole("button", { name: "Não conforme" }));
+      expect(replace).toHaveBeenCalledWith("/analise/1", { scroll: false });
+    });
   });
 });
