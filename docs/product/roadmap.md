@@ -45,9 +45,9 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 10 | RF-011 | Endpoint de marcação de "verificado" | Must | implementada com RF-008 |
 | 11 | RF-017 | Validação de comentário obrigatório nas ações de revisão | Must | implementada com RF-008 |
 | 12 | RF-014 | Referência de página + entrega do PDF por página | Must | implementada |
-| 13 | RF-012 | Endpoint de conclusão global com trava por obrigatórios | Must | user story aprovada |
-| 14 | RF-013 | Registro de responsável, datas e status final | Must | user story aprovada (com RF-012) |
-| 15 | RF-015 | Conclusão interna sem aprovação/assinatura/dupla revisão | Must | user story aprovada (com RF-012) |
+| 13 | RF-012 | Endpoint de conclusão global com trava por obrigatórios | Must | TSD em aprovação |
+| 14 | RF-013 | Registro de responsável, datas e status final | Must | TSD em aprovação (com RF-012) |
+| 15 | RF-015 | Conclusão interna sem aprovação/assinatura/dupla revisão | Must | TSD em aprovação (com RF-012) |
 | 16 | RF-016 | Geração sob demanda do relatório PDF final | Must | não iniciada |
 | 17 | RF-003 | Escopo de acesso por analista | Must (fase com identidade) | não iniciada — pós-MVP (P-10) |
 
@@ -350,7 +350,7 @@ Recorte backend deste ciclo (reduzido após as decisões — o visor do frontend
 ### RF-012 — Conclusão global da análise
 
 **Frentes:** Backend · Frontend
-**Status (backend):** user story aprovada
+**Status (backend):** TSD em aprovação
 **Status (frontend):** não iniciada
 
 > Ciclo backend agrupado: **RF-012 + RF-013 + RF-015** = "concluir a análise" (um endpoint de conclusão). User Story e critérios abaixo cobrem os três.
@@ -385,7 +385,7 @@ Recorte backend deste ciclo:
 3. **Responsável (RF-013):** *"você decide"* → expor `analistaId` **e** `analistaNome` (resolvidos pelo `AnalistaAtualProvider`, que já tem os dois na config). Motivo: o relatório PDF (RF-016, próximo ciclo) precisa de um nome legível; custo baixo agora.
 4. **Trava (RF-012):** fiel ao PRD — basta que **todo requisito obrigatório esteja `verificado`**. Não se exige que o `statusFinal` tenha sido editado (o analista pode verificar aceitando a sugestão da IA).
 
-**TSD associada:** `docs/engineering/specs/010-conclusao-analise.tsd.md` (a redigir pelo Engenheiro).
+**TSD associada:** `docs/engineering/specs/010-conclusao-analise.tsd.md` (redigida — em aprovação).
 
 ### RF-013 — Registro de responsável, datas e status final
 

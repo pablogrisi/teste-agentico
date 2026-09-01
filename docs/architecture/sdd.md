@@ -155,14 +155,19 @@ Não há identidade no MVP: o `AnalistaAtualProvider` devolve sempre o analista 
 
 ### Fluxo - Concluir análise
 
-1. `POST /analises/:id/concluir`.
-2. Se existir requisito obrigatório com `verificado = false` → 422 com a lista de pendentes; análise continua aberta.
-3. Caso contrário → `status = CONCLUIDA`, grava `concluida_em`. Idempotente se já concluída.
+**Implementado (TSD-010).** `POST /analises/:id/concluir` (`HttpCode 200` — nada é criado). RF-012 + RF-013 + RF-015.
+
+1. `404` se a análise não existe para o analista atual.
+2. Análise já `CONCLUIDA` → **`200` idempotente** com o payload completo, sem alterar `concluida_em`.
+3. Análise fora de `PRONTA_PARA_REVISAO` (`PENDENTE`/`PROCESSANDO`/`ERRO_PROCESSAMENTO`) → `409`.
+4. Se existir requisito **obrigatório** com `verificado = false` (inclui obrigatório com `statusFinal = NAO_SE_APLICA`) → `422` com `{ message, requisitosPendentes: [{ requisitoId, codigo, titulo, area }] }`; nada gravado, análise segue `PRONTA_PARA_REVISAO`. A trava olha **só** `verificado` (não exige edição do parecer).
+5. Caso contrário → transição atômica `updateMany(where status = PRONTA_PARA_REVISAO) → status = CONCLUIDA`, grava `concluida_em`. Responde o payload completo (mesmo formato de `GET /analises/:id`).
+6. Sem etapa de aprovação, assinatura ou dupla revisão (RF-015). Conclusão do MVP é interna (P-01 aberta).
 
 ### Fluxo - Abrir análise / listar
 
 1. `GET /analises` → **implementado (TSD-005)**. Filtrado por `analista_id`. Query: `q` (busca em `nup`+`objeto`, contém, case-insensitive), `status` (um ou mais, vírgula ou repetição), `ordenarPor` (`iniciadaEm` default | `nup`), `ordem` (`asc`|`desc` default `desc`), `pagina` (1-based, default 1), `tamanho` (default 20, máx 100). Resposta `{ itens, total, pagina, tamanho }`; `itens` com `id`, `nup`, `objeto`, `status`, `iniciadaEm`, `concluidaEm`. Query inválida → `422` sem tocar no banco. (P-06 fechado; contagem de requisitos por linha fica para depois de RF-007.)
-2. `GET /analises/:id` → **implementado (TSD-004 + TSD-007 + TSD-009)**. Devolve os campos da análise (`id`, `nup`, `objeto`, `status`, `motivoErro`, `iniciadaEm`, `concluidaEm`, `totalPaginasPdf` — número ou `null`), `resumo` (`total`, `conforme`, `naoConforme`, `naoSeAplica`, `verificados`, `obrigatoriosPendentes` — por `statusFinal`) e `avaliacoesPorArea: [{ area, itens: [...] }]` — áreas em ordem alfabética, dentro de cada área os `NAO_CONFORME` (por `statusFinal`) primeiro e depois `requisito.ordem`. Cada item: `id` da avaliação, `requisitoId`, `codigo`, `area`, `titulo`, `descricao`, `obrigatorio`, `ordem`, `norma` (estruturada), `statusSugeridoIa`, `statusFinal`, `verificado`, `comentario`, `paginaReferencia`. Sem avaliações (`PENDENTE`/`PROCESSANDO`) → `avaliacoesPorArea: []` e resumo zerado; `ERRO_PROCESSAMENTO` → idem + `motivoErro`. `404` se o id não existir sob o `analista_id` atual (estrutura que já suporta o `403` de RF-003).
+2. `GET /analises/:id` → **implementado (TSD-004 + TSD-007 + TSD-009 + TSD-010)**. Devolve os campos da análise (`id`, `nup`, `objeto`, `status`, `motivoErro`, `analistaId` + `analistaNome` — responsável, RF-013, `iniciadaEm`, `concluidaEm`, `totalPaginasPdf` — número ou `null`), `resumo` (`total`, `conforme`, `naoConforme`, `naoSeAplica`, `verificados`, `obrigatoriosPendentes` — por `statusFinal`) e `avaliacoesPorArea: [{ area, itens: [...] }]` — áreas em ordem alfabética, dentro de cada área os `NAO_CONFORME` (por `statusFinal`) primeiro e depois `requisito.ordem`. Cada item: `id` da avaliação, `requisitoId`, `codigo`, `area`, `titulo`, `descricao`, `obrigatorio`, `ordem`, `norma` (estruturada), `statusSugeridoIa`, `statusFinal`, `verificado`, `comentario`, `paginaReferencia`. Sem avaliações (`PENDENTE`/`PROCESSANDO`) → `avaliacoesPorArea: []` e resumo zerado; `ERRO_PROCESSAMENTO` → idem + `motivoErro`. `404` se o id não existir sob o `analista_id` atual (estrutura que já suporta o `403` de RF-003).
 3. `GET /analises/:id/pdf` → **implementado (TSD-004)**. Bytes do PDF **inteiro** (`application/pdf`). A navegação por página (RF-014) é do visor no frontend, via fragmento `#page=N` sobre este mesmo recurso — **não há endpoint/param de página no servidor** (decisão do ciclo RF-014 / TSD-009). O total de páginas para validar o alvo vem de `totalPaginasPdf` em `GET /analises/:id`.
 
 ### Fluxo - Relatório PDF
