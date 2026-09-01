@@ -48,7 +48,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 13 | RF-012 | Endpoint de conclusão global com trava por obrigatórios | Must | implementada |
 | 14 | RF-013 | Registro de responsável, datas e status final | Must | implementada (com RF-012) |
 | 15 | RF-015 | Conclusão interna sem aprovação/assinatura/dupla revisão | Must | implementada (com RF-012) |
-| 16 | RF-016 | Geração sob demanda do relatório PDF final | Must | TSD em aprovação |
+| 16 | RF-016 | Geração sob demanda do relatório PDF final | Must | em validação |
 | 17 | RF-003 | Escopo de acesso por analista | Must (fase com identidade) | não iniciada — pós-MVP (P-10) |
 
 ## Tabela de sequenciamento — Frente Frontend (`frontend/`)
@@ -407,7 +407,7 @@ Recorte backend deste ciclo:
 ### RF-016 — Relatório PDF final da análise concluída
 
 **Frentes:** Backend · Frontend
-**Status (backend):** TSD em aprovação
+**Status (backend):** em validação
 **Status (frontend):** não iniciada
 
 **User Story** — *validada em 01/09/2026*
