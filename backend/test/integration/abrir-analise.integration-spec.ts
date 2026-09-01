@@ -91,6 +91,8 @@ describe('GET /analises/:id — abrir análise (integração)', () => {
       id,
       nup: 'NUP-ABRIR',
       status: 'PRONTA_PARA_REVISAO',
+      analistaId: 'analista-teste',
+      analistaNome: 'Analista de Teste',
     });
 
     expect(

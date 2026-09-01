@@ -9,6 +9,7 @@ const analise = {
   objeto: 'Objeto',
   status: 'PRONTA_PARA_REVISAO',
   motivoErro: null,
+  analistaId: 'analista-mvp',
   iniciadaEm: new Date('2026-01-01'),
   concluidaEm: null,
   totalPaginasPdf: 7,
@@ -146,6 +147,14 @@ describe('montarAnaliseDetalhe', () => {
 
   it('expõe totalPaginasPdf vindo da análise', () => {
     expect(montarAnaliseDetalhe(analise, []).totalPaginasPdf).toBe(7);
+  });
+
+  it('expõe o responsável (analistaId da análise + analistaNome recebido)', () => {
+    const d = montarAnaliseDetalhe(analise, [], 'Analista MVP');
+    expect(d.analistaId).toBe('analista-mvp');
+    expect(d.analistaNome).toBe('Analista MVP');
+    // sem o 3º parâmetro, analistaNome cai para ''
+    expect(montarAnaliseDetalhe(analise, []).analistaNome).toBe('');
   });
 
   it('sem avaliações → grupos vazios e resumo zerado', () => {

@@ -73,6 +73,12 @@ export class AnalisesController {
     return { id: a.id, status: a.status };
   }
 
+  @Post(':id/concluir')
+  @HttpCode(200)
+  async concluir(@Param('id') id: string) {
+    return this.analises.concluir(id);
+  }
+
   @Patch(':id/requisitos/:requisitoId')
   async revisar(
     @Param('id') id: string,

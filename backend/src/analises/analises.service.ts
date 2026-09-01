@@ -30,6 +30,7 @@ import {
 } from './analise-detalhe';
 import { PatchRevisaoBody, validarEResolverPatch } from './revisao-requisito';
 import { contarPaginasPdf } from './contar-paginas-pdf';
+import { requisitosObrigatoriosPendentes } from './conclusao-analise';
 
 /** Campos de uma análise numa listagem (RF-002). */
 export type AnaliseResumo = Pick<
@@ -181,7 +182,49 @@ export class AnalisesService {
       where: { analiseId: id },
       include: { requisito: true },
     });
-    return montarAnaliseDetalhe(analise, avaliacoes);
+    const { nome } = this.analistaAtual.getAnalistaAtual();
+    return montarAnaliseDetalhe(analise, avaliacoes, nome);
+  }
+
+  /**
+   * Conclusão global da análise (RF-012/013/015). Só passa se todo requisito
+   * obrigatório estiver `verificado`; senão `422` com a lista de pendentes.
+   * Já `CONCLUIDA` → `200` idempotente. Fora de `PRONTA_PARA_REVISAO` → `409`.
+   */
+  async concluir(id: string): Promise<AnaliseDetalhe> {
+    const analise = await this.buscarPorId(id);
+
+    if (analise.status === 'CONCLUIDA') {
+      return this.abrir(id);
+    }
+    if (analise.status !== 'PRONTA_PARA_REVISAO') {
+      throw new ConflictException(
+        `Só é possível concluir uma análise em revisão (status atual: ${analise.status})`,
+      );
+    }
+
+    const avaliacoes = await this.prisma.avaliacaoRequisito.findMany({
+      where: { analiseId: id },
+      include: { requisito: true },
+    });
+
+    const pendentes = requisitosObrigatoriosPendentes(avaliacoes);
+    if (pendentes.length > 0) {
+      throw new UnprocessableEntityException({
+        message:
+          'Há requisitos obrigatórios não verificados; conclua a revisão antes de concluir a análise',
+        requisitosPendentes: pendentes,
+      });
+    }
+
+    // Transição atômica: só um concluir grava `concluidaEm`; um segundo
+    // concorrente vê count 0 e apenas relê o estado já concluído.
+    await this.prisma.analise.updateMany({
+      where: { id, status: 'PRONTA_PARA_REVISAO' },
+      data: { status: 'CONCLUIDA', concluidaEm: new Date() },
+    });
+
+    return this.abrir(id);
   }
 
   /** Revisão de um requisito: parecer final, verificado e comentário (RF-008/011/017). */

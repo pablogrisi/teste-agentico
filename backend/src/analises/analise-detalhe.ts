@@ -50,6 +50,8 @@ export interface AnaliseDetalhe {
   objeto: string;
   status: string;
   motivoErro: string | null;
+  analistaId: string;
+  analistaNome: string;
   iniciadaEm: Date;
   concluidaEm: Date | null;
   totalPaginasPdf: number | null;
@@ -111,6 +113,7 @@ export function calcularResumo(
 export function montarAnaliseDetalhe(
   analise: Analise,
   avaliacoes: AvaliacaoComRequisito[],
+  analistaNome = '',
 ): AnaliseDetalhe {
   const porArea = new Map<string, AvaliacaoItem[]>();
   for (const a of avaliacoes) {
@@ -137,6 +140,8 @@ export function montarAnaliseDetalhe(
     objeto: analise.objeto,
     status: analise.status,
     motivoErro: analise.motivoErro,
+    analistaId: analise.analistaId,
+    analistaNome,
     iniciadaEm: analise.iniciadaEm,
     concluidaEm: analise.concluidaEm,
     totalPaginasPdf: analise.totalPaginasPdf,
