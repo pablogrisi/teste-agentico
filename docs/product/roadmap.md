@@ -58,7 +58,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 1 | RF-002 | Tela de listagem de análises + estado vazio | Must | implementada (branch `frontend/rf-002-listagem`) |
 | 2 | RF-001 | Modal "Nova análise" (NUP, objeto) + validação | Must | implementada (branch `frontend/rf-001-nova-analise`) |
 | 3 | RF-004 | Campo de upload de PDF no modal + estados de erro | Must | implementada com RF-001 (branch `frontend/rf-001-nova-analise`) |
-| 4 | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre | Must | user story em aprovação (branch `frontend/rf-010-tela-analise`) |
+| 4 | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre | Must | implementada (branch `frontend/rf-010-tela-analise`) |
 | 5 | RF-007 | Exibição dos requisitos com status sugerido pela IA | Must | não iniciada |
 | 6 | RF-009 | Visão inicial priorizando não conformes + filtros por status | Must | não iniciada |
 | 7 | RF-008 | Modal de alteração de status final ("parecer") | Must | não iniciada |
@@ -286,7 +286,7 @@ Recorte backend deste ciclo: o endpoint de leitura da análise passa a devolver 
 ### RF-010 — Navegação livre entre seções e abas da análise
 
 **Frentes:** Frontend (backend entrega os requisitos agrupados por área)
-**Status (frontend):** user story em aprovação — branch `frontend/rf-010-tela-analise`
+**Status (frontend):** implementada na branch `frontend/rf-010-tela-analise` — validada, aguardando merge
 
 **User Story (frontend)**
 

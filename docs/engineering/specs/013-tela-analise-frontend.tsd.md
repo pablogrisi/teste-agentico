@@ -3,9 +3,9 @@
 ---
 title: TSD - Tela de análise (RF-010, frontend)
 type: tsd
-status: em aprovação
+status: implementada na branch frontend/rf-010-tela-analise
 created: 01/09/2026 // Vinicius
-updated: 01/09/2026 // Vinicius
+updated: 01/09/2026 // Vinicius (decisões validadas: Técnica fiel ao backend; polling ligado; §10 inspecionada)
 related:
 - docs/product/prd.md
 - docs/architecture/sdd.md
@@ -78,6 +78,10 @@ RF-012).
     grupos de `AreaComItens` com cabeçalho (rótulo da área + contagem) e a lista de
     `RequisitoItem`. Estado "sem itens" por aba. Quando a análise não está pronta
     (`avaliacoesPorArea` vazio): mensagem "processando" / `motivoErro`.
+  - `AutoRefreshAnalise` (client) — enquanto `status ∈ {PENDENTE, PROCESSANDO}`, chama
+    `router.refresh()` num intervalo (`ANALISE_POLL_MS`, ~4 s); para de reagendar assim que o
+    status sai desse conjunto; limpa o timer no unmount. É o único mecanismo de atualização
+    (o Server Component re-busca a cada refresh).
   - `RequisitoItem` (client, accordion) — recolhido: `checkbox` **desabilitado** (placeholder
     de RF-011) + título + `StatusBadgeRequisito` + chevron; expandido: descrição, `NormaTexto`
     (lei art. inciso …), comentário (se houver), "Página N do PDF" como **texto** (RF-014 torna
@@ -99,8 +103,7 @@ RF-012).
 - Modal de alteração de `statusFinal` → **RF-008**; comentário obrigatório → **RF-017**.
 - Visor de PDF real + `#page=N` clicável → **RF-014** (o espaço fica placeholder).
 - Modal de conclusão / botão global → **RF-012**.
-- Semântica definitiva da aba Técnica (P-04) — ver §9.
-- Polling/atualização automática enquanto `PROCESSANDO` (recarregar é manual neste ciclo).
+- Semântica definitiva da aba Técnica (P-04) — ver §9 (neste ciclo, decisão validada: fiel ao backend).
 
 ## 4. Contexto consultado
 
@@ -161,33 +164,35 @@ npm run ci
 
 ## 8. Critérios de aceite
 
-- [ ] `/analise/[id]` carrega `GET /analises/:id` pelo `AnalisesGateway`; nenhum componente chama HTTP direto.
-- [ ] Cabeçalho mostra NUP, objeto, status (badge), responsável e datas.
-- [ ] Painel de revisão tem abas **Checklist** e **Técnica**; clicar em qualquer uma alterna imediatamente, sem ordem obrigatória (RF-010 / PRD RF-010). Legislação/Outros aparecem desabilitadas.
-- [ ] Cada aba lista os requisitos **agrupados por área**, na ordem recebida do backend; item em acordeão: recolhido = título + badge do `statusFinal`; expandido = descrição + norma + comentário (se houver) + "Página N" (texto).
-- [ ] Barra de progresso reflete `resumo.verificados` / `resumo.total`.
-- [ ] Análise `PENDENTE`/`PROCESSANDO` → mensagem "processando" no lugar da lista; `ERRO_PROCESSAMENTO` → `motivoErro`; `404` → página "análise não encontrada" com link para `/`.
-- [ ] Nada interativo além da troca de aba e do expandir/recolher: checkbox desabilitado, sem modal de parecer, sem filtros, sem visor real.
-- [ ] `abrirAnalise` existe nas duas gateways; `HttpAnalisesGateway.abrirAnalise` tem teste de contrato.
-- [ ] `npm run ci` verde: `eslint .` + prettier, `tsc --noEmit`, testes (inclui contrato de `GET /analises/:id`), `next build`.
-- [ ] §10 preenchida e revisada; screenshots das abas comparados com o protótipo — `frontend/docs/visual-reference/rf-010/`.
+- [x] `/analise/[id]` carrega `GET /analises/:id` pelo `AnalisesGateway`; nenhum componente chama HTTP direto.
+- [x] Cabeçalho mostra NUP, objeto, status (badge), responsável e datas.
+- [x] Painel de revisão tem abas **Checklist** e **Técnica**; clicar em qualquer uma alterna imediatamente, sem ordem obrigatória (RF-010 / PRD RF-010). Legislação/Outros aparecem desabilitadas.
+- [x] Cada aba lista os requisitos **agrupados por área**, na ordem recebida do backend; item em acordeão: recolhido = título + badge do `statusFinal`; expandido = descrição + norma + comentário (se houver) + "Página N" (texto).
+- [x] Barra de progresso reflete `resumo.verificados` / `resumo.total`.
+- [x] Análise `PENDENTE`/`PROCESSANDO` → mensagem "processando" no lugar da lista **e polling** (`router.refresh()` a cada ~4 s) que para sozinho quando o status sai desse conjunto; `ERRO_PROCESSAMENTO` → `motivoErro` (sem polling); `404` → página "análise não encontrada" com link para `/`.
+- [x] Nada interativo além da troca de aba e do expandir/recolher: checkbox desabilitado, sem modal de parecer, sem filtros, sem visor real.
+- [x] `abrirAnalise` existe nas duas gateways; `HttpAnalisesGateway.abrirAnalise` tem teste de contrato.
+- [x] `npm run ci` verde: `eslint .` + prettier, `tsc --noEmit`, testes (inclui contrato de `GET /analises/:id`), `next build`.
+- [x] §10 preenchida e revisada; screenshots das abas comparados com o protótipo — `frontend/docs/visual-reference/rf-010/`.
 
 ## 9. Riscos e decisões abertas
 
-### Decisões da slice
+### Decisões da slice (validadas pelo responsável — 01/09/2026)
 
-- **Server Component + carga única:** `/analise/[id]` busca o detalhe no servidor a cada
-  request (`dynamic`), sem polling. Enquanto `PROCESSANDO`, o analista recarrega a página para
-  ver o resultado. Polling/refresh automático fica para um refinamento (ou entra junto de RF-007).
+- **Server Component + polling client:** `/analise/[id]` busca o detalhe no servidor a cada
+  request (`dynamic`). Enquanto `status ∈ {PENDENTE, PROCESSANDO}`, o `AutoRefreshAnalise`
+  (client) chama `router.refresh()` a cada `ANALISE_POLL_MS` (~4 s) e para de reagendar quando
+  o status sai desse conjunto. `ERRO_PROCESSAMENTO` não faz polling (o analista reprocessa no
+  backend). Sem WebSocket/SSE no MVP.
+- **Aba Técnica fiel ao backend:** o backend grava `statusFinal` para **todo** requisito ativo
+  (TSD-006), inclusive Técnica. Decisão validada: a aba Técnica renderiza os itens **iguais aos
+  de Checklist**, com badge de `statusFinal`. **Divergência do protótipo** (que trata Técnica
+  como "observações" neutras, sem status) — registrada na §10. Se a P-04 fechar noutro sentido,
+  é um ajuste visual localizado no `RequisitoItem`/aba.
 - **Abas por prefixo de `area`:** o backend usa `area` string com convenção que começa por
   `CHECKLIST`/`TECNICA` (RF-006). A aba Checklist agrega as áreas `CHECKLIST*`, Técnica as
   `TECNICA*`; qualquer outra área cai em "outras" (renderizada como um terceiro grupo dentro de
   Checklist, para não sumir dado — improvável no MVP).
-- **Aba Técnica renderizada como Checklist:** o backend grava `statusFinal` para **todo**
-  requisito ativo (TSD-006), inclusive Técnica. Então os itens de Técnica mostram badge de
-  status igual aos de Checklist. **Divergência do protótipo** (que trata Técnica como
-  "observações" neutras, sem status) — registrada na §10; a semântica definitiva é a P-04 e, se
-  mudar, é um ajuste visual localizado.
 - **Somente leitura:** o checkbox de "verificado" aparece **desabilitado** (placeholder visual
   de RF-011) para o enquadramento bater com o protótipo; nada é editável neste ciclo.
 - **`AnaliseDetalhe` no frontend espelha o payload atual** (TSD-004+007+009+010). Se o backend
@@ -209,19 +214,70 @@ Referência: `Prototipo Licia Analisadora/src/routes/AnalysisPage/` — `Analysi
 
 | ID | Papel na aplicação | Link/localização | Nome na origem | Estados representados | Status de inspeção |
 |---|---|---|---|---|---|
-| REF-06 | Painel de revisão — abas, progresso, lista em acordeão | `Prototipo Licia Analisadora/src/routes/AnalysisPage/components/AnalysisPanel.tsx` | `AnalysisPanel` | aba Checklist; aba Técnica; item recolhido/expandido | Pendente |
-| REF-07 | Item de requisito (acordeão) | `.../components/ChecklistItem.tsx` + `ObservationItem.tsx` | `ChecklistItem` / `ObservationItem` | recolhido; expandido | Pendente |
+| REF-06 | Painel de revisão — abas, progresso, lista em acordeão | `Prototipo Licia Analisadora/src/routes/AnalysisPage/components/AnalysisPanel.{tsx,module.css}` | `AnalysisPanel` | aba Checklist; aba Técnica; item recolhido/expandido | Inspecionado — 01/09/2026 (Vinicius) |
+| REF-07 | Item de requisito (acordeão) | `.../components/ChecklistItem.tsx` + `ObservationItem.tsx` | `ChecklistItem` / `ObservationItem` | recolhido; expandido | Inspecionado — 01/09/2026 (Vinicius) |
 | REF-04 | Frame da tela de análise (dois painéis) | `.../AnalysisPage.tsx` + `PdfPanel.module.css` | `AnalysisPage` | frame (já inspecionado na TSD-002 §10 / REF-04) | Inspecionado (TSD-002) |
+
+### 10.1 Observações da inspeção (01/09/2026)
+
+**REF-06 — `AnalysisPanel`** (`.module.css`):
+
+- `.panel` — largura fixa **596px**, altura total, fundo card, borda com `--radius-8` só nos
+  cantos esquerdos, `border-right: none`, `overflow: hidden`. (É o painel direito do frame
+  REF-04; nesta slice o `PainelRevisao` ocupa esse espaço.)
+- `.tabs` — barra de abas `flex`, `gap: --spacing-16`, `padding: 0 --spacing-32 0 --spacing-16`,
+  `border-bottom: 1px solid --color-border-default`. Cada `.tab`: altura 44px, `padding-bottom`
+  negativo de −1px (a aba ativa "come" a borda), `border-bottom: 2px solid transparent`.
+  - `.tabActive` → `border-bottom-color: --color-brand-default`; label em `--color-brand-default`.
+  - `.tabInactive` (Legislação/Outros) → `cursor: default`, label em `--color-text-disabled`.
+  - `.tabBadge` — pílula 24×24, `--radius-12`, fundo `--color-bg-hover` / (ativa) `--color-brand-muted`.
+    No protótipo o badge do Checklist é a contagem de não-conformes; da Técnica é o total.
+- `.progress` — bloco com `.progressRow` (label "Progresso da análise" + contador
+  "X/Y itens verificados") e `.progressBar` (4px, `--color-border-default`) com `.progressFill`
+  (`--color-brand-default`, `transition: width .3s`).
+- `.filters` — linha de `.chip` (chips de filtro por status). **Fora do escopo desta slice
+  (RF-009)** — o `PainelRevisao` não renderiza os filtros ainda.
+- `.list` — coluna rolável (`overflow-y: auto`), `gap: --spacing-8`, `padding` assimétrico,
+  fundo `--color-bg-page`.
+- `.group` — `.groupHeader` (`.groupLabel` bold caption + `.groupBadge` 20×20 com a contagem)
+  + `.items` (coluna, `gap: --spacing-8`).
+
+**REF-07 — `ChecklistItem` / `ObservationItem`**:
+
+- `.item` — `border-left: 4px solid var(--accent)` + `--radius-8`; o `--accent` vem da classe
+  de status: `.itemSuccess` = verde de marca, `.itemError` = vermelho, `.itemNa` = cinza forte,
+  `.itemObs` = azulado (`--color-obs-accent`). `.itemInner` = card branco com borda; aberta
+  (`.itemOpen`) a borda fica na cor do accent.
+- `.itemHeader` — `flex`, `gap: --spacing-16`, `padding: --spacing-12 --spacing-16`,
+  `border-bottom`, clicável (alterna o acordeão; cliques no checkbox/links não propagam).
+  Dentro: `.checkbox` (18×18, `appearance: none`, borda 2px; `:checked` fica verde com o
+  "tick" via `::after`; `:disabled` → `opacity: .4`), `.itemText` (`.question` = texto do
+  requisito; `.pages` = "p. 18–22" clicável — **RF-014**), e à direita `.status`
+  (`.statusLabel` na cor do status + `.chevron` 15px que rotaciona 180° quando aberto).
+- `.detail` (só quando aberto) — `.detailRow` com `.detailText` (o texto da análise/IA);
+  `.detailActions` com "Ver p. …" (**RF-014**) e "Alterar parecer" (**RF-008**) —
+  **ambos fora do escopo**. `ObservationItem` (Técnica) não tem `.status` nem `.detailActions`
+  no protótipo (item neutro) — nesta slice, por decisão validada, a Técnica passa a ter o
+  badge de `statusFinal` como o Checklist.
+
+### 10.2 Divergências intencionais em relação ao protótipo
+
+- **Aba Técnica com badge de `statusFinal`** (protótipo: "observações" neutras sem status) —
+  decisão validada, o backend entrega status para todo requisito (P-04).
+- **Sem filtros por status** (chips) → RF-009. **Sem checkbox interativo** (fica desabilitado)
+  → RF-011. **Sem "Alterar parecer"** → RF-008. **Sem "Ver p." clicável** ("Página N" é texto)
+  → RF-014. **Sem modais de conclusão / toasts** → RF-012.
+- **Legislação / Outros** aparecem como abas desabilitadas (indisponíveis no MVP — glossário).
+- **Badge das abas** = contagem de itens da aba (não "não-conformes" no Checklist como o
+  protótipo) — simplificação; a priorização de não conformes é RF-009.
+- **Progresso** = `resumo.verificados / resumo.total` para as duas abas (o protótipo tem
+  contadores separados por aba com totais "verificáveis"); os contadores de conclusão de etapa
+  do protótipo não entram (RF-012).
+- Sem trava `min-width: 1440px` (herdado da TSD-002); o painel mantém os 596px fixos.
 
 Screenshots obrigatórios: aba Checklist (itens recolhidos + um expandido), aba Técnica, estado
 "processando"; comparação de enquadramento (abas, barra de progresso, grupo de área, acordeão)
-com REF-06/REF-07. **Divergências a registrar:** aba Técnica com badge de status (protótipo:
-neutra); filtros/checkbox/editar-parecer ausentes (entram em RF-009/011/008); Legislação/Outros
-desabilitadas; sem "Progresso"/contadores de conclusão do protótipo além de verificados/total.
-
-**Esta TSD não deve ser implementada enquanto o `Status de inspeção` de REF-06/REF-07 estiver
-`Pendente`** — a inspeção do painel do protótipo e o preenchimento da §10 vêm antes de codar
-(gate do `visual-reference-workflow`).
+com REF-06/REF-07. Evidência em `frontend/docs/visual-reference/rf-010/`.
 
 ## 11. Rollback
 

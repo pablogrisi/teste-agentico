@@ -20,6 +20,24 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 01/09/2026 — RF-010 / TSD-013: tela de análise — abas Checklist/Técnica (frontend)
+
+Contexto: 3º ciclo de RF do frontend, na branch `frontend/rf-010-tela-analise` (a partir da `main` `9887dca`). Numeração: backend tinha tomado TSD-009 (RF-014) e TSD-010 (RF-012/013/015); frontend seguiu com 011 (RF-002), 012 (RF-001/004) e agora **013** (RF-010).
+
+Papéis (em sequência, mesma sessão):
+- **PM**: User Story do recorte frontend de RF-010 em `docs/product/roadmap.md` — tela de análise carrega `GET /analises/:id`, abas Checklist/Técnica com navegação livre, lista de requisitos por área em acordeão **somente leitura**, estados carregando/erro/404. Fora do escopo: filtros (RF-009), IA sugerida (RF-007), verificado interativo (RF-011), modal de parecer (RF-008), comentário (RF-017), visor de PDF (RF-014), conclusão (RF-012). **Apresentada e parada para validação.**
+- **Engenheiro**: `docs/engineering/specs/013-tela-analise-frontend.tsd.md`. **Apresentada e parada.** Usuário validou com 3 decisões: (1) corte inclui a lista read-only; (2) aba Técnica **fiel ao backend** (badge de `statusFinal`, não neutra como o protótipo — P-04); (3) **ligar polling** enquanto processa; checkbox desabilitado (interativo no RF-011). TSD-013 §9/§10 atualizadas com as decisões e a inspeção do `AnalysisPanel`.
+- **Dev**:
+  - Camada de dados: `types.ts` (`AnaliseDetalhe`, `ResumoAnalise`, `AreaComItens`, `AvaliacaoItem`, `NormaReferencia`); `analise-detalhe.ts` (`separarPorAba` por prefixo `CHECKLIST`/`TECNICA`, `rotuloArea`, `normaTexto`, `calcularResumo`, `contarItens`, `ANALISE_POLL_MS`); `status-requisito.ts` (label/tone); `analises-gateway.ts` (`abrirAnalise` + `AnaliseNaoEncontradaError`); `fixtures-analise-detalhe.ts` (fixtures explícitas ids 1/2/3/5 + sintetizador a partir da listagem); `fixtures-analises-gateway.ts`/`http-analises-gateway.ts` (`abrirAnalise` + `validarAnaliseDetalhe`); `index.ts`.
+  - Rota: `app/analise/[id]/page.tsx` reescrita (Server Component `dynamic`, `notFound()` no `AnaliseNaoEncontradaError`); `not-found.tsx` novo.
+  - Componentes `src/components/analise/`: `AnaliseHeader` (NUP/objeto/status/responsável/datas — barra própria acima dos painéis), `AnaliseVisorPlaceholder` (RF-014), `AutoRefreshAnalise` (client, `setInterval`→`router.refresh()` só enquanto `PENDENTE`/`PROCESSANDO`), `PainelRevisao` (client — abas, progresso do `resumo`, grupos por área, estados processando/erro), `RequisitoItem` (client — acordeão; `<div>` header com checkbox desabilitado + `<button>` toggle para não aninhar input em button; expandido = descrição/norma/comentário/página-texto), `StatusBadgeRequisito`. Ícones: nenhum novo (reusa `ChevronDownIcon`).
+- **Testes (mecânico)**: `npm run ci` ✅ — `eslint .` + prettier, `tsc --noEmit`, **vitest 104/104 (16 arquivos)**, `next build`. Novos/estendidos: `analise-detalhe` (separar/rótulo/norma/resumo), `fixtures-analises-gateway` (+`abrirAnalise`: fixture/sintetizado/processando/404/imutabilidade), `http-analises-gateway` (+`abrirAnalise` contrato: URL encodada, mapeamento completo, `404`→`NaoEncontrada`, `500`, sem `avaliacoesPorArea`/`resumo`, status fora da allowlist, rede), `painel-revisao` (6 casos), `requisito-item` (4), `analise-header` (2). Percalço: comentário JSDoc com `CHECKLIST*/` fechava o bloco → reescrito.
+- **Visual**: screenshots (Checklist com item expandido, Técnica, processando, não-encontrada) + `prototipo-painel.png` em `frontend/docs/visual-reference/rf-010/` + `README.md` com a comparação vs REF-06/REF-07 (divergências: Técnica com status, sem filtros/checkbox/editar-parecer, badge pílula, cabeçalho em barra própria).
+
+Docs: `roadmap.md` (RF-010 frontend — User Story + status), `013-*.tsd.md` (novo), checkpoint §1/§2/§5/§7, este arquivo.
+
+Estado: ciclo implementado e validado, `npm run ci` verde, **branch aguardando push + merge na `main`**. Próximo frontend: RF-007 (status sugerido pela IA na tela de análise). Follow-up: smoke da tela de análise contra o backend real quando houver ambiente conjunto.
+
 ## 01/09/2026 — RF-001 + RF-004 / TSD-012: modal "Nova análise" + upload (frontend)
 
 Contexto: usuário pediu "Continue" após aprovar RF-002. Aberto o 2º ciclo de RF do frontend na branch `frontend/rf-001-nova-analise` (a partir de `frontend/rf-002-listagem`), agrupando RF-001 (criar análise: NUP, objeto) + RF-004 (upload de PDF) — mesmo agrupamento do backend (TSD-004). Sem merge na `main`.
