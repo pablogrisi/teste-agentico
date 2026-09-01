@@ -20,6 +20,29 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 01/09/2026 — RF-001 + RF-004 / TSD-011: modal "Nova análise" + upload (frontend)
+
+Contexto: usuário pediu "Continue" após aprovar RF-002. Aberto o 2º ciclo de RF do frontend na branch `frontend/rf-001-nova-analise` (a partir de `frontend/rf-002-listagem`), agrupando RF-001 (criar análise: NUP, objeto) + RF-004 (upload de PDF) — mesmo agrupamento do backend (TSD-004). Sem merge na `main`.
+
+Papéis (em sequência, mesma sessão):
+- **PM**: User Story do recorte frontend em `docs/product/roadmap.md` (RF-001), com escopo, fora do escopo e divergências protótipo × PRD (limite 25 MB vs 50 MB; `objeto`/`arquivo`; sem "Processando documento…").
+- **Engenheiro**: `docs/engineering/specs/011-nova-analise-frontend.tsd.md` — escopo, estratégia de testes (inclui **contrato** de `POST /analises`), decisões (validação client-side = obrigatórios + tipo PDF + 25 MB; magic bytes/`/Encrypt` ficam no backend), §10 (REF-05).
+- **Dev**:
+  - `src/lib/data/nova-analise.ts` — `ANALISE_PDF_TAMANHO_MAX_MB=25`, `NUP_MAX=60`, `OBJETO_MAX=2000`; `validarArquivoPdf`, `validarNovaAnalise`, `formatarTamanho` (puros).
+  - `types.ts` — `NovaAnaliseInput` (`{ nup, objeto, arquivo: File }`), `AnaliseCriada`.
+  - `analises-gateway.ts` — `criarAnalise` na interface; `AnaliseValidacaoError extends AnalisesGatewayError` (`motivos: string[]`).
+  - `fixtures-analises-gateway.ts` — `criarAnalise` revalida e devolve `AnaliseCriada` sintética `PENDENTE` (`id: nova-<uuid>`; **não** entra na lista — andaime).
+  - `http-analises-gateway.ts` — `criarAnalise` = `POST {base}/analises` (FormData `nup`/`objeto`/`arquivo`); `422` → `AnaliseValidacaoError` (lê `message` string|array); `≥500`/rede → `AnalisesGatewayError`; `validarAnaliseCriada` para o `201`.
+  - `NovaAnaliseModal` (client, `createPortal` p/ `document.body`): campos + dropzone (clique + drag&drop), `role="dialog"`/`aria-modal`, Escape / clique-fora / × / Cancelar (bloqueado enviando), foco inicial no NUP, `body` sem scroll enquanto aberto. Erro por campo (`aria-invalid`/`aria-describedby`); faixa do arquivo fica **vermelha** quando inválido; banner de erro de envio acima do rodapé com os campos preservados.
+  - `NovaAnaliseButton` (client) — substitui o `<button disabled>` do `AnalisesToolbar`; no `onCriada` faz `router.push('/analise/<id>')`.
+  - Ícones `XmarkIcon`, `UploadIcon`, `CircleCheckIcon`, `TrashIcon`.
+- **Testes (mecânico)**: `npm run ci` ✅ — `eslint .` + prettier, `tsc --noEmit`, **vitest 72/72 (12 arquivos)**, `next build`. Novos: `nova-analise` (validações puras), `nova-analise-modal` (7 casos RTL: campos, habilita só quando válido, recusa não-PDF via drag, recusa >25 MB, sucesso → `onCriada`, erro do servidor → banner + dados preservados, Escape), `nova-analise-button` (abre modal, cria → `push`), + `criarAnalise` no `fixtures-analises-gateway` e no `http-analises-gateway` (contrato: FormData/URL/método, `201`, `422` array e string, `502`, corpo fora do formato, rede). Percalços: `userEvent.upload` filtra por `accept` → teste de "não-PDF" usa `fireEvent.drop`; `crypto.randomUUID` disponível no ambiente jsdom.
+- **Visual**: screenshots do modal (vazio, com arquivo, erro de arquivo) + `prototipo-modal.png` em `frontend/docs/visual-reference/rf-001/` + `README.md` com a comparação vs REF-05. Estado "erro de envio" é coberto por teste (sem backend no ar).
+
+Docs: `roadmap.md` (RF-001/RF-004 frontend — User Story + status + TSD-011), `011-*.tsd.md` (novo), checkpoint §1/§2/§5/§7, este arquivo.
+
+Estado: ciclo implementado, `npm run ci` verde, **branch aguardando revisão (Crítico) + merge** — na ordem `tsd-002-fundacao` → `rf-002-listagem` → `rf-001-nova-analise`. Próximo frontend: RF-010 (tela de análise). Follow-up: smoke `criar → abrir` contra o backend real quando houver ambiente conjunto (o `HttpAnalisesGateway` só passou por teste de contrato).
+
 ## 01/09/2026 — RF-002 / TSD-010: tela de listagem de análises (frontend)
 
 Contexto: usuário (Vinicius) pediu para abrir o 1º ciclo de RF do frontend a partir da fundação (TSD-002 não mergeada), sem merge na `main`, e incluir o follow-up de migração do `next lint`. Branch `frontend/rf-002-listagem` a partir de `frontend/tsd-002-fundacao`.
