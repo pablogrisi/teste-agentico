@@ -6,11 +6,13 @@ vivem na raiz.
 
 > **Estado:** fundação (TSD-002) + **RF-002** (listagem, TSD-011) + **RF-001/RF-004** (modal
 > "Nova análise", TSD-012) + **RF-010** (tela de análise, TSD-013) + **RF-007** (status
-> sugerido pela IA, TSD-014). `/` lista as análises e abre o modal de criação;
-> `/analise/[id]` mostra cabeçalho + abas Checklist/Técnica (navegação livre) com os
-> requisitos em acordeão **somente leitura**, cada um indicando o status **sugerido pela IA**
-> e a divergência quando o parecer atual difere. Filtros, edição de parecer, verificado
-> interativo e visor de PDF entram em RF-009/008/011/014.
+> sugerido pela IA, TSD-014) + **RF-009** (visão inicial priorizando não conformes + filtros
+> por status, TSD-015). `/` lista as análises e abre o modal de criação; `/analise/[id]`
+> mostra cabeçalho + abas Checklist/Técnica (navegação livre) com os requisitos em acordeão
+> **somente leitura**, cada um indicando o status **sugerido pela IA** e a divergência quando
+> o parecer atual difere; a lista abre filtrada por **não conformes** e tem chips de filtro
+> por status (persistidos na URL). Edição de parecer, verificado interativo e visor de PDF
+> entram em RF-008/011/014.
 
 ## Pré-requisitos
 
@@ -34,8 +36,9 @@ Rotas:
   filtro por status + ordenação + paginação; "Nova análise" cria via `POST /analises` e navega
   para a análise.
 - `/analise/<id>` — tela de análise (RF-010): cabeçalho + abas Checklist/Técnica + lista de
-  requisitos avaliados (read-only); polling enquanto a análise está processando; visor de PDF
-  é placeholder (RF-014).
+  requisitos avaliados (read-only); chips de filtro por status (RF-009 — abre em "Não
+  conforme", `?requisitos=<slug>` na URL); polling enquanto a análise está processando; visor
+  de PDF é placeholder (RF-014).
 
 ## Scripts
 
