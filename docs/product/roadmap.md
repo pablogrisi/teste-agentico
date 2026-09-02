@@ -62,7 +62,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 5 | RF-007 | Exibição dos requisitos com status sugerido pela IA | Must | implementada (branch `frontend/rf-007-status-ia`) |
 | 6 | RF-009 | Visão inicial priorizando não conformes + filtros por status | Must | implementada — Crítico ✅ (branch `frontend/rf-009-filtros`) |
 | 7 | RF-008 | Modal de alteração de status final ("parecer") | Must | implementada — Crítico ✅ (branch `frontend/rf-008-parecer`) |
-| 8 | RF-011 | Controle de "marcar como verificado" | Must | não iniciada |
+| 8 | RF-011 | Controle de "marcar como verificado" | Must | user story + TSD-017 em aprovação (branch `frontend/rf-011-verificado`) |
 | 9 | RF-017 | Campo de comentário obrigatório nas ações de revisão | Must | não iniciada |
 | 10 | RF-014 | Visor de PDF + referência de página clicável / ausência explícita | Must | não iniciada |
 | 11 | RF-012 | Modal de conclusão + botão global bloqueado até tudo verificado | Must | não iniciada |
@@ -412,7 +412,30 @@ Recorte deste ciclo (frontend), em cima do painel do RF-010/RF-007/RF-009:
 
 **Frentes:** Backend · Frontend
 **Status (backend):** coberto no ciclo de RF-008 (ver seção RF-008)
-**Status (frontend):** não iniciada
+**Status (frontend):** user story + TSD-017 em aprovação — branch `frontend/rf-011-verificado`
+
+**User Story (frontend — RF-011)**
+
+Como analista técnico, quero **marcar e desmarcar cada requisito como "verificado"** direto na lista da tela de análise, e ver a barra de progresso e os contadores acompanharem na hora, para controlar o que já revisei sem abrir o modal de parecer.
+
+Recorte deste ciclo (frontend), em cima do painel do RF-010/007/009/008:
+
+- O **checkbox de "verificado"** de cada `RequisitoItem` deixa de ser desabilitado: clicar alterna `verificado` (true↔false) via `PATCH /analises/:id/requisitos/:requisitoId` com `{ verificado }` — **sem comentário** (a regra R-06 só vale ao mudar `statusFinal`).
+- A resposta `{ item, resumo }` é aplicada **na hora** (mesmo mecanismo de `overrides` + `resumo` de estado do RF-008): a **barra de progresso** (`verificados/total`) e as contagens acompanham; nada recarrega.
+- Enquanto o `PATCH` está em curso, o checkbox fica **desabilitado**; se falhar, ele **volta ao estado anterior** e aparece uma mensagem curta no item.
+- **Só quando a análise está `PRONTA_PARA_REVISAO`.** Em `CONCLUIDA` o checkbox fica desabilitado (a revisão está fechada).
+- Alterar o parecer pelo modal (RF-008) continua ligando `verificado = true` — sem regressão.
+- **Fora do escopo:** "verificar tudo" em massa; concluir a análise / botão global (RF-012); campo de comentário fora do fluxo de parecer (RF-017); página do PDF (RF-014); histórico.
+
+**Critério de aceite (frontend)**
+
+- Cada requisito de uma análise `PRONTA_PARA_REVISAO` tem um checkbox de "verificado" **operável**; o de uma análise `CONCLUIDA` fica desabilitado.
+- Clicar chama `AnalisesGateway.marcarVerificado(analiseId, requisitoId, verificado)` (nenhum componente fala HTTP direto); no sucesso o item reflete o novo `verificado` e o **progresso/contadores** se ajustam pelo `resumo` devolvido, sem reload.
+- Durante a chamada o checkbox não aceita novos cliques; num erro (`409`/`404`/rede) ele volta ao valor anterior e o item mostra uma mensagem.
+- O corpo enviado é só `{ verificado: boolean }` — nunca `statusFinal`/`comentario`.
+- Nenhuma mudança de contrato; mesmo endpoint da TSD-008.
+
+**TSD associada (frontend):** `docs/engineering/specs/017-verificado-interativo-frontend.tsd.md`.
 
 ### RF-017 — Comentário obrigatório nas ações de revisão
 
