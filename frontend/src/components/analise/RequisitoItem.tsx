@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import { ChevronDownIcon } from "@/components/icons";
-import { divergeDaIa, normaTexto, STATUS_REQUISITO_LABEL } from "@/lib/data";
+import { AnaliseValidacaoError, divergeDaIa, normaTexto, STATUS_REQUISITO_LABEL } from "@/lib/data";
 import type { AvaliacaoItem } from "@/lib/data";
 import { StatusBadgeRequisito } from "./StatusBadgeRequisito";
 import { StatusIaResumo } from "./StatusIaResumo";
@@ -43,8 +43,12 @@ export function RequisitoItem({
     setErroToggle(null);
     try {
       await onToggleVerificado(!item.verificado);
-    } catch {
-      setErroToggle("Não foi possível salvar. Tente de novo.");
+    } catch (erro) {
+      setErroToggle(
+        erro instanceof AnaliseValidacaoError
+          ? (erro.motivos[0] ?? "Não foi possível salvar. Tente de novo.")
+          : "Não foi possível salvar. Tente de novo.",
+      );
     } finally {
       setSalvando(false);
     }
@@ -112,7 +116,7 @@ export function RequisitoItem({
                 <span className={styles.rotulo}>Norma:</span> {norma}
               </p>
             )}
-            {item.comentario && (
+            {!diverge && item.comentario && (
               <p className={styles.linha}>
                 <span className={styles.rotulo}>Comentário:</span> {item.comentario}
               </p>

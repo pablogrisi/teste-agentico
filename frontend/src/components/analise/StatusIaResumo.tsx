@@ -22,6 +22,11 @@ export function StatusIaResumo({ item }: { item: AvaliacaoItem }) {
           <span className={styles.aviso}>alterado na revisão</span>
         </p>
       )}
+      {diverge && item.comentario?.trim() && (
+        <p className={styles.justificativa}>
+          <span className={styles.rotulo}>Justificativa da alteração:</span> {item.comentario}
+        </p>
+      )}
     </div>
   );
 }

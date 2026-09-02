@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { RequisitoItem } from "@/components/analise/RequisitoItem";
+import { AnaliseConflitoError, AnaliseValidacaoError } from "@/lib/data";
 import type { AvaliacaoItem } from "@/lib/data";
 
 function item(over: Partial<AvaliacaoItem> = {}): AvaliacaoItem {
@@ -51,6 +52,41 @@ describe("RequisitoItem", () => {
     expect(screen.getByText("não informada")).toBeInTheDocument();
   });
 
+  describe("comentário / justificativa (RF-017)", () => {
+    it("item não divergente com comentário → linha 'Comentário:'", async () => {
+      const user = userEvent.setup();
+      render(
+        <RequisitoItem
+          item={item({
+            statusSugeridoIa: "NAO_CONFORME",
+            statusFinal: "NAO_CONFORME",
+            comentario: "CI não localizada.",
+          })}
+        />,
+      );
+      await user.click(screen.getByRole("button", { expanded: false }));
+      expect(screen.getByText("Comentário:")).toBeInTheDocument();
+      expect(screen.queryByText("Justificativa da alteração:")).not.toBeInTheDocument();
+    });
+
+    it("item divergente com comentário → 'Justificativa da alteração:' uma vez, sem 'Comentário:'", async () => {
+      const user = userEvent.setup();
+      render(
+        <RequisitoItem
+          item={item({
+            statusSugeridoIa: "NAO_CONFORME",
+            statusFinal: "CONFORME",
+            comentario: "Documento localizado à fl. 2.",
+          })}
+        />,
+      );
+      await user.click(screen.getByRole("button", { expanded: false }));
+      expect(screen.queryByText("Comentário:")).not.toBeInTheDocument();
+      expect(screen.getByText("Justificativa da alteração:")).toBeInTheDocument();
+      expect(screen.getAllByText("Documento localizado à fl. 2.")).toHaveLength(1);
+    });
+  });
+
   it("o checkbox de verificado fica desabilitado sem o callback (ex.: análise concluída)", () => {
     render(<RequisitoItem item={item({ verificado: true })} />);
     const cb = screen.getByRole("checkbox");
@@ -91,9 +127,9 @@ describe("RequisitoItem", () => {
       await waitFor(() => expect(cb).toBeEnabled());
     });
 
-    it("no erro mostra a mensagem no item e o checkbox reflete de novo o valor da prop", async () => {
+    it("no erro genérico mostra a mensagem padrão e o checkbox reflete de novo o valor da prop", async () => {
       const user = userEvent.setup();
-      const onToggleVerificado = vi.fn().mockRejectedValue(new Error("falhou"));
+      const onToggleVerificado = vi.fn().mockRejectedValue(new AnaliseConflitoError());
       render(
         <RequisitoItem
           item={item({ verificado: false })}
@@ -106,6 +142,25 @@ describe("RequisitoItem", () => {
       // o pai não mudou o item → o checkbox continua desmarcado
       expect(cb).not.toBeChecked();
       expect(cb).toBeEnabled();
+    });
+
+    it("no 422 (AnaliseValidacaoError) mostra a mensagem do backend, não a genérica (RF-017)", async () => {
+      const user = userEvent.setup();
+      const onToggleVerificado = vi
+        .fn()
+        .mockRejectedValue(
+          new AnaliseValidacaoError(["Comentário obrigatório quando o parecer difere da IA."]),
+        );
+      render(
+        <RequisitoItem
+          item={item({ verificado: false })}
+          onToggleVerificado={onToggleVerificado}
+        />,
+      );
+      await user.click(screen.getByRole("checkbox"));
+      const alerta = await screen.findByRole("alert");
+      expect(alerta).toHaveTextContent("Comentário obrigatório quando o parecer difere da IA.");
+      expect(alerta).not.toHaveTextContent(/não foi possível salvar/i);
     });
   });
 

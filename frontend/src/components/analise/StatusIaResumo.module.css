@@ -29,3 +29,9 @@
   font-style: italic;
   color: var(--color-warning-text);
 }
+
+.justificativa {
+  font-size: var(--text-caption-size);
+  line-height: var(--line-height-16);
+  color: var(--color-text-body);
+}
