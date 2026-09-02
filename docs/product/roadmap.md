@@ -65,7 +65,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 8 | RF-011 | Controle de "marcar como verificado" | Must | implementada — Crítico ✅ (branch `frontend/rf-011-verificado`) |
 | 9 | RF-017 | Campo de comentário obrigatório nas ações de revisão | Must | implementada — Crítico ✅ (branch `frontend/rf-017-comentario`) |
 | 10 | RF-014 | Visor de PDF + referência de página clicável / ausência explícita | Must | implementada — Crítico ✅ (branch `frontend/rf-014-visor`) |
-| 11 | RF-012 | Modal de conclusão + botão global bloqueado até tudo verificado | Must | não iniciada |
+| 11 | RF-012 | Modal de conclusão + botão global bloqueado até tudo verificado | Must | user story + TSD-020 em aprovação (branch `frontend/rf-012-conclusao`) |
 | 12 | RF-016 | Ação de baixar o relatório PDF da análise concluída | Must | não iniciada |
 
 Status possíveis, nessa ordem de progresso dentro de um ciclo: `não iniciada` → `user story em aprovação` → `user story aprovada` → `TSD em aprovação` → `TSD aprovada` → `em construção` → `em validação` → `implementada`.
@@ -531,9 +531,35 @@ Recorte backend deste ciclo (reduzido após as decisões — o visor do frontend
 
 **Frentes:** Backend · Frontend
 **Status (backend):** implementada (mergeada no `main` `56f83bd`)
-**Status (frontend):** não iniciada
+**Status (frontend):** user story + TSD-020 em aprovação — branch `frontend/rf-012-conclusao`
 
 > Ciclo backend agrupado: **RF-012 + RF-013 + RF-015** = "concluir a análise" (um endpoint de conclusão). User Story e critérios abaixo cobrem os três.
+
+**User Story (frontend — RF-012)**
+
+Como analista técnico, quero um botão **"Concluir análise"** na tela, que só habilita quando **todos os requisitos obrigatórios estão verificados**, e uma confirmação antes de fechar — para registrar o parecer final e deixar a análise congelada para consulta, numa única ação.
+
+Recorte deste ciclo (frontend), em cima da tela do RF-010/…/RF-014:
+
+- **Botão "Concluir análise"** no cabeçalho da tela (ao lado do status), visível enquanto a análise está `PRONTA_PARA_REVISAO`.
+  - **Desabilitado** enquanto `resumo.obrigatoriosPendentes > 0`, com um texto curto do porquê ("Faltam N requisitos obrigatórios não verificados"). O contador usa o `resumo` **corrente** da sessão (reflete o que o analista acabou de marcar — RF-011), não só o do servidor.
+  - **Habilitado** quando `obrigatoriosPendentes === 0`.
+- **Modal de confirmação** — "Concluir a análise? Depois disso ela fica **somente leitura**." + Cancelar / Concluir.
+- **Confirmar** → `POST /analises/:id/concluir` via `AnalisesGateway.concluirAnalise` (nenhum componente fala HTTP direto).
+  - **Sucesso** → a tela reflete `CONCLUIDA` **na hora** (sem reload): o badge de status vira "Concluída", aparece "Concluída em", e **todas as ações de revisão ficam read-only** (o `podeEditar` já deriva do status — "Alterar parecer", checkbox de "verificado" e o editor de página somem/desabilitam). O visor de PDF continua.
+  - **`422`** (corrida — alguém desverificou entre a checagem e o clique) → o modal mostra "Ainda faltam N requisitos obrigatórios:" + a lista (`codigo` — `titulo`) que o backend devolve; a análise segue aberta.
+  - **`409`** (fora de `PRONTA_PARA_REVISAO`) / **`404`** / rede → mensagem clara no modal.
+- **Idempotência:** abrir uma análise já `CONCLUIDA` não mostra o botão; o backend responde `200` idempotente se chamado de novo.
+- **Fora do escopo:** baixar o relatório PDF (RF-016 — fica um lugar reservado); reabrir uma análise concluída (fora do MVP); os "modais de etapa concluída" intermediários do protótipo (checklist/técnica) — aqui é uma conclusão única.
+
+**Critério de aceite (frontend)**
+
+- Numa análise `PRONTA_PARA_REVISAO` com obrigatórios pendentes, o botão "Concluir análise" aparece **desabilitado** com o motivo; ao verificar o último obrigatório (RF-011), ele **habilita** sem reload.
+- Confirmar no modal chama `POST /analises/:id/concluir`; no sucesso a tela vira `CONCLUIDA` sem reload — badge, "Concluída em" e read-only em tudo; `422` lista os pendentes do backend; `409`/`404`/rede, mensagem clara.
+- Numa análise `CONCLUIDA` o botão não aparece.
+- Nenhuma mudança de contrato; sem regressão nos testes de RF-008/011/014/017.
+
+**TSD associada (frontend):** `docs/engineering/specs/020-conclusao-analise-frontend.tsd.md`.
 
 **User Story** — *validada em 01/09/2026*
 
