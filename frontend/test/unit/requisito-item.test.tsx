@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { RequisitoItem } from "@/components/analise/RequisitoItem";
-import { AnaliseConflitoError, AnaliseValidacaoError } from "@/lib/data";
+import { AnaliseConflitoError, AnaliseNaoEncontradaError, AnaliseValidacaoError } from "@/lib/data";
 import type { AvaliacaoItem } from "@/lib/data";
 
 function item(over: Partial<AvaliacaoItem> = {}): AvaliacaoItem {
@@ -142,6 +142,19 @@ describe("RequisitoItem", () => {
       // o pai não mudou o item → o checkbox continua desmarcado
       expect(cb).not.toBeChecked();
       expect(cb).toBeEnabled();
+    });
+
+    it("erro 404 (AnaliseNaoEncontradaError) também cai na mensagem genérica", async () => {
+      const user = userEvent.setup();
+      const onToggleVerificado = vi.fn().mockRejectedValue(new AnaliseNaoEncontradaError("1"));
+      render(
+        <RequisitoItem
+          item={item({ verificado: false })}
+          onToggleVerificado={onToggleVerificado}
+        />,
+      );
+      await user.click(screen.getByRole("checkbox"));
+      expect(await screen.findByRole("alert")).toHaveTextContent(/não foi possível salvar/i);
     });
 
     it("no 422 (AnaliseValidacaoError) mostra a mensagem do backend, não a genérica (RF-017)", async () => {

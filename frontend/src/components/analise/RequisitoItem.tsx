@@ -116,7 +116,7 @@ export function RequisitoItem({
                 <span className={styles.rotulo}>Norma:</span> {norma}
               </p>
             )}
-            {!diverge && item.comentario && (
+            {!diverge && item.comentario?.trim() && (
               <p className={styles.linha}>
                 <span className={styles.rotulo}>Comentário:</span> {item.comentario}
               </p>

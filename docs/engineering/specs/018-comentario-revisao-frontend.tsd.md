@@ -165,7 +165,8 @@ npm run ci
   coberto por teste de unidade (rejeição forjada), não por screenshot — mesmo critério do RF-011.
 - **Comentário longo** no `StatusIaResumo`: a linha quebra em várias linhas; conferir na
   inspeção visual que o bloco âmbar comporta.
-- **`item.comentario` com espaços só** — `trim()` na condição evita render de linha vazia.
+- **`item.comentario` com espaços só** — `trim()` na condição das **duas** linhas (a
+  "Justificativa da alteração" e a "Comentário:" do item não divergente) evita render de linha vazia.
 
 ## 10. Referências visuais
 
