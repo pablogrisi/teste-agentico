@@ -64,7 +64,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 7 | RF-008 | Modal de alteração de status final ("parecer") | Must | implementada — Crítico ✅ (branch `frontend/rf-008-parecer`) |
 | 8 | RF-011 | Controle de "marcar como verificado" | Must | implementada — Crítico ✅ (branch `frontend/rf-011-verificado`) |
 | 9 | RF-017 | Campo de comentário obrigatório nas ações de revisão | Must | implementada — Crítico ✅ (branch `frontend/rf-017-comentario`) |
-| 10 | RF-014 | Visor de PDF + referência de página clicável / ausência explícita | Must | não iniciada |
+| 10 | RF-014 | Visor de PDF + referência de página clicável / ausência explícita | Must | user story + TSD-019 em aprovação (branch `frontend/rf-014-visor`) |
 | 11 | RF-012 | Modal de conclusão + botão global bloqueado até tudo verificado | Must | não iniciada |
 | 12 | RF-016 | Ação de baixar o relatório PDF da análise concluída | Must | não iniciada |
 
@@ -468,11 +468,33 @@ Recorte deste ciclo (frontend), em cima do RF-007/008/011:
 
 **Frentes:** Backend · Frontend
 **Status (backend):** implementada (mergeada no `main` `19f308b`)
-**Status (frontend):** não iniciada
+**Status (frontend):** user story + TSD-019 em aprovação — branch `frontend/rf-014-visor`
 
 **User Story** — *validada em 31/08/2026*
 
 Como analista técnico, quero, a partir de um requisito, abrir a página do PDF que sustenta o parecer — e ver claramente quando não há página associada — para conferir a evidência sem folhear o documento inteiro.
+
+**User Story (frontend — RF-014)**
+
+Como analista técnico, quero **ver o PDF do processo ao lado da lista de requisitos** e, ao clicar na referência de página de um requisito, **o visor pula para aquela página** — e, quando a página estiver errada ou faltando, **corrigir/definir a página** sem sair da tela.
+
+Recorte deste ciclo (frontend), em cima da tela do RF-010/007/008/009/011/017:
+
+- **Visor de PDF real** no lugar do `AnaliseVisorPlaceholder`: um `<iframe>` com o PDF inteiro servido por `GET /analises/:id/pdf` (backend `19f308b`) + navegação por `#page=N` (decisão do ciclo — nada de extração no servidor). Barra simples: página atual / total (`totalPaginasPdf` do payload) + anterior/próxima + campo de página.
+- **Sem backend real (fixtures)** não há PDF → o visor mostra um aviso claro ("O visor abre o PDF quando conectado ao backend") + o total de páginas; a referência de página clicável e a correção continuam funcionando (só não há documento para exibir).
+- **Referência de página clicável no requisito**: a linha "Referência de página: Página N" do bloco expandido vira um botão que manda o visor para a página N. `paginaReferencia: null` continua como "não informada" (ausência explícita).
+- **Corrigir/definir a página**: no bloco expandido, ao lado da referência, um controle "Editar" → campo numérico + salvar. Envia `PATCH /analises/:id/requisitos/:requisitoId` com `{ paginaReferencia }` (inteiro `1..totalPaginasPdf`, ou `≥1` quando o total é desconhecido, ou `null` para limpar). **Não** dispara a regra de comentário (R-06). Aplica o `{ item, resumo }` devolvido na hora (mecanismo do RF-008/011).
+- **Fora do escopo:** destaque de trecho/anotação no PDF; miniaturas; busca no PDF; download; sugestão automática de página pela IA (depende de A-02); campo de página dentro do modal "Alterar parecer" (fica só o editor inline).
+
+**Critério de aceite (frontend)**
+
+- A tela de análise mostra o visor do PDF à esquerda; com backend real, o `<iframe>` carrega `GET /analises/:id/pdf`; com fixtures, um aviso + o total de páginas.
+- Clicar na referência de página de um requisito move o visor para aquela página (`#page=N`); `paginaReferencia: null` aparece como "não informada" e não é clicável.
+- O editor inline de página envia `PATCH { paginaReferencia }` via `AnalisesGateway` (nenhum componente fala HTTP direto); no sucesso o requisito reflete a nova página e o `resumo` é aplicado; `422` (fora do intervalo) mostra a mensagem do backend; `409`/`404`/rede, mensagens claras.
+- Só é possível editar a página quando a análise está `PRONTA_PARA_REVISAO` (igual às demais ações de revisão).
+- Nenhuma mudança de contrato; sem regressão nos testes de RF-008/011/017.
+
+**TSD associada (frontend):** `docs/engineering/specs/019-visor-pdf-frontend.tsd.md`.
 
 Recorte backend deste ciclo (reduzido após as decisões — o visor do frontend navega para a página via `#page=N` contra o PDF inteiro que já existe; **não há extração de página no servidor**):
 - Persistir o **total de páginas** do PDF de entrada (nova coluna `Analise.totalPaginasPdf`, calculada no `criar` com `pdf-lib`, best-effort).
