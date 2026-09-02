@@ -6,6 +6,12 @@
 export interface AppConfig {
   nodeEnv: string;
   port: number;
+  /**
+   * Origens permitidas em CORS (lista de `CORS_ORIGINS`, separada por vírgula).
+   * Vazia = reflete a origem da requisição (adequado ao MVP sem autenticação —
+   * SDD §2/§9; apertar quando houver identidade).
+   */
+  corsOrigins: string[];
   database: {
     url: string;
   };
@@ -29,9 +35,17 @@ export interface AppConfig {
   };
 }
 
+export function parseCorsOrigins(raw: string | undefined): string[] {
+  return (raw ?? '')
+    .split(',')
+    .map((origem) => origem.trim())
+    .filter(Boolean);
+}
+
 export default (): AppConfig => ({
   nodeEnv: process.env.NODE_ENV ?? 'development',
   port: parseInt(process.env.PORT ?? '3000', 10),
+  corsOrigins: parseCorsOrigins(process.env.CORS_ORIGINS),
   database: {
     url: process.env.DATABASE_URL ?? '',
   },

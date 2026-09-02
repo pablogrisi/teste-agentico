@@ -10,6 +10,15 @@ async function bootstrap(): Promise<void> {
   const config = app.get(ConfigService);
   const port = config.get<number>('port', 3000);
 
+  // CORS: o frontend (Next.js) chama a API direto do navegador nos modais de
+  // criação/revisão. Sem `CORS_ORIGINS`, reflete a origem da requisição — ok no
+  // MVP sem autenticação (SDD §2/§9); definir a lista quando houver identidade.
+  const corsOrigins = config.get<string[]>('corsOrigins', []);
+  app.enableCors({
+    origin: corsOrigins.length > 0 ? corsOrigins : true,
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  });
+
   await app.listen(port);
   Logger.log(
     `LicIA Analisadora (backend) ouvindo na porta ${port}`,
