@@ -185,6 +185,101 @@
   color: var(--color-text-disabled);
 }
 
+/* ── Referência de página (RF-014) ── */
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.paginaLink {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-family-base);
+  font-size: var(--text-caption-size);
+  line-height: var(--line-height-16);
+  color: var(--color-brand-default);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.paginaEditar {
+  margin-left: var(--spacing-8);
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-family-base);
+  font-size: var(--text-caption-size);
+  line-height: var(--line-height-16);
+  color: var(--color-text-secondary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.paginaEditar:hover {
+  color: var(--color-text-title);
+}
+
+.paginaEditor {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+
+.paginaInput {
+  width: 88px;
+  padding: var(--spacing-4) var(--spacing-8);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-8);
+  background: var(--color-bg-card);
+  font-family: var(--font-family-base);
+  font-size: var(--text-caption-size);
+  color: var(--color-text-body);
+  outline: none;
+}
+
+.paginaInput:focus {
+  border-color: var(--color-border-brand);
+}
+
+.paginaSalvar,
+.paginaCancelar {
+  padding: var(--spacing-4) var(--spacing-12);
+  border-radius: var(--radius-8);
+  font-family: var(--font-family-base);
+  font-size: var(--text-caption-size);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-16);
+  cursor: pointer;
+}
+
+.paginaSalvar {
+  border: 1px solid var(--color-brand-default);
+  background: var(--color-brand-default);
+  color: var(--color-text-inverse);
+}
+
+.paginaSalvar:hover:not(:disabled) {
+  background: var(--color-brand-hover);
+}
+
+.paginaCancelar {
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-card);
+  color: var(--color-text-body);
+}
+
+.paginaCancelar:hover:not(:disabled) {
+  background: var(--color-bg-hover);
+}
+
+.paginaSalvar:disabled,
+.paginaCancelar:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .acoes {
   display: flex;
   justify-content: flex-end;

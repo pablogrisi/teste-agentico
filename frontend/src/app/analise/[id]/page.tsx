@@ -1,10 +1,8 @@
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/layout/PageShell";
 import { AnaliseHeader } from "@/components/analise/AnaliseHeader";
-import { AnaliseVisorPlaceholder } from "@/components/analise/AnaliseVisorPlaceholder";
 import { AutoRefreshAnalise } from "@/components/analise/AutoRefreshAnalise";
-import { PainelRevisao } from "@/components/analise/PainelRevisao";
+import { TelaAnalise } from "@/components/analise/TelaAnalise";
 import { AnaliseNaoEncontradaError, getAnalisesGateway } from "@/lib/data";
 import type { AnaliseDetalhe } from "@/lib/data";
 import styles from "./page.module.css";
@@ -12,7 +10,7 @@ import styles from "./page.module.css";
 // Sempre reflete o estado atual (o polling client dispara `router.refresh()`).
 export const dynamic = "force-dynamic";
 
-/** Rota `/analise/[id]` — tela de análise: abas Checklist/Técnica + navegação livre (RF-010). */
+/** Rota `/analise/[id]` — tela de análise: visor de PDF + abas Checklist/Técnica (RF-010/014). */
 export default async function AnalisePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
@@ -29,12 +27,7 @@ export default async function AnalisePage({ params }: { params: Promise<{ id: st
       <AutoRefreshAnalise status={detalhe.status} />
       <div className={styles.coluna}>
         <AnaliseHeader detalhe={detalhe} />
-        <div className={styles.paineis}>
-          <AnaliseVisorPlaceholder totalPaginas={detalhe.totalPaginasPdf} />
-          <Suspense fallback={null}>
-            <PainelRevisao detalhe={detalhe} />
-          </Suspense>
-        </div>
+        <TelaAnalise detalhe={detalhe} />
       </div>
     </PageShell>
   );

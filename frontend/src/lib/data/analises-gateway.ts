@@ -80,4 +80,21 @@ export interface AnalisesGateway {
     requisitoId: string,
     verificado: boolean,
   ): Promise<RevisaoRequisitoResultado>;
+
+  /**
+   * URL do PDF de entrada da análise para carregar no visor (`GET /analises/:id/pdf`, TSD-009).
+   * `null` quando não há backend real (fixtures) — a tela mostra um aviso no lugar do visor.
+   */
+  urlPdf(analiseId: string): string | null;
+
+  /**
+   * Corrige/define a `paginaReferencia` de um requisito — mesmo `PATCH` da TSD-008/009, corpo
+   * `{ paginaReferencia }` (`1..totalPaginasPdf` \| `≥ 1` \| `null` para limpar). Não dispara a
+   * R-06. `422` → `AnaliseValidacaoError`; `409` → `AnaliseConflitoError`; `404` → `AnaliseNaoEncontradaError`.
+   */
+  corrigirPaginaReferencia(
+    analiseId: string,
+    requisitoId: string,
+    pagina: number | null,
+  ): Promise<RevisaoRequisitoResultado>;
 }

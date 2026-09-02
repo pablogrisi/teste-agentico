@@ -52,6 +52,97 @@ describe("RequisitoItem", () => {
     expect(screen.getByText("não informada")).toBeInTheDocument();
   });
 
+  describe("referência de página (RF-014)", () => {
+    it("com onIrParaPagina: 'Página N' vira botão que chama com o número", async () => {
+      const user = userEvent.setup();
+      const onIrParaPagina = vi.fn();
+      render(
+        <RequisitoItem item={item({ paginaReferencia: 12 })} onIrParaPagina={onIrParaPagina} />,
+      );
+      await user.click(screen.getByRole("button", { expanded: false }));
+      await user.click(screen.getByRole("button", { name: "Página 12" }));
+      expect(onIrParaPagina).toHaveBeenCalledWith(12);
+    });
+
+    it("sem onIrParaPagina: a página é texto, não botão", async () => {
+      const user = userEvent.setup();
+      render(<RequisitoItem item={item({ paginaReferencia: 12 })} />);
+      await user.click(screen.getByRole("button", { expanded: false }));
+      expect(screen.queryByRole("button", { name: "Página 12" })).not.toBeInTheDocument();
+      expect(screen.getByText("Página 12")).toBeInTheDocument();
+    });
+
+    it("editor inline: valida e chama onCorrigirPagina com o número", async () => {
+      const user = userEvent.setup();
+      const onCorrigirPagina = vi.fn().mockResolvedValue(undefined);
+      render(
+        <RequisitoItem
+          item={item({ paginaReferencia: 3 })}
+          totalPaginas={24}
+          onCorrigirPagina={onCorrigirPagina}
+        />,
+      );
+      await user.click(screen.getByRole("button", { expanded: false }));
+      await user.click(screen.getByRole("button", { name: "Editar" }));
+      const campo = screen.getByLabelText("Página no documento");
+      await user.clear(campo);
+      await user.type(campo, "18");
+      await user.click(screen.getByRole("button", { name: "Salvar" }));
+      expect(onCorrigirPagina).toHaveBeenCalledWith(18);
+    });
+
+    it("editor inline: página acima do total → erro, sem chamar onCorrigirPagina", async () => {
+      const user = userEvent.setup();
+      const onCorrigirPagina = vi.fn().mockResolvedValue(undefined);
+      render(
+        <RequisitoItem
+          item={item({ paginaReferencia: 3 })}
+          totalPaginas={24}
+          onCorrigirPagina={onCorrigirPagina}
+        />,
+      );
+      await user.click(screen.getByRole("button", { expanded: false }));
+      await user.click(screen.getByRole("button", { name: "Editar" }));
+      const campo = screen.getByLabelText("Página no documento");
+      await user.clear(campo);
+      await user.type(campo, "99");
+      await user.click(screen.getByRole("button", { name: "Salvar" }));
+      expect(await screen.findByRole("alert")).toHaveTextContent(/24 páginas/);
+      expect(onCorrigirPagina).not.toHaveBeenCalled();
+    });
+
+    it("editor inline: 422 do backend → mensagem do backend", async () => {
+      const user = userEvent.setup();
+      const onCorrigirPagina = vi
+        .fn()
+        .mockRejectedValue(new AnaliseValidacaoError(["página fora do intervalo do documento"]));
+      render(
+        <RequisitoItem
+          item={item({ paginaReferencia: 3 })}
+          totalPaginas={null}
+          onCorrigirPagina={onCorrigirPagina}
+        />,
+      );
+      await user.click(screen.getByRole("button", { expanded: false }));
+      await user.click(screen.getByRole("button", { name: "Editar" }));
+      const campo = screen.getByLabelText("Página no documento");
+      await user.clear(campo);
+      await user.type(campo, "5");
+      await user.click(screen.getByRole("button", { name: "Salvar" }));
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "página fora do intervalo do documento",
+      );
+    });
+
+    it("sem onCorrigirPagina: não há botão 'Editar'/'Definir'", async () => {
+      const user = userEvent.setup();
+      render(<RequisitoItem item={item({ paginaReferencia: null })} />);
+      await user.click(screen.getByRole("button", { expanded: false }));
+      expect(screen.queryByRole("button", { name: "Definir" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Editar" })).not.toBeInTheDocument();
+    });
+  });
+
   describe("comentário / justificativa (RF-017)", () => {
     it("item não divergente com comentário → linha 'Comentário:'", async () => {
       const user = userEvent.setup();

@@ -136,6 +136,18 @@ export class HttpAnalisesGateway implements AnalisesGateway {
     return this.patchRevisao(analiseId, requisitoId, { verificado });
   }
 
+  urlPdf(analiseId: string): string {
+    return `${this.baseUrl.replace(/\/+$/, "")}/analises/${encodeURIComponent(analiseId)}/pdf`;
+  }
+
+  async corrigirPaginaReferencia(
+    analiseId: string,
+    requisitoId: string,
+    pagina: number | null,
+  ): Promise<RevisaoRequisitoResultado> {
+    return this.patchRevisao(analiseId, requisitoId, { paginaReferencia: pagina });
+  }
+
   /** `PATCH /analises/:id/requisitos/:requisitoId` com o corpo dado — comum a revisar e verificar (TSD-008). */
   private async patchRevisao(
     analiseId: string,

@@ -51,6 +51,8 @@ export {
   validarAlteracaoParecer,
 } from "./alterar-parecer";
 export type { EntradaAlteracaoParecer, ErrosAlteracaoParecer } from "./alterar-parecer";
+export { PAGINA_REFERENCIA_VAZIO, validarPaginaReferencia } from "./pagina-referencia";
+export type { ResultadoValidacaoPagina } from "./pagina-referencia";
 export {
   ANALISE_PDF_TAMANHO_MAX_MB,
   formatarTamanho,

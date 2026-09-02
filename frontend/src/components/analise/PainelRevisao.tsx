@@ -27,7 +27,14 @@ import styles from "./PainelRevisao.module.css";
 const EM_PROCESSAMENTO = new Set(["PENDENTE", "PROCESSANDO"]);
 
 /** Painel de revisão: abas Checklist/Técnica (navegação livre), progresso, filtro por status e lista. */
-export function PainelRevisao({ detalhe }: { detalhe: AnaliseDetalhe }) {
+export function PainelRevisao({
+  detalhe,
+  onIrParaPagina,
+}: {
+  detalhe: AnaliseDetalhe;
+  /** RF-014 — clicar na referência de página de um requisito move o visor. */
+  onIrParaPagina?: (n: number) => void;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -73,6 +80,15 @@ export function PainelRevisao({ detalhe }: { detalhe: AnaliseDetalhe }) {
       detalhe.id,
       item.requisitoId,
       verificado,
+    );
+    aplicarRevisao(it, rs);
+  }
+
+  async function corrigirPagina(item: AvaliacaoItem, pagina: number | null) {
+    const { item: it, resumo: rs } = await getAnalisesGateway().corrigirPaginaReferencia(
+      detalhe.id,
+      item.requisitoId,
+      pagina,
     );
     aplicarRevisao(it, rs);
   }
@@ -163,9 +179,12 @@ export function PainelRevisao({ detalhe }: { detalhe: AnaliseDetalhe }) {
             <ConteudoAba
               grupos={gruposFiltrados}
               filtro={filtro}
+              totalPaginas={detalhe.totalPaginasPdf}
               onVerTodos={() => trocarFiltro("TODOS")}
               onAlterarParecer={podeEditar ? setParecerDe : undefined}
               onToggleVerificado={podeEditar ? alternarVerificado : undefined}
+              onIrParaPagina={onIrParaPagina}
+              onCorrigirPagina={podeEditar ? corrigirPagina : undefined}
             />
           </>
         )}
@@ -186,19 +205,24 @@ export function PainelRevisao({ detalhe }: { detalhe: AnaliseDetalhe }) {
   );
 }
 
+interface AcoesRequisito {
+  totalPaginas: number | null;
+  onAlterarParecer?: (item: AvaliacaoItem) => void;
+  onToggleVerificado?: (item: AvaliacaoItem, verificado: boolean) => Promise<void>;
+  onIrParaPagina?: (n: number) => void;
+  onCorrigirPagina?: (item: AvaliacaoItem, pagina: number | null) => Promise<void>;
+}
+
 function ConteudoAba({
   grupos,
   filtro,
   onVerTodos,
-  onAlterarParecer,
-  onToggleVerificado,
+  ...acoes
 }: {
   grupos: AreaComItens[];
   filtro: FiltroRequisito;
   onVerTodos: () => void;
-  onAlterarParecer?: (item: AvaliacaoItem) => void;
-  onToggleVerificado?: (item: AvaliacaoItem, verificado: boolean) => Promise<void>;
-}) {
+} & AcoesRequisito) {
   if (grupos.length === 0) {
     return <p className={styles.vazio}>Nenhum requisito nesta aba.</p>;
   }
@@ -224,24 +248,17 @@ function ConteudoAba({
     );
   }
 
-  return (
-    <ListaAba
-      grupos={grupos}
-      onAlterarParecer={onAlterarParecer}
-      onToggleVerificado={onToggleVerificado}
-    />
-  );
+  return <ListaAba grupos={grupos} {...acoes} />;
 }
 
 function ListaAba({
   grupos,
+  totalPaginas,
   onAlterarParecer,
   onToggleVerificado,
-}: {
-  grupos: AreaComItens[];
-  onAlterarParecer?: (item: AvaliacaoItem) => void;
-  onToggleVerificado?: (item: AvaliacaoItem, verificado: boolean) => Promise<void>;
-}) {
+  onIrParaPagina,
+  onCorrigirPagina,
+}: { grupos: AreaComItens[] } & AcoesRequisito) {
   return (
     <div className={styles.lista}>
       {grupos.map((grupo) => (
@@ -258,11 +275,16 @@ function ListaAba({
                 <RequisitoItem
                   key={item.id}
                   item={item}
+                  totalPaginas={totalPaginas}
                   onAlterarParecer={onAlterarParecer ? () => onAlterarParecer(item) : undefined}
                   onToggleVerificado={
                     onToggleVerificado
                       ? (verificado) => onToggleVerificado(item, verificado)
                       : undefined
+                  }
+                  onIrParaPagina={onIrParaPagina}
+                  onCorrigirPagina={
+                    onCorrigirPagina ? (pagina) => onCorrigirPagina(item, pagina) : undefined
                   }
                 />
               ))}

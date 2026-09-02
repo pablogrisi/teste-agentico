@@ -600,3 +600,84 @@ describe("HttpAnalisesGateway.marcarVerificado (contrato PATCH { verificado } �
     ).rejects.toBeInstanceOf(AnalisesGatewayError);
   });
 });
+
+describe("HttpAnalisesGateway.urlPdf / corrigirPaginaReferencia (RF-014 / TSD-009)", () => {
+  const ITEM = {
+    id: "av-1",
+    requisitoId: "req-1",
+    codigo: "CHK-001",
+    area: "CHECKLIST_DADOS_GERAIS",
+    titulo: "t",
+    descricao: "d",
+    obrigatorio: true,
+    ordem: 1,
+    norma: { lei: null, artigo: null, inciso: null, paragrafo: null, alinea: null },
+    statusSugeridoIa: "NAO_CONFORME",
+    statusFinal: "NAO_CONFORME",
+    verificado: false,
+    comentario: null,
+    paginaReferencia: 12,
+  };
+  const RESUMO = {
+    total: 1,
+    conforme: 0,
+    naoConforme: 1,
+    naoSeAplica: 0,
+    verificados: 0,
+    obrigatoriosPendentes: 1,
+  };
+
+  function stubFetch(resposta: { ok?: boolean; status?: number; jsonData?: unknown }) {
+    const fn = vi.fn(async (_url: string, _init?: RequestInit) => ({
+      ok: resposta.ok ?? true,
+      status: resposta.status ?? 200,
+      json: async () => resposta.jsonData,
+    }));
+    vi.stubGlobal("fetch", fn);
+    return fn;
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("urlPdf monta {base}/analises/{id}/pdf (id encodado, sem barra dupla)", () => {
+    expect(new HttpAnalisesGateway(`${BASE}/`).urlPdf("a 1")).toBe(`${BASE}/analises/a%201/pdf`);
+  });
+
+  it("corrigirPaginaReferencia faz PATCH na URL de revisão com o corpo { paginaReferencia }", async () => {
+    const fetchSpy = stubFetch({ jsonData: { item: ITEM, resumo: RESUMO } });
+    await new HttpAnalisesGateway(BASE).corrigirPaginaReferencia("a1", "req-1", 7);
+    const [url, init] = fetchSpy.mock.calls[0];
+    expect(url).toBe(`${BASE}/analises/a1/requisitos/req-1`);
+    expect(init?.method).toBe("PATCH");
+    expect(JSON.parse(String(init?.body))).toEqual({ paginaReferencia: 7 });
+  });
+
+  it("corrigirPaginaReferencia com null envia { paginaReferencia: null } e mapeia { item, resumo }", async () => {
+    stubFetch({ jsonData: { item: { ...ITEM, paginaReferencia: null }, resumo: RESUMO } });
+    const r = await new HttpAnalisesGateway(BASE).corrigirPaginaReferencia("a1", "req-1", null);
+    expect(r.item.paginaReferencia).toBeNull();
+    expect(r.resumo).toEqual(RESUMO);
+  });
+
+  it("422 vira AnaliseValidacaoError; 409 → AnaliseConflitoError; 404 → AnaliseNaoEncontradaError", async () => {
+    stubFetch({ ok: false, status: 422, jsonData: { message: ["página fora do intervalo"] } });
+    const erro = await new HttpAnalisesGateway(BASE)
+      .corrigirPaginaReferencia("a1", "req-1", 99)
+      .catch((e) => e);
+    expect(erro).toBeInstanceOf(AnaliseValidacaoError);
+    expect(erro.motivos).toEqual(["página fora do intervalo"]);
+
+    stubFetch({ ok: false, status: 409, jsonData: {} });
+    await expect(
+      new HttpAnalisesGateway(BASE).corrigirPaginaReferencia("a1", "req-1", 3),
+    ).rejects.toBeInstanceOf(AnaliseConflitoError);
+
+    stubFetch({ ok: false, status: 404, jsonData: {} });
+    await expect(
+      new HttpAnalisesGateway(BASE).corrigirPaginaReferencia("a1", "req-1", 3),
+    ).rejects.toBeInstanceOf(AnaliseNaoEncontradaError);
+  });
+});

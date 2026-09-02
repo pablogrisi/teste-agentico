@@ -140,6 +140,23 @@ export class FixturesAnalisesGateway implements AnalisesGateway {
     return resultadoComItem(grupos, { ...atual, verificado });
   }
 
+  /** Sem backend não há PDF real — a tela mostra um aviso no lugar do visor. */
+  urlPdf(_analiseId: string): string | null {
+    return null;
+  }
+
+  /**
+   * Sem backend: aplica `paginaReferencia` (TSD-009). **Não persiste** (andaime; ver TSD-019 §9).
+   */
+  async corrigirPaginaReferencia(
+    analiseId: string,
+    requisitoId: string,
+    pagina: number | null,
+  ): Promise<RevisaoRequisitoResultado> {
+    const { grupos, atual } = await this.localizarAvaliacao(analiseId, requisitoId);
+    return resultadoComItem(grupos, { ...atual, paginaReferencia: pagina });
+  }
+
   /** `409` se a análise não está em revisão; `404` se a avaliação não existe. */
   private async localizarAvaliacao(analiseId: string, requisitoId: string) {
     const detalhe = await this.abrirAnalise(analiseId);

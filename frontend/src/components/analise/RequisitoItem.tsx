@@ -2,7 +2,13 @@
 
 import { useId, useState } from "react";
 import { ChevronDownIcon } from "@/components/icons";
-import { AnaliseValidacaoError, divergeDaIa, normaTexto, STATUS_REQUISITO_LABEL } from "@/lib/data";
+import {
+  AnaliseValidacaoError,
+  divergeDaIa,
+  normaTexto,
+  STATUS_REQUISITO_LABEL,
+  validarPaginaReferencia,
+} from "@/lib/data";
 import type { AvaliacaoItem } from "@/lib/data";
 import { StatusBadgeRequisito } from "./StatusBadgeRequisito";
 import { StatusIaResumo } from "./StatusIaResumo";
@@ -14,20 +20,32 @@ const ACCENT: Record<AvaliacaoItem["statusFinal"], string> = {
   NAO_SE_APLICA: styles.accentNeutro,
 };
 
+const ERRO_GENERICO = "Não foi possível salvar. Tente de novo.";
+
+function mensagemErro(erro: unknown): string {
+  return erro instanceof AnaliseValidacaoError ? (erro.motivos[0] ?? ERRO_GENERICO) : ERRO_GENERICO;
+}
+
 /**
  * Um requisito avaliado, em acordeão.
- * Mostra o status sugerido pela IA (RF-007) e o parecer atual; com `onAlterarParecer`,
- * o bloco expandido ganha a ação "Alterar parecer" (RF-008). Com `onToggleVerificado`,
- * o checkbox de "verificado" fica operável (RF-011).
+ * RF-007: status sugerido pela IA. RF-008: `onAlterarParecer` → ação "Alterar parecer".
+ * RF-011: `onToggleVerificado` → checkbox operável. RF-014: `onIrParaPagina` torna a
+ * referência de página clicável (leva ao visor) e `onCorrigirPagina` abre o editor inline.
  */
 export function RequisitoItem({
   item,
+  totalPaginas = null,
   onAlterarParecer,
   onToggleVerificado,
+  onIrParaPagina,
+  onCorrigirPagina,
 }: {
   item: AvaliacaoItem;
+  totalPaginas?: number | null;
   onAlterarParecer?: () => void;
   onToggleVerificado?: (verificado: boolean) => Promise<void>;
+  onIrParaPagina?: (n: number) => void;
+  onCorrigirPagina?: (pagina: number | null) => Promise<void>;
 }) {
   const [aberto, setAberto] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -44,11 +62,7 @@ export function RequisitoItem({
     try {
       await onToggleVerificado(!item.verificado);
     } catch (erro) {
-      setErroToggle(
-        erro instanceof AnaliseValidacaoError
-          ? (erro.motivos[0] ?? "Não foi possível salvar. Tente de novo.")
-          : "Não foi possível salvar. Tente de novo.",
-      );
+      setErroToggle(mensagemErro(erro));
     } finally {
       setSalvando(false);
     }
@@ -121,14 +135,12 @@ export function RequisitoItem({
                 <span className={styles.rotulo}>Comentário:</span> {item.comentario}
               </p>
             )}
-            <p className={styles.linha}>
-              <span className={styles.rotulo}>Referência de página:</span>{" "}
-              {item.paginaReferencia !== null ? (
-                `Página ${item.paginaReferencia}`
-              ) : (
-                <span className={styles.semPagina}>não informada</span>
-              )}
-            </p>
+            <LinhaPagina
+              pagina={item.paginaReferencia}
+              totalPaginas={totalPaginas}
+              onIrParaPagina={onIrParaPagina}
+              onCorrigirPagina={onCorrigirPagina}
+            />
             {onAlterarParecer && (
               <div className={styles.acoes}>
                 <button type="button" className={styles.alterarParecer} onClick={onAlterarParecer}>
@@ -139,6 +151,114 @@ export function RequisitoItem({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Linha "Referência de página": leva ao visor (RF-014) e, com `onCorrigirPagina`, edita a página. */
+function LinhaPagina({
+  pagina,
+  totalPaginas,
+  onIrParaPagina,
+  onCorrigirPagina,
+}: {
+  pagina: number | null;
+  totalPaginas: number | null;
+  onIrParaPagina?: (n: number) => void;
+  onCorrigirPagina?: (pagina: number | null) => Promise<void>;
+}) {
+  const [editando, setEditando] = useState(false);
+  const [campo, setCampo] = useState(pagina === null ? "" : String(pagina));
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  function abrirEditor() {
+    setCampo(pagina === null ? "" : String(pagina));
+    setErro(null);
+    setEditando(true);
+  }
+
+  async function salvar() {
+    const { pagina: valor, erro: erroValidacao } = validarPaginaReferencia(campo, totalPaginas);
+    if (erroValidacao) {
+      setErro(erroValidacao);
+      return;
+    }
+    if (!onCorrigirPagina) return;
+    setSalvando(true);
+    setErro(null);
+    try {
+      await onCorrigirPagina(valor);
+      setEditando(false);
+    } catch (e) {
+      setErro(mensagemErro(e));
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <div className={styles.pagina}>
+      <p className={styles.linha}>
+        <span className={styles.rotulo}>Referência de página:</span>{" "}
+        {pagina !== null ? (
+          onIrParaPagina ? (
+            <button
+              type="button"
+              className={styles.paginaLink}
+              onClick={() => onIrParaPagina(pagina)}
+            >
+              Página {pagina}
+            </button>
+          ) : (
+            `Página ${pagina}`
+          )
+        ) : (
+          <span className={styles.semPagina}>não informada</span>
+        )}
+        {onCorrigirPagina && !editando && (
+          <button type="button" className={styles.paginaEditar} onClick={abrirEditor}>
+            {pagina === null ? "Definir" : "Editar"}
+          </button>
+        )}
+      </p>
+
+      {editando && (
+        <div className={styles.paginaEditor}>
+          <input
+            className={styles.paginaInput}
+            type="number"
+            min={1}
+            max={totalPaginas ?? undefined}
+            value={campo}
+            onChange={(e) => setCampo(e.target.value)}
+            disabled={salvando}
+            aria-label="Página no documento"
+            placeholder={totalPaginas !== null ? `1–${totalPaginas}` : "página"}
+          />
+          <button
+            type="button"
+            className={styles.paginaSalvar}
+            onClick={salvar}
+            disabled={salvando}
+          >
+            {salvando ? "Salvando…" : "Salvar"}
+          </button>
+          <button
+            type="button"
+            className={styles.paginaCancelar}
+            onClick={() => setEditando(false)}
+            disabled={salvando}
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
+      {erro && (
+        <p className={styles.erroToggle} role="alert">
+          {erro}
+        </p>
+      )}
     </div>
   );
 }

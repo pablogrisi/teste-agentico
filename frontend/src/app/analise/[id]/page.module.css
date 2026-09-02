@@ -10,11 +10,5 @@
   overflow: hidden;
 }
 
-.paineis {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  align-items: stretch;
-  gap: var(--spacing-16);
-  overflow: hidden;
-}
+/* Os dois painéis (visor + revisão) e o estado de página compartilhado ficam em
+   TelaAnalise (client) — ver TelaAnalise.module.css. */

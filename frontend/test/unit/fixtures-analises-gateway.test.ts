@@ -261,4 +261,45 @@ describe("FixturesAnalisesGateway", () => {
       ).rejects.toBeInstanceOf(AnaliseNaoEncontradaError);
     });
   });
+
+  describe("urlPdf / corrigirPaginaReferencia (RF-014)", () => {
+    it("urlPdf → null (sem PDF real nas fixtures)", () => {
+      expect(new FixturesAnalisesGateway().urlPdf("1")).toBeNull();
+    });
+
+    it("corrigirPaginaReferencia aplica a página e recalcula o resumo, sem persistir", async () => {
+      const gw = new FixturesAnalisesGateway();
+      const detalhe = await gw.abrirAnalise("1");
+      const alvo = detalhe.avaliacoesPorArea.flatMap((g) => g.itens)[0];
+
+      const { item } = await gw.corrigirPaginaReferencia("1", alvo.requisitoId, 9);
+      expect(item.paginaReferencia).toBe(9);
+      expect(item.statusFinal).toBe(alvo.statusFinal);
+
+      const depois = await gw.abrirAnalise("1");
+      const mesmo = depois.avaliacoesPorArea
+        .flatMap((g) => g.itens)
+        .find((i) => i.requisitoId === alvo.requisitoId)!;
+      expect(mesmo.paginaReferencia).toBe(alvo.paginaReferencia);
+    });
+
+    it("null limpa a página", async () => {
+      const gw = new FixturesAnalisesGateway();
+      const detalhe = await gw.abrirAnalise("1");
+      const alvo = detalhe.avaliacoesPorArea
+        .flatMap((g) => g.itens)
+        .find((i) => i.paginaReferencia !== null)!;
+      const { item } = await gw.corrigirPaginaReferencia("1", alvo.requisitoId, null);
+      expect(item.paginaReferencia).toBeNull();
+    });
+
+    it("análise fora de PRONTA_PARA_REVISAO → AnaliseConflitoError; requisito inexistente → AnaliseNaoEncontradaError", async () => {
+      await expect(
+        new FixturesAnalisesGateway().corrigirPaginaReferencia("2", "req-1", 3),
+      ).rejects.toBeInstanceOf(AnaliseConflitoError);
+      await expect(
+        new FixturesAnalisesGateway().corrigirPaginaReferencia("1", "req-zzz", 3),
+      ).rejects.toBeInstanceOf(AnaliseNaoEncontradaError);
+    });
+  });
 });

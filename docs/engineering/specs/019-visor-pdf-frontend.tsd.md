@@ -3,7 +3,7 @@
 ---
 title: TSD - Visor de PDF e referência de página (RF-014, frontend)
 type: tsd
-status: em aprovação
+status: aprovada — em implementação
 created: 01/09/2026 // Vinicius
 updated: 01/09/2026 // Vinicius
 related:
