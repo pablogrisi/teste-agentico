@@ -6,6 +6,7 @@ import {
   AnaliseValidacaoError,
   divergeDaIa,
   normaTexto,
+  PAGINA_REFERENCIA_VAZIO,
   STATUS_REQUISITO_LABEL,
   validarPaginaReferencia,
 } from "@/lib/data";
@@ -168,12 +169,12 @@ function LinhaPagina({
   onCorrigirPagina?: (pagina: number | null) => Promise<void>;
 }) {
   const [editando, setEditando] = useState(false);
-  const [campo, setCampo] = useState(pagina === null ? "" : String(pagina));
+  const [campo, setCampo] = useState(pagina === null ? PAGINA_REFERENCIA_VAZIO : String(pagina));
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
   function abrirEditor() {
-    setCampo(pagina === null ? "" : String(pagina));
+    setCampo(pagina === null ? PAGINA_REFERENCIA_VAZIO : String(pagina));
     setErro(null);
     setEditando(true);
   }

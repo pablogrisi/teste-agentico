@@ -328,4 +328,36 @@ describe("PainelRevisao", () => {
       for (const cb of screen.getAllByRole("checkbox")) expect(cb).toBeDisabled();
     });
   });
+
+  describe("referência de página (RF-014)", () => {
+    const COM_PAGINA: AreaComItens[] = [
+      {
+        area: "CHECKLIST_A",
+        itens: [item("p1", { statusFinal: "NAO_CONFORME", paginaReferencia: 5 })],
+      },
+    ];
+
+    it("PRONTA_PARA_REVISAO: 'Página N' clicável + botão 'Editar'", async () => {
+      const user = userEvent.setup();
+      render(
+        <PainelRevisao
+          detalhe={detalhe("PRONTA_PARA_REVISAO", COM_PAGINA)}
+          onIrParaPagina={vi.fn()}
+        />,
+      );
+      await user.click(screen.getByRole("button", { name: /Requisito p1/ }));
+      expect(screen.getByRole("button", { name: "Página 5" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
+    });
+
+    it("CONCLUIDA: 'Página N' segue clicável, mas sem 'Editar'/'Definir'", async () => {
+      const user = userEvent.setup();
+      render(<PainelRevisao detalhe={detalhe("CONCLUIDA", COM_PAGINA)} onIrParaPagina={vi.fn()} />);
+      await user.click(screen.getByRole("button", { name: "Todos" }));
+      await user.click(screen.getByRole("button", { name: /Requisito p1/ }));
+      expect(screen.getByRole("button", { name: "Página 5" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Editar" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Definir" })).not.toBeInTheDocument();
+    });
+  });
 });
