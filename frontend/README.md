@@ -6,15 +6,16 @@ vivem na raiz.
 
 > **Estado:** fundação (TSD-002) + **RF-002** (listagem, TSD-011) + **RF-001/RF-004** (modal
 > "Nova análise", TSD-012) + **RF-010** (tela de análise, TSD-013) + **RF-007** (status
-> sugerido pela IA, TSD-014) + **RF-009** (visão inicial priorizando não conformes + filtros
-> por status, TSD-015) + **RF-008** (modal "Alterar parecer", TSD-016). `/` lista as análises
-> e abre o modal de criação; `/analise/[id]` mostra cabeçalho + abas Checklist/Técnica
-> (navegação livre) com os requisitos em acordeão, cada um indicando o status **sugerido pela
-> IA** e a divergência quando o parecer atual difere; a lista abre filtrada por **não
-> conformes** com chips de filtro por status (persistidos na URL), e cada requisito tem
-> **"Alterar parecer"** — um modal que grava o novo `statusFinal` + comentário
-> (`PATCH /analises/:id/requisitos/:requisitoId`) e atualiza a lista e o progresso na hora.
-> Marcar "verificado" manualmente e o visor de PDF entram em RF-011/014.
+> sugerido pela IA, TSD-014) + **RF-009** (filtros por status, TSD-015) + **RF-008** (modal
+> "Alterar parecer", TSD-016) + **RF-011** (checkbox de "verificado" interativo, TSD-017).
+> `/` lista as análises e abre o modal de criação; `/analise/[id]` mostra cabeçalho + abas
+> Checklist/Técnica (navegação livre) com os requisitos em acordeão, cada um indicando o
+> status **sugerido pela IA** e a divergência quando o parecer atual difere; a lista abre
+> filtrada por **não conformes** com chips de filtro por status (persistidos na URL); cada
+> requisito tem **"Alterar parecer"** (modal que grava `statusFinal` + comentário) e um
+> **checkbox de "verificado"** operável — ambos via `PATCH /analises/:id/requisitos/:requisitoId`,
+> aplicando `{ item, resumo }` na lista e no progresso sem recarregar. O visor de PDF e o
+> modal de conclusão entram em RF-014/012.
 
 ## Pré-requisitos
 
@@ -40,8 +41,9 @@ Rotas:
 - `/analise/<id>` — tela de análise (RF-010): cabeçalho + abas Checklist/Técnica + lista de
   requisitos avaliados; chips de filtro por status (RF-009 — abre em "Não conforme",
   `?requisitos=<slug>` na URL); **"Alterar parecer"** em cada requisito (RF-008 — modal com
-  select de `statusFinal` + comentário obrigatório; aplica `{ item, resumo }` sem recarregar);
-  polling enquanto a análise está processando; visor de PDF é placeholder (RF-014).
+  select de `statusFinal` + comentário obrigatório) e **checkbox de "verificado"** operável
+  (RF-011), ambos aplicando `{ item, resumo }` sem recarregar; polling enquanto a análise
+  está processando; visor de PDF é placeholder (RF-014).
 
 ## Scripts
 

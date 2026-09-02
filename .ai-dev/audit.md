@@ -20,6 +20,22 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 01/09/2026 — RF-011 / TSD-017: checkbox de "verificado" interativo (frontend)
+
+Contexto: 7º ciclo de RF do frontend, na branch `frontend/rf-011-verificado` (a partir da `main` `e3e19a8`). Ciclo completo dos 6 papéis, incluindo o subagente `critico`. O usuário validou a User Story + TSD ("aprovar"). Antes deste ciclo, o usuário pediu para conferir o GitHub: o backend do MVP está completo (Pablo mergeou RF-016 / relatório PDF), e os 4 contratos que o frontend consome foram **conferidos campo a campo** contra `backend/src/analises` do `main` e batem — commit `chore(frontend): notas de integração` (`.env.example`/README com o passo de rodar os dois juntos; gap conhecido: backend sem `app.enableCors()`). Colisão de numeração anotada: Pablo criou `docs/engineering/specs/011-relatorio-pdf.tsd.md` (há dois "TSD-011").
+
+Papéis:
+- **PM**: User Story do recorte frontend de RF-011 no `roadmap.md` — o checkbox de "verificado" (desabilitado desde o RF-010) fica operável; `PATCH { verificado }` (mesmo endpoint da TSD-008); painel aplica `{ item, resumo }` na hora (mecanismo do RF-008). **Apresentada e parada.**
+- **Engenheiro**: `docs/engineering/specs/017-verificado-interativo-frontend.tsd.md` — `AnalisesGateway.marcarVerificado`; `RequisitoItem` com estado local `salvando`/`erroToggle`; `PainelRevisao` só passa o fio. Decisões da slice na §9. **Apresentada e parada.**
+- **Dev**: `analises-gateway.ts` (`marcarVerificado`); `http-analises-gateway.ts` (extraído `patchRevisao(analiseId, requisitoId, body)` comum a `revisarRequisito` e `marcarVerificado`); `fixtures-analises-gateway.ts` (`marcarVerificado` aplica só o `verificado`, recalcula `resumo`, **não persiste**; helpers `localizarAvaliacao`/`resultadoComItem` compartilhados); `RequisitoItem.tsx` (+ CSS — prop `onToggleVerificado?`, checkbox perde `disabled`/`readOnly`, `onChange`, `salvando` trava, `erroToggle` `role="alert"` que reverte o valor); `PainelRevisao.tsx` (`alternarVerificado` + `aplicarRevisao` extraído/compartilhado com o `onAlterado` do modal; fio só quando `podeEditar`).
+- **Testes (mecânico)**: `npm run ci` ✅ — `eslint .` + prettier, `tsc --noEmit`, **vitest 177 → 179/179 (20 arquivos)**, `next build`. Novos: `http`/`fixtures` gateway (contrato `{ verificado }` + regras + 409/404 + 422/rede + não-persistência), `requisito-item` +3, `painel-revisao` +2 (progresso pelo `resumo`; `CONCLUIDA` desabilitado).
+- **Crítico** (subagente `critico`): **APROVADO**, sem bloqueantes. Ajustes após o Crítico: `aria-label` do checkbox não-editável; +422 e falha de rede explícitos no contrato de `marcarVerificado`; redação reconciliada na TSD §8/§9/§10. Não-bloqueantes no checkpoint §3.1.
+- **Documentador**: TSD-017 (status `implementada` + §8), `roadmap.md` (RF-011 frontend → implementada; tabela linha 8), checkpoint §1/§2/§3.1/§5/§7, este arquivo, `frontend/README.md`.
+
+Evidência visual: `frontend/docs/visual-reference/rf-011/` — `rf011-checkboxes.png`, `rf011-apos-marcar.png` (progresso 2/6→3/6 sem reload), `rf011-concluida-desabilitado.png` + `README.md` (REF-05 / `ChecklistItem`).
+
+Estado: ciclo fechado com Crítico ✅, `npm run ci` verde, **branch aguardando push + merge na `main`**. Próximo frontend: RF-017 (comentário obrigatório — o PM avalia quanto já veio no modal do RF-008). Follow-ups: fixtures não persistem; `resumo` de estado pode refletir resposta fora de ordem com N `PATCH` concorrentes; smoke frontend↔backend bloqueado por CORS no backend.
+
 ## 01/09/2026 — RF-016 / TSD-011: relatório PDF final (backend)
 
 Contexto: usuário mandou "vamos continuar o desenvolvimento pra fechar o backend do mvp" — RF-016 é o último ciclo de feature do backend (depois só a integração da IA real). Branch `backend/rf-016-relatorio`, dois pontos de aprovação humana explícitos.
