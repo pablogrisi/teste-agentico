@@ -68,7 +68,7 @@ export default (): AppConfig => ({
     openaiApiKey: process.env.OPENAI_API_KEY ?? '',
     baseUrl: process.env.IA_BASE_URL ?? '',
     maxRequisitosPorChamada: Number(
-      process.env.IA_MAX_REQUISITOS_POR_CHAMADA ?? '200',
+      process.env.IA_MAX_REQUISITOS_POR_CHAMADA ?? '50',
     ),
   },
   armazenamentoPdf: {

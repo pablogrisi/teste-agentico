@@ -99,7 +99,7 @@ export function validateEnv(config: Record<string, unknown>): ValidatedEnv {
   const IA_TIMEOUT_MS = inteiroPositivo('IA_TIMEOUT_MS', 120000);
   const IA_MAX_REQUISITOS_POR_CHAMADA = inteiroPositivo(
     'IA_MAX_REQUISITOS_POR_CHAMADA',
-    200,
+    50,
   );
   const PROCESSAMENTO_INTERVALO_MS = inteiroPositivo(
     'PROCESSAMENTO_INTERVALO_MS',

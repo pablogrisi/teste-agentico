@@ -12,7 +12,7 @@ describe('validateEnv — IA_ADAPTER / OpenAI (TSD-022)', () => {
     const env = validateEnv({ ...base });
     expect(env.IA_ADAPTER).toBe('stub');
     expect(env.IA_MODELO).toBe('gpt-4o');
-    expect(env.IA_MAX_REQUISITOS_POR_CHAMADA).toBe(200);
+    expect(env.IA_MAX_REQUISITOS_POR_CHAMADA).toBe(50);
     expect(env.OPENAI_API_KEY).toBe('');
   });
 

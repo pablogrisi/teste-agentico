@@ -22,7 +22,7 @@ function cfg(over: Record<string, unknown> = {}): ConfigService {
     'ia.openaiApiKey': 'sk-test',
     'ia.modelo': 'gpt-4o',
     'ia.baseUrl': '',
-    'ia.maxRequisitosPorChamada': 200,
+    'ia.maxRequisitosPorChamada': 50,
     ...over,
   };
   return {
@@ -82,6 +82,13 @@ describe('AnaliseIaOpenAiAdapter', () => {
       type: 'json_schema',
       strict: true,
       name: 'sugestoes_requisitos',
+    });
+    expect(arg.text.format.schema).toBeDefined();
+    expect(arg.text.format.schema.required).toEqual(['sugestoes']);
+    expect(typeof arg.max_output_tokens).toBe('number');
+    expect(arg.input[0]).toEqual({
+      role: 'system',
+      content: expect.any(String),
     });
     const userContent = arg.input[1].content;
     expect(userContent[0]).toEqual({ type: 'input_file', file_id: 'file-abc' });
@@ -210,5 +217,17 @@ describe('AnaliseIaOpenAiAdapter', () => {
     await expect(
       adapter.analisar({ pdf: PDF, requisitos: [req('CHK-1')] }),
     ).rejects.toThrow(/sugestoes/);
+  });
+
+  it('resposta incompleta (max_output_tokens) → erro claro citando o corte', async () => {
+    mockResponsesCreate.mockResolvedValue({
+      status: 'incomplete',
+      incomplete_details: { reason: 'max_output_tokens' },
+      output_text: '',
+    });
+    const adapter = new AnaliseIaOpenAiAdapter(cfg());
+    await expect(
+      adapter.analisar({ pdf: PDF, requisitos: [req('CHK-1')] }),
+    ).rejects.toThrow(/incompleta.*IA_MAX_REQUISITOS_POR_CHAMADA/s);
   });
 });

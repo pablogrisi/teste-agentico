@@ -33,7 +33,7 @@ export class AnaliseIaOpenAiAdapter implements AnaliseIaPort {
     const baseURL = config.get<string>('ia.baseUrl', '') || undefined;
     this.client = new OpenAI({ apiKey, baseURL });
     this.modelo = config.get<string>('ia.modelo', 'gpt-4o');
-    this.maxPorChamada = config.get<number>('ia.maxRequisitosPorChamada', 200);
+    this.maxPorChamada = config.get<number>('ia.maxRequisitosPorChamada', 50);
   }
 
   async analisar({
@@ -83,6 +83,9 @@ export class AnaliseIaOpenAiAdapter implements AnaliseIaPort {
           ],
         },
       ],
+      // Folga para o JSON de saída crescer com o lote (~64 tokens por requisito
+      // + margem), teto para não estourar custo. Evita truncar o JSON.
+      max_output_tokens: Math.min(16000, requisitos.length * 64 + 1024),
       text: {
         format: {
           type: 'json_schema',
@@ -92,6 +95,14 @@ export class AnaliseIaOpenAiAdapter implements AnaliseIaPort {
         },
       },
     });
+
+    if (resposta.status === 'incomplete') {
+      throw new Error(
+        `resposta da IA incompleta (${
+          resposta.incomplete_details?.reason ?? 'motivo desconhecido'
+        }) — reduza IA_MAX_REQUISITOS_POR_CHAMADA`,
+      );
+    }
 
     let bruto: unknown;
     try {
