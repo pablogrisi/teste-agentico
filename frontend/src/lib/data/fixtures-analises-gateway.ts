@@ -20,6 +20,8 @@ import type {
   AnaliseDetalhe,
   AnaliseResumo,
   AnalisesPagina,
+  AreaComItens,
+  AvaliacaoItem,
   ListarAnalisesQuery,
   NovaAnaliseInput,
   RevisaoRequisitoResultado,
@@ -110,12 +112,7 @@ export class FixturesAnalisesGateway implements AnalisesGateway {
     requisitoId: string,
     patch: AlteracaoParecerInput,
   ): Promise<RevisaoRequisitoResultado> {
-    const detalhe = await this.abrirAnalise(analiseId);
-    if (detalhe.status !== "PRONTA_PARA_REVISAO") throw new AnaliseConflitoError();
-
-    const grupos = detalhe.avaliacoesPorArea;
-    const atual = grupos.flatMap((g) => g.itens).find((i) => i.requisitoId === requisitoId);
-    if (!atual) throw new AnaliseNaoEncontradaError(analiseId);
+    const { grupos, atual } = await this.localizarAvaliacao(analiseId, requisitoId);
 
     const { ok, erros } = validarAlteracaoParecer({
       statusFinal: patch.statusFinal,
@@ -127,11 +124,39 @@ export class FixturesAnalisesGateway implements AnalisesGateway {
       throw new AnaliseValidacaoError(Object.values(erros).filter(Boolean) as string[]);
     }
 
-    const item = resolverAlteracaoParecer(atual, patch);
-    const gruposAtualizados = grupos.map((g) => ({
-      area: g.area,
-      itens: g.itens.map((i) => (i.id === item.id ? item : i)),
-    }));
-    return { item, resumo: calcularResumo(gruposAtualizados) };
+    return resultadoComItem(grupos, resolverAlteracaoParecer(atual, patch));
   }
+
+  /**
+   * Sem backend: alterna `verificado` de um requisito (TSD-008, corpo `{ verificado }`).
+   * **Não persiste** (andaime; ver TSD-017 §9).
+   */
+  async marcarVerificado(
+    analiseId: string,
+    requisitoId: string,
+    verificado: boolean,
+  ): Promise<RevisaoRequisitoResultado> {
+    const { grupos, atual } = await this.localizarAvaliacao(analiseId, requisitoId);
+    return resultadoComItem(grupos, { ...atual, verificado });
+  }
+
+  /** `409` se a análise não está em revisão; `404` se a avaliação não existe. */
+  private async localizarAvaliacao(analiseId: string, requisitoId: string) {
+    const detalhe = await this.abrirAnalise(analiseId);
+    if (detalhe.status !== "PRONTA_PARA_REVISAO") throw new AnaliseConflitoError();
+
+    const grupos = detalhe.avaliacoesPorArea;
+    const atual = grupos.flatMap((g) => g.itens).find((i) => i.requisitoId === requisitoId);
+    if (!atual) throw new AnaliseNaoEncontradaError(analiseId);
+    return { grupos, atual };
+  }
+}
+
+/** Recompõe os grupos com o item atualizado e devolve `{ item, resumo }`. */
+function resultadoComItem(grupos: AreaComItens[], item: AvaliacaoItem): RevisaoRequisitoResultado {
+  const gruposAtualizados = grupos.map((g) => ({
+    area: g.area,
+    itens: g.itens.map((i) => (i.id === item.id ? item : i)),
+  }));
+  return { item, resumo: calcularResumo(gruposAtualizados) };
 }

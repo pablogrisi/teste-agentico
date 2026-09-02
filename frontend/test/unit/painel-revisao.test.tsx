@@ -296,4 +296,36 @@ describe("PainelRevisao", () => {
       expect(screen.queryByRole("button", { name: "Alterar parecer" })).not.toBeInTheDocument();
     });
   });
+
+  describe("marcar verificado (RF-011)", () => {
+    it("marcar um requisito atualiza o progresso pelo resumo devolvido", async () => {
+      const user = userEvent.setup();
+      const c1Verificado = item("c1", { statusFinal: "NAO_CONFORME", verificado: true });
+      const resumoNovo = calcularResumo([
+        {
+          area: "CHECKLIST_DADOS_GERAIS",
+          itens: [c1Verificado, item("c2", { verificado: true })],
+        },
+        { area: "TECNICA_ESPEC", itens: [item("t1", { statusFinal: "NAO_CONFORME" })] },
+      ]);
+      const spy = vi
+        .spyOn(FixturesAnalisesGateway.prototype, "marcarVerificado")
+        .mockResolvedValue({ item: c1Verificado, resumo: resumoNovo });
+
+      render(<PainelRevisao detalhe={detalhe("PRONTA_PARA_REVISAO", GRUPOS)} />);
+      expect(screen.getByText("1/3 verificados")).toBeInTheDocument();
+
+      await user.click(screen.getByRole("checkbox")); // c1 (único visível no filtro padrão)
+
+      expect(spy).toHaveBeenCalledWith("1", "r-c1", true);
+      await waitFor(() => expect(screen.getByText("2/3 verificados")).toBeInTheDocument());
+    });
+
+    it("numa análise CONCLUIDA os checkboxes ficam desabilitados", async () => {
+      const user = userEvent.setup();
+      render(<PainelRevisao detalhe={detalhe("CONCLUIDA", GRUPOS)} />);
+      await user.click(screen.getByRole("button", { name: "Todos" }));
+      for (const cb of screen.getAllByRole("checkbox")) expect(cb).toBeDisabled();
+    });
+  });
 });

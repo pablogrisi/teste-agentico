@@ -122,6 +122,26 @@ export class HttpAnalisesGateway implements AnalisesGateway {
     requisitoId: string,
     patch: AlteracaoParecerInput,
   ): Promise<RevisaoRequisitoResultado> {
+    return this.patchRevisao(analiseId, requisitoId, {
+      statusFinal: patch.statusFinal,
+      comentario: patch.comentario,
+    });
+  }
+
+  async marcarVerificado(
+    analiseId: string,
+    requisitoId: string,
+    verificado: boolean,
+  ): Promise<RevisaoRequisitoResultado> {
+    return this.patchRevisao(analiseId, requisitoId, { verificado });
+  }
+
+  /** `PATCH /analises/:id/requisitos/:requisitoId` com o corpo dado — comum a revisar e verificar (TSD-008). */
+  private async patchRevisao(
+    analiseId: string,
+    requisitoId: string,
+    body: Record<string, unknown>,
+  ): Promise<RevisaoRequisitoResultado> {
     const base = this.baseUrl.replace(/\/+$/, "");
     const url = `${base}/analises/${encodeURIComponent(analiseId)}/requisitos/${encodeURIComponent(
       requisitoId,
@@ -131,7 +151,7 @@ export class HttpAnalisesGateway implements AnalisesGateway {
     try {
       resposta = await fetch(url, {
         method: "PATCH",
-        body: JSON.stringify({ statusFinal: patch.statusFinal, comentario: patch.comentario }),
+        body: JSON.stringify(body),
         headers: { "content-type": "application/json", accept: "application/json" },
         cache: "no-store",
       });
@@ -143,7 +163,7 @@ export class HttpAnalisesGateway implements AnalisesGateway {
     if (resposta.status === 409) throw new AnaliseConflitoError();
     if (resposta.status === 404) throw new AnaliseNaoEncontradaError(analiseId);
     if (!resposta.ok) {
-      throw new AnalisesGatewayError(`Falha ao alterar o parecer (HTTP ${resposta.status}).`);
+      throw new AnalisesGatewayError(`Falha ao revisar o requisito (HTTP ${resposta.status}).`);
     }
 
     let corpo: unknown;

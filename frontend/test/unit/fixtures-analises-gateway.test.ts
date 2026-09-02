@@ -221,4 +221,44 @@ describe("FixturesAnalisesGateway", () => {
       ).rejects.toBeInstanceOf(AnaliseNaoEncontradaError);
     });
   });
+
+  describe("marcarVerificado", () => {
+    async function primeiroNaoVerificado() {
+      const gw = new FixturesAnalisesGateway();
+      const detalhe = await gw.abrirAnalise("1");
+      const alvo = detalhe.avaliacoesPorArea.flatMap((g) => g.itens).find((i) => !i.verificado)!;
+      return { gw, alvo, detalhe };
+    }
+
+    it("alterna verificado e recalcula o resumo, sem tocar em statusFinal/comentario", async () => {
+      const { gw, alvo, detalhe } = await primeiroNaoVerificado();
+      const { item, resumo } = await gw.marcarVerificado("1", alvo.requisitoId, true);
+      expect(item.verificado).toBe(true);
+      expect(item.statusFinal).toBe(alvo.statusFinal);
+      expect(item.comentario).toBe(alvo.comentario);
+      expect(resumo.verificados).toBe(detalhe.resumo.verificados + 1);
+    });
+
+    it("não persiste — a próxima abrirAnalise volta ao estado das fixtures", async () => {
+      const { gw, alvo } = await primeiroNaoVerificado();
+      await gw.marcarVerificado("1", alvo.requisitoId, true);
+      const depois = await gw.abrirAnalise("1");
+      const mesmo = depois.avaliacoesPorArea
+        .flatMap((g) => g.itens)
+        .find((i) => i.requisitoId === alvo.requisitoId)!;
+      expect(mesmo.verificado).toBe(alvo.verificado);
+    });
+
+    it("análise fora de PRONTA_PARA_REVISAO → AnaliseConflitoError", async () => {
+      await expect(
+        new FixturesAnalisesGateway().marcarVerificado("2", "req-1", true),
+      ).rejects.toBeInstanceOf(AnaliseConflitoError);
+    });
+
+    it("requisito inexistente → AnaliseNaoEncontradaError", async () => {
+      await expect(
+        new FixturesAnalisesGateway().marcarVerificado("1", "req-inexistente", true),
+      ).rejects.toBeInstanceOf(AnaliseNaoEncontradaError);
+    });
+  });
 });

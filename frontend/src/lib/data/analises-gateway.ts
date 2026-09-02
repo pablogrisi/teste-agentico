@@ -70,4 +70,14 @@ export interface AnalisesGateway {
     requisitoId: string,
     patch: AlteracaoParecerInput,
   ): Promise<RevisaoRequisitoResultado>;
+
+  /**
+   * Marca/desmarca um requisito como `verificado` — mesmo `PATCH` da TSD-008, corpo
+   * `{ verificado }` (sem comentário; a R-06 só vale ao mudar `statusFinal`). Mesmos erros.
+   */
+  marcarVerificado(
+    analiseId: string,
+    requisitoId: string,
+    verificado: boolean,
+  ): Promise<RevisaoRequisitoResultado>;
 }

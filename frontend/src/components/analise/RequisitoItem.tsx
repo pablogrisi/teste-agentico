@@ -17,20 +17,38 @@ const ACCENT: Record<AvaliacaoItem["statusFinal"], string> = {
 /**
  * Um requisito avaliado, em acordeão.
  * Mostra o status sugerido pela IA (RF-007) e o parecer atual; com `onAlterarParecer`,
- * o bloco expandido ganha a ação "Alterar parecer" (RF-008).
- * O checkbox de "verificado" segue desabilitado (fica interativo no RF-011).
+ * o bloco expandido ganha a ação "Alterar parecer" (RF-008). Com `onToggleVerificado`,
+ * o checkbox de "verificado" fica operável (RF-011).
  */
 export function RequisitoItem({
   item,
   onAlterarParecer,
+  onToggleVerificado,
 }: {
   item: AvaliacaoItem;
   onAlterarParecer?: () => void;
+  onToggleVerificado?: (verificado: boolean) => Promise<void>;
 }) {
   const [aberto, setAberto] = useState(false);
+  const [salvando, setSalvando] = useState(false);
+  const [erroToggle, setErroToggle] = useState<string | null>(null);
   const detalheId = useId();
   const norma = normaTexto(item.norma);
   const diverge = divergeDaIa(item);
+  const editavel = onToggleVerificado !== undefined;
+
+  async function aoAlternarVerificado() {
+    if (!onToggleVerificado) return;
+    setSalvando(true);
+    setErroToggle(null);
+    try {
+      await onToggleVerificado(!item.verificado);
+    } catch {
+      setErroToggle("Não foi possível salvar. Tente de novo.");
+    } finally {
+      setSalvando(false);
+    }
+  }
 
   return (
     <div
@@ -44,10 +62,15 @@ export function RequisitoItem({
             type="checkbox"
             className={styles.checkbox}
             checked={item.verificado}
-            disabled
-            readOnly
-            tabIndex={-1}
-            aria-label={`Verificado — disponível no RF-011 (${item.titulo})`}
+            disabled={!editavel || salvando}
+            readOnly={!editavel}
+            tabIndex={editavel ? undefined : -1}
+            onChange={editavel ? aoAlternarVerificado : undefined}
+            aria-label={
+              editavel
+                ? `Marcar como verificado — ${item.titulo}`
+                : `Verificado — disponível no RF-011 (${item.titulo})`
+            }
           />
           <button
             type="button"
@@ -75,6 +98,12 @@ export function RequisitoItem({
             </span>
           </button>
         </div>
+
+        {erroToggle && (
+          <p className={styles.erroToggle} role="alert">
+            {erroToggle}
+          </p>
+        )}
 
         {aberto && (
           <div className={styles.detalhe} id={detalheId}>

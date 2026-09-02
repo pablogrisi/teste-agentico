@@ -503,3 +503,79 @@ describe("HttpAnalisesGateway.revisarRequisito (contrato PATCH /analises/:id/req
     ).rejects.toBeInstanceOf(AnalisesGatewayError);
   });
 });
+
+describe("HttpAnalisesGateway.marcarVerificado (contrato PATCH { verificado } — TSD-008)", () => {
+  const ITEM = {
+    id: "av-1",
+    requisitoId: "req-1",
+    codigo: "CHK-001",
+    area: "CHECKLIST_DADOS_GERAIS",
+    titulo: "Contém a CI do setor?",
+    descricao: "…",
+    obrigatorio: true,
+    ordem: 1,
+    norma: { lei: null, artigo: null, inciso: null, paragrafo: null, alinea: null },
+    statusSugeridoIa: "NAO_CONFORME",
+    statusFinal: "NAO_CONFORME",
+    verificado: true,
+    comentario: null,
+    paginaReferencia: null,
+  };
+  const RESUMO = {
+    total: 1,
+    conforme: 0,
+    naoConforme: 1,
+    naoSeAplica: 0,
+    verificados: 1,
+    obrigatoriosPendentes: 0,
+  };
+
+  function stubFetch(resposta: { ok?: boolean; status?: number; jsonData?: unknown }) {
+    const fn = vi.fn(async (_url: string, _init?: RequestInit) => ({
+      ok: resposta.ok ?? true,
+      status: resposta.status ?? 200,
+      json: async () => resposta.jsonData,
+    }));
+    vi.stubGlobal("fetch", fn);
+    return fn;
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("faz PATCH na URL certa com o corpo exatamente { verificado }", async () => {
+    const fetchSpy = stubFetch({ jsonData: { item: ITEM, resumo: RESUMO } });
+    await new HttpAnalisesGateway(`${BASE}/`).marcarVerificado("a1", "req-1", true);
+    const [url, init] = fetchSpy.mock.calls[0];
+    expect(url).toBe(`${BASE}/analises/a1/requisitos/req-1`);
+    expect(init?.method).toBe("PATCH");
+    expect(JSON.parse(String(init?.body))).toEqual({ verificado: true });
+  });
+
+  it("mapeia { item, resumo } para RevisaoRequisitoResultado", async () => {
+    stubFetch({ jsonData: { item: ITEM, resumo: RESUMO } });
+    const r = await new HttpAnalisesGateway(BASE).marcarVerificado("a1", "req-1", false);
+    expect(r).toEqual({ item: ITEM, resumo: RESUMO });
+  });
+
+  it("409 vira AnaliseConflitoError; 404 vira AnaliseNaoEncontradaError", async () => {
+    stubFetch({ ok: false, status: 409, jsonData: {} });
+    await expect(
+      new HttpAnalisesGateway(BASE).marcarVerificado("a1", "req-1", true),
+    ).rejects.toBeInstanceOf(AnaliseConflitoError);
+
+    stubFetch({ ok: false, status: 404, jsonData: {} });
+    await expect(
+      new HttpAnalisesGateway(BASE).marcarVerificado("a1", "req-1", true),
+    ).rejects.toBeInstanceOf(AnaliseNaoEncontradaError);
+  });
+
+  it("payload de resposta fora do formato é rejeitado", async () => {
+    stubFetch({ jsonData: { item: { ...ITEM, verificado: "sim" }, resumo: RESUMO } });
+    await expect(
+      new HttpAnalisesGateway(BASE).marcarVerificado("a1", "req-1", true),
+    ).rejects.toBeInstanceOf(AnalisesGatewayError);
+  });
+});

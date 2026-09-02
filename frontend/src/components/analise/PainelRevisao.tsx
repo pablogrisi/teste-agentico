@@ -7,6 +7,7 @@ import {
   FILTRO_REQUISITO_PADRAO,
   filtrarPorStatus,
   filtroParaSlug,
+  getAnalisesGateway,
   parseFiltroRequisito,
   rotuloArea,
   separarPorAba,
@@ -59,6 +60,21 @@ export function PainelRevisao({ detalhe }: { detalhe: AnaliseDetalhe }) {
     else sp.set("requisitos", filtroParaSlug(proximo));
     const qs = sp.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }
+
+  /** Aplica um `{ item, resumo }` devolvido pelo backend/fixture (RF-008/RF-011). */
+  function aplicarRevisao(it: AvaliacaoItem, rs: typeof detalhe.resumo) {
+    setOverrides((atual) => new Map(atual).set(it.id, it));
+    setResumo(rs);
+  }
+
+  async function alternarVerificado(item: AvaliacaoItem, verificado: boolean) {
+    const { item: it, resumo: rs } = await getAnalisesGateway().marcarVerificado(
+      detalhe.id,
+      item.requisitoId,
+      verificado,
+    );
+    aplicarRevisao(it, rs);
   }
 
   const avaliacoesEfetivas = useMemo<AreaComItens[]>(() => {
@@ -149,6 +165,7 @@ export function PainelRevisao({ detalhe }: { detalhe: AnaliseDetalhe }) {
               filtro={filtro}
               onVerTodos={() => trocarFiltro("TODOS")}
               onAlterarParecer={podeEditar ? setParecerDe : undefined}
+              onToggleVerificado={podeEditar ? alternarVerificado : undefined}
             />
           </>
         )}
@@ -160,8 +177,7 @@ export function PainelRevisao({ detalhe }: { detalhe: AnaliseDetalhe }) {
           item={parecerDe}
           onFechar={() => setParecerDe(null)}
           onAlterado={({ item, resumo: resumoNovo }) => {
-            setOverrides((atual) => new Map(atual).set(item.id, item));
-            setResumo(resumoNovo);
+            aplicarRevisao(item, resumoNovo);
             setParecerDe(null);
           }}
         />
@@ -175,11 +191,13 @@ function ConteudoAba({
   filtro,
   onVerTodos,
   onAlterarParecer,
+  onToggleVerificado,
 }: {
   grupos: AreaComItens[];
   filtro: FiltroRequisito;
   onVerTodos: () => void;
   onAlterarParecer?: (item: AvaliacaoItem) => void;
+  onToggleVerificado?: (item: AvaliacaoItem, verificado: boolean) => Promise<void>;
 }) {
   if (grupos.length === 0) {
     return <p className={styles.vazio}>Nenhum requisito nesta aba.</p>;
@@ -206,15 +224,23 @@ function ConteudoAba({
     );
   }
 
-  return <ListaAba grupos={grupos} onAlterarParecer={onAlterarParecer} />;
+  return (
+    <ListaAba
+      grupos={grupos}
+      onAlterarParecer={onAlterarParecer}
+      onToggleVerificado={onToggleVerificado}
+    />
+  );
 }
 
 function ListaAba({
   grupos,
   onAlterarParecer,
+  onToggleVerificado,
 }: {
   grupos: AreaComItens[];
   onAlterarParecer?: (item: AvaliacaoItem) => void;
+  onToggleVerificado?: (item: AvaliacaoItem, verificado: boolean) => Promise<void>;
 }) {
   return (
     <div className={styles.lista}>
@@ -233,6 +259,11 @@ function ListaAba({
                   key={item.id}
                   item={item}
                   onAlterarParecer={onAlterarParecer ? () => onAlterarParecer(item) : undefined}
+                  onToggleVerificado={
+                    onToggleVerificado
+                      ? (verificado) => onToggleVerificado(item, verificado)
+                      : undefined
+                  }
                 />
               ))}
             </div>

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { RequisitoItem } from "@/components/analise/RequisitoItem";
@@ -51,11 +51,62 @@ describe("RequisitoItem", () => {
     expect(screen.getByText("não informada")).toBeInTheDocument();
   });
 
-  it("o checkbox de verificado está desabilitado (RF-011)", () => {
+  it("o checkbox de verificado fica desabilitado sem o callback (ex.: análise concluída)", () => {
     render(<RequisitoItem item={item({ verificado: true })} />);
     const cb = screen.getByRole("checkbox");
     expect(cb).toBeDisabled();
     expect(cb).toBeChecked();
+  });
+
+  describe("checkbox de 'verificado' (RF-011)", () => {
+    it("com onToggleVerificado: fica operável e chama a prop com o valor invertido", async () => {
+      const user = userEvent.setup();
+      const onToggleVerificado = vi.fn().mockResolvedValue(undefined);
+      render(
+        <RequisitoItem
+          item={item({ verificado: false })}
+          onToggleVerificado={onToggleVerificado}
+        />,
+      );
+      const cb = screen.getByRole("checkbox");
+      expect(cb).toBeEnabled();
+      await user.click(cb);
+      expect(onToggleVerificado).toHaveBeenCalledWith(true);
+    });
+
+    it("desabilita o checkbox enquanto a chamada não resolve", async () => {
+      const user = userEvent.setup();
+      let resolver: () => void = () => {};
+      const onToggleVerificado = vi.fn(() => new Promise<void>((r) => (resolver = r)));
+      render(
+        <RequisitoItem
+          item={item({ verificado: false })}
+          onToggleVerificado={onToggleVerificado}
+        />,
+      );
+      const cb = screen.getByRole("checkbox");
+      await user.click(cb);
+      expect(cb).toBeDisabled();
+      resolver();
+      await waitFor(() => expect(cb).toBeEnabled());
+    });
+
+    it("no erro mostra a mensagem no item e o checkbox reflete de novo o valor da prop", async () => {
+      const user = userEvent.setup();
+      const onToggleVerificado = vi.fn().mockRejectedValue(new Error("falhou"));
+      render(
+        <RequisitoItem
+          item={item({ verificado: false })}
+          onToggleVerificado={onToggleVerificado}
+        />,
+      );
+      const cb = screen.getByRole("checkbox");
+      await user.click(cb);
+      expect(await screen.findByRole("alert")).toHaveTextContent(/não foi possível salvar/i);
+      // o pai não mudou o item → o checkbox continua desmarcado
+      expect(cb).not.toBeChecked();
+      expect(cb).toBeEnabled();
+    });
   });
 
   describe("ação 'Alterar parecer' (RF-008)", () => {
