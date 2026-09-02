@@ -64,7 +64,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 7 | RF-008 | Modal de alteração de status final ("parecer") | Must | implementada — Crítico ✅ (branch `frontend/rf-008-parecer`) |
 | 8 | RF-011 | Controle de "marcar como verificado" | Must | implementada — Crítico ✅ (branch `frontend/rf-011-verificado`) |
 | 9 | RF-017 | Campo de comentário obrigatório nas ações de revisão | Must | implementada — Crítico ✅ (branch `frontend/rf-017-comentario`) |
-| 10 | RF-014 | Visor de PDF + referência de página clicável / ausência explícita | Must | user story + TSD-019 em aprovação (branch `frontend/rf-014-visor`) |
+| 10 | RF-014 | Visor de PDF + referência de página clicável / ausência explícita | Must | implementada — Crítico ✅ (branch `frontend/rf-014-visor`) |
 | 11 | RF-012 | Modal de conclusão + botão global bloqueado até tudo verificado | Must | não iniciada |
 | 12 | RF-016 | Ação de baixar o relatório PDF da análise concluída | Must | não iniciada |
 
@@ -468,7 +468,7 @@ Recorte deste ciclo (frontend), em cima do RF-007/008/011:
 
 **Frentes:** Backend · Frontend
 **Status (backend):** implementada (mergeada no `main` `19f308b`)
-**Status (frontend):** user story + TSD-019 em aprovação — branch `frontend/rf-014-visor`
+**Status (frontend):** implementada — Crítico ✅ (02/09/2026), branch `frontend/rf-014-visor`; `npm run ci` verde (214 testes). Aguardando push + merge.
 
 **User Story** — *validada em 31/08/2026*
 

@@ -8,15 +8,16 @@ vivem na raiz.
 > "Nova análise", TSD-012) + **RF-010** (tela de análise, TSD-013) + **RF-007** (status
 > sugerido pela IA, TSD-014) + **RF-009** (filtros por status, TSD-015) + **RF-008** (modal
 > "Alterar parecer", TSD-016) + **RF-011** (checkbox de "verificado" interativo, TSD-017) +
-> **RF-017** (justificativa da alteração visível, TSD-018). `/` lista as análises e abre o
-> modal de criação; `/analise/[id]` mostra cabeçalho + abas Checklist/Técnica (navegação
-> livre) com os requisitos em acordeão, cada um indicando o status **sugerido pela IA** e,
-> quando o parecer atual difere, a **justificativa da alteração**; a lista abre filtrada por
-> **não conformes** com chips de filtro por status (persistidos na URL); cada requisito tem
-> **"Alterar parecer"** (modal que grava `statusFinal` + comentário) e um **checkbox de
-> "verificado"** operável — ambos via `PATCH /analises/:id/requisitos/:requisitoId`, aplicando
-> `{ item, resumo }` na lista e no progresso sem recarregar. O visor de PDF e o modal de
-> conclusão entram em RF-014/012.
+> **RF-017** (justificativa da alteração visível, TSD-018) + **RF-014** (visor de PDF +
+> referência de página, TSD-019). `/` lista as análises e abre o modal de criação;
+> `/analise/[id]` mostra cabeçalho, o **visor do PDF** à esquerda (`<iframe>` de
+> `GET /analises/:id/pdf` navegado por `#page=N` — ou um aviso sem backend) e, à direita, as
+> abas Checklist/Técnica com os requisitos em acordeão: status **sugerido pela IA** + a
+> **justificativa** quando o parecer difere; lista filtrada por **não conformes** com chips de
+> status (na URL); cada requisito tem **"Alterar parecer"**, **checkbox de "verificado"** e a
+> **referência de página clicável** (leva o visor à folha) + editor de página inline — tudo
+> via `PATCH /analises/:id/requisitos/:requisitoId`, aplicando `{ item, resumo }` sem
+> recarregar. O modal de conclusão e o download do relatório entram em RF-012/016.
 
 ## Pré-requisitos
 
@@ -39,12 +40,13 @@ Rotas:
 - `/` — lista de análises (RF-002) + modal "Nova análise" (RF-001/RF-004): tabela + busca +
   filtro por status + ordenação + paginação; "Nova análise" cria via `POST /analises` e navega
   para a análise.
-- `/analise/<id>` — tela de análise (RF-010): cabeçalho + abas Checklist/Técnica + lista de
-  requisitos avaliados; chips de filtro por status (RF-009 — abre em "Não conforme",
-  `?requisitos=<slug>` na URL); **"Alterar parecer"** em cada requisito (RF-008 — modal com
-  select de `statusFinal` + comentário obrigatório) e **checkbox de "verificado"** operável
-  (RF-011), ambos aplicando `{ item, resumo }` sem recarregar; polling enquanto a análise
-  está processando; visor de PDF é placeholder (RF-014).
+- `/analise/<id>` — tela de análise: **visor de PDF** à esquerda (RF-014 — `<iframe>` de
+  `GET /analises/:id/pdf` por `#page=N`, ou aviso sem backend) + abas Checklist/Técnica à
+  direita (RF-010); chips de filtro por status (RF-009 — abre em "Não conforme",
+  `?requisitos=<slug>` na URL); em cada requisito: **"Alterar parecer"** (RF-008),
+  **checkbox de "verificado"** (RF-011) e a **referência de página clicável** + editor de
+  página inline (RF-014) — via `PATCH .../requisitos/:requisitoId`, `{ item, resumo }` sem
+  recarregar; polling enquanto a análise está processando.
 
 ## Scripts
 
