@@ -58,7 +58,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 
 Não é um RF: é a fundação adiada desde 31/08 (o `AnaliseIaStubAdapter` sustentou os ciclos). É o **último ciclo de backend do MVP**.
 
-**Status (backend):** user story aprovada — branch `backend/ia-openai`
+**Status (backend):** TSD em aprovação — branch `backend/ia-openai`
 
 **User Story**
 
@@ -90,7 +90,7 @@ Recorte deste ciclo (backend):
 6. **Saída estruturada:** `response_format` json_schema (`strict`) — array `[{ codigo, statusSugerido, paginaReferencia? }]`; o adaptador casa `codigo → requisitoId`.
 7. **`stub` continua o padrão**; `IA_ADAPTER=openai` é opt-in. Merge com o stub ativo — ninguém liga o OpenAI sem querer.
 
-**TSD associada:** `docs/engineering/specs/022-integracao-ia-openai.tsd.md` (a redigir pelo Engenheiro).
+**TSD associada:** `docs/engineering/specs/022-integracao-ia-openai.tsd.md` (redigida — em aprovação).
 
 ## Tabela de sequenciamento — Frente Frontend (`frontend/`)
 
