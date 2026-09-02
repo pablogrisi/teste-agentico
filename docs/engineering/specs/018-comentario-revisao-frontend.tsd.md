@@ -3,7 +3,7 @@
 ---
 title: TSD - Comentário nas ações de revisão (RF-017, frontend)
 type: tsd
-status: em aprovação
+status: implementada
 created: 01/09/2026 // Vinicius
 updated: 01/09/2026 // Vinicius
 related:
@@ -134,12 +134,12 @@ npm run ci
 
 ## 8. Critérios de aceite
 
-- [ ] Num requisito com `statusFinal ≠ statusSugeridoIa` **e** `comentario` preenchido, o bloco expandido mostra **"Justificativa da alteração:"** com o texto, dentro do `StatusIaResumo`.
-- [ ] Nesse mesmo item, a linha genérica **"Comentário:"** não aparece (sem texto duplicado).
-- [ ] Num requisito **não** divergente com `comentario`, a linha "Comentário:" continua aparecendo como hoje.
-- [ ] Uma ação de "marcar verificado" recusada com `422` (`AnaliseValidacaoError`) mostra **`motivos[0]`** no item (`role="alert"`); `409`/`404`/rede continuam com a mensagem genérica.
-- [ ] Nenhuma mudança de contrato; `npm run ci` verde (`eslint .` + prettier, `tsc`, testes, `next build`); sem regressão nos testes de `StatusIaResumo`/`RequisitoItem`/`PainelRevisao`.
-- [ ] §10 revisada; screenshot em `frontend/docs/visual-reference/rf-017/`.
+- [x] Num requisito com `statusFinal ≠ statusSugeridoIa` **e** `comentario` preenchido, o bloco expandido mostra **"Justificativa da alteração:"** com o texto, dentro do `StatusIaResumo`.
+- [x] Nesse mesmo item, a linha genérica **"Comentário:"** não aparece (sem texto duplicado).
+- [x] Num requisito **não** divergente com `comentario`, a linha "Comentário:" continua aparecendo como hoje.
+- [x] Uma ação de "marcar verificado" recusada com `422` (`AnaliseValidacaoError`) mostra **`motivos[0]`** no item (`role="alert"`); `409`/`404`/rede continuam com a mensagem genérica.
+- [x] Nenhuma mudança de contrato; `npm run ci` verde (`eslint .` + prettier, `tsc`, testes, `next build`); sem regressão nos testes de `StatusIaResumo`/`RequisitoItem`/`PainelRevisao`.
+- [x] §10 revisada; screenshot em `frontend/docs/visual-reference/rf-017/`.
 
 ## 9. Riscos e decisões abertas
 
