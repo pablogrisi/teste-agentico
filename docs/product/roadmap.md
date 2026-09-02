@@ -56,20 +56,20 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 
 ## Tabela de sequenciamento — Frente Frontend (`frontend/`)
 
-| Sequência | ID     | Feature (recorte frontend)                                        | Prioridade | Status                                                                                             |
-| --------- | ------ | ----------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------- |
-| 1         | RF-002 | Tela de listagem de análises + estado vazio                       | Must       | implementada (branch `frontend/rf-002-listagem`)                                                   |
-| 2         | RF-001 | Modal "Nova análise" (NUP, objeto) + validação                    | Must       | implementada (branch `frontend/rf-001-nova-analise`)                                               |
-| 3         | RF-004 | Campo de upload de PDF no modal + estados de erro                 | Must       | implementada com RF-001 (branch `frontend/rf-001-nova-analise`)                                    |
-| 4         | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre         | Must       | implementada (branch `frontend/rf-010-tela-analise`)                                               |
-| 5         | RF-007 | Exibição dos requisitos com status sugerido pela IA               | Must       | implementada (branch `frontend/rf-007-status-ia`)                                                  |
-| 6         | RF-009 | Visão inicial priorizando não conformes + filtros por status      | Must       | implementada — Crítico ✅ (branch `frontend/rf-009-filtros`)                                       |
-| 7         | RF-008 | Modal de alteração de status final ("parecer")                    | Must       | implementada — Crítico ✅ (branch `frontend/rf-008-parecer`)                                       |
-| 8         | RF-011 | Controle de "marcar como verificado"                              | Must       | implementada — Crítico ✅ (branch `frontend/rf-011-verificado`)                                    |
-| 9         | RF-017 | Campo de comentário obrigatório nas ações de revisão              | Must       | implementada — Crítico ✅ (branch `frontend/rf-017-comentario`)                                    |
-| 10        | RF-014 | Visor de PDF + referência de página clicável / ausência explícita | Must       | implementada — Crítico ✅ (branch `frontend/rf-014-visor`)                                         |
-| 11        | RF-012 | Modal de conclusão + botão global bloqueado até tudo verificado   | Must       | implementada — Crítico ✅ (branch `frontend/rf-012-conclusao`)                                     |
-| 12        | RF-016 | Ação de baixar o relatório PDF da análise concluída               | Must       | user story + TSD-021 em aprovação (branch `frontend/rf-016-relatorio`) — **último RF do frontend** |
+| Sequência | ID     | Feature (recorte frontend)                                        | Prioridade | Status                                                                                    |
+| --------- | ------ | ----------------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------- |
+| 1         | RF-002 | Tela de listagem de análises + estado vazio                       | Must       | implementada (branch `frontend/rf-002-listagem`)                                          |
+| 2         | RF-001 | Modal "Nova análise" (NUP, objeto) + validação                    | Must       | implementada (branch `frontend/rf-001-nova-analise`)                                      |
+| 3         | RF-004 | Campo de upload de PDF no modal + estados de erro                 | Must       | implementada com RF-001 (branch `frontend/rf-001-nova-analise`)                           |
+| 4         | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre         | Must       | implementada (branch `frontend/rf-010-tela-analise`)                                      |
+| 5         | RF-007 | Exibição dos requisitos com status sugerido pela IA               | Must       | implementada (branch `frontend/rf-007-status-ia`)                                         |
+| 6         | RF-009 | Visão inicial priorizando não conformes + filtros por status      | Must       | implementada — Crítico ✅ (branch `frontend/rf-009-filtros`)                              |
+| 7         | RF-008 | Modal de alteração de status final ("parecer")                    | Must       | implementada — Crítico ✅ (branch `frontend/rf-008-parecer`)                              |
+| 8         | RF-011 | Controle de "marcar como verificado"                              | Must       | implementada — Crítico ✅ (branch `frontend/rf-011-verificado`)                           |
+| 9         | RF-017 | Campo de comentário obrigatório nas ações de revisão              | Must       | implementada — Crítico ✅ (branch `frontend/rf-017-comentario`)                           |
+| 10        | RF-014 | Visor de PDF + referência de página clicável / ausência explícita | Must       | implementada — Crítico ✅ (branch `frontend/rf-014-visor`)                                |
+| 11        | RF-012 | Modal de conclusão + botão global bloqueado até tudo verificado   | Must       | implementada — Crítico ✅ (branch `frontend/rf-012-conclusao`)                            |
+| 12        | RF-016 | Ação de baixar o relatório PDF da análise concluída               | Must       | implementada — Crítico ✅ (branch `frontend/rf-016-relatorio`) — **fecha o MVP frontend** |
 
 Status possíveis, nessa ordem de progresso dentro de um ciclo: `não iniciada` → `user story em aprovação` → `user story aprovada` → `TSD em aprovação` → `TSD aprovada` → `em construção` → `em validação` → `implementada`.
 
@@ -629,7 +629,7 @@ Recorte backend deste ciclo:
 
 **Frentes:** Backend · Frontend
 **Status (backend):** implementada (mergeada na `main`)
-**Status (frontend):** user story + TSD-021 em aprovação — branch `frontend/rf-016-relatorio`
+**Status (frontend):** implementada — Crítico ✅ (02/09/2026), branch `frontend/rf-016-relatorio`; `npm run ci` verde (250 testes); smoke conjunto contra o NestJS real feito. **Fecha o MVP frontend.** Aguardando push + merge.
 
 **User Story (frontend — RF-016)**
 
@@ -654,6 +654,15 @@ Recorte deste ciclo (frontend), em cima da tela do RF-010/…/RF-012:
 - Nenhuma mudança de contrato; `npm run ci` verde; sem regressão em RF-012/014.
 
 **TSD associada (frontend):** `docs/engineering/specs/021-relatorio-pdf-frontend.tsd.md`.
+
+**Notas do ciclo (frontend — 02/09/2026)**
+
+- **User Story + TSD-021 validadas** pelo usuário; decisão da §9 "link em nova aba (não fetch+blob+download forçado)" aprovada — consistente com o `urlPdf` do RF-014 e com a decisão do ciclo backend de entregar `Content-Disposition: inline`.
+- **Implementação:** `AnalisesGateway.urlRelatorio(analiseId): string | null` (Http monta `${base}/analises/${id}/relatorio`, id encodado; Fixtures → `null`) — segundo uso do padrão "seam expõe URL de binário", ao lado do `urlPdf`. `BaixarRelatorio` (client, novo): `url` → `<a href target="_blank" rel="noopener noreferrer">Baixar relatório</a>`; `null` → span desabilitado + aviso "Disponível com a tela conectada ao backend." (mesmo tratamento do visor sem backend). `TelaAnalise.acao` ganha o ramo `status === "CONCLUIDA"` → `<BaixarRelatorio>` (o slot do "Concluir análise" do RF-012); concluir pelo modal troca o botão sem reload. `AnaliseHeader` intocado.
+- **Testes:** `npm run ci` verde (lint + typecheck + **250 testes / 26 arquivos** + `next build`). Contrato de `urlRelatorio` (Http monta a URL; Fixtures → `null`); `baixar-relatorio.test.tsx` (com/sem url — link vs span+aviso); `tela-analise` (CONCLUIDA mostra "Baixar relatório", PRONTA mostra "Concluir análise"; PENDENTE/PROCESSANDO/ERRO_PROCESSAMENTO nenhum dos dois; link com backend; troca sem reload após concluir).
+- **Smoke conjunto contra o backend real** (NestJS + PostgreSQL 17, `:3000` / frontend `:3201`): análise `CONCLUIDA` → botão "Baixar relatório" (`href` do endpoint real, `target="_blank"`); clicar abre nova aba → `GET /analises/:id/relatorio` → `200 application/pdf`, `Content-Disposition: inline; filename="relatorio-analise-<id>.pdf"`, corpo `%PDF-`, o visor nativo renderiza o "Relatório de Análise de Conformidade"; análise `PRONTA_PARA_REVISAO` → "Concluir análise", sem "Baixar relatório"; `GET /relatorio` em análise não `CONCLUIDA` → `409` (confirmado direto na API); modo fixtures → botão desabilitado + aviso. Evidência: `frontend/docs/visual-reference/rf-016/` (3 screenshots + README).
+- **Crítico:** APROVADO, sem bloqueadores. Ajuste aplicado: teste parametrizado dos estados sem botão (§8 item 2). Não-bloqueadores: follow-up de A11y unificada nos três botões desabilitados (`BaixarRelatorio` / `ConcluirAnalise` travado / `AnaliseVisor` sem backend) — `aria-describedby` ligando o pseudo-botão ao aviso; fora do escopo desta slice.
+- **Marco:** fecha o **MVP frontend** (ver o marco após esta seção).
 
 **User Story** — _validada em 01/09/2026_
 
@@ -694,6 +703,8 @@ Recorte backend deste ciclo:
 - **Frente frontend:** botão "baixar relatório" na tela da análise concluída → `GET /analises/:id/relatorio` (abre inline / salva).
 
 > **Marco:** com RF-016 mergeado, o **backend de features do MVP está completo**. Resta só a integração com o serviço de IA real (`HttpAdapter` da `AnaliseIaPort` + A-02), adiada para o fim.
+
+> **Marco (frontend — 02/09/2026):** com RF-016 (frontend) mergeado, o **MVP frontend está completo**. As 12 linhas da tabela de sequenciamento do frontend estão `implementada — Crítico ✅`. `/` (listagem + "Nova análise") e `/analise/[id]` (visor de PDF + navegação por página, revisão de requisitos com status sugerido pela IA, "Alterar parecer", "verificado" interativo, justificativa visível, referência de página clicável + editor, "Concluir análise" com trava por obrigatórios, "Baixar relatório") cobrem todos os RFs de frontend. Consumidos 6 contratos do backend (`GET /analises`, `POST /analises`, `GET /analises/:id`, `GET /analises/:id/pdf`, `PATCH /analises/:id/requisitos/:requisitoId`, `POST /analises/:id/concluir`) + o link para `GET /analises/:id/relatorio`; todos com teste de contrato e smoke conjunto contra o NestJS real. Pendências gerais do MVP: a integração da IA real (backend, A-02) e os follow-ups de acabamento anotados no checkpoint.
 
 ### RF-003 — Restrição de visualização das análises ao analista que as iniciou
 

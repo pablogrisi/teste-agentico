@@ -4,14 +4,15 @@ App **Next.js (App Router) + TypeScript** da LicIA Analisadora. Frente `frontend
 monorepo; a frente `backend/` (NestJS) roda isolada. Método e docs de produto/arquitetura
 vivem na raiz.
 
-> **Estado:** fundação (TSD-002) + **RF-002** (listagem, TSD-011) + **RF-001/RF-004** (modal
-> "Nova análise", TSD-012) + **RF-010** (tela de análise, TSD-013) + **RF-007** (status
-> sugerido pela IA, TSD-014) + **RF-009** (filtros por status, TSD-015) + **RF-008** (modal
-> "Alterar parecer", TSD-016) + **RF-011** (checkbox de "verificado" interativo, TSD-017) +
-> **RF-017** (justificativa da alteração visível, TSD-018) + **RF-014** (visor de PDF +
-> referência de página, TSD-019) + **RF-012** (concluir análise + modal de confirmação,
-> TSD-020). `/` lista as análises e abre o modal de criação; `/analise/[id]` mostra cabeçalho
-> (com o botão **"Concluir análise"** ao lado do status), o **visor do PDF** à esquerda
+> **Estado: MVP frontend completo.** fundação (TSD-002) + **RF-002** (listagem, TSD-011) +
+> **RF-001/RF-004** (modal "Nova análise", TSD-012) + **RF-010** (tela de análise, TSD-013) +
+> **RF-007** (status sugerido pela IA, TSD-014) + **RF-009** (filtros por status, TSD-015) +
+> **RF-008** (modal "Alterar parecer", TSD-016) + **RF-011** (checkbox de "verificado"
+> interativo, TSD-017) + **RF-017** (justificativa da alteração visível, TSD-018) + **RF-014**
+> (visor de PDF + referência de página, TSD-019) + **RF-012** (concluir análise + modal de
+> confirmação, TSD-020) + **RF-016** (baixar o relatório PDF, TSD-021). `/` lista as análises e
+> abre o modal de criação; `/analise/[id]` mostra cabeçalho (com **"Concluir análise"** →
+> **"Baixar relatório"** ao lado do status, conforme o status), o **visor do PDF** à esquerda
 > (`<iframe>` de `GET /analises/:id/pdf` navegado por `#page=N` — ou um aviso sem backend) e, à
 > direita, as abas Checklist/Técnica com os requisitos em acordeão: status **sugerido pela
 > IA** + a **justificativa** quando o parecer difere; lista filtrada por **não conformes** com
@@ -20,7 +21,8 @@ vivem na raiz.
 > página inline — tudo via `PATCH /analises/:id/requisitos/:requisitoId`, aplicando
 > `{ item, resumo }` sem recarregar. **"Concluir análise"** só habilita quando não há
 > obrigatório pendente; confirmar chama `POST /analises/:id/concluir` e a tela vira `CONCLUIDA`
-> (read-only) na hora. O download do relatório entra em RF-016.
+> (read-only) na hora, trocando o botão do cabeçalho por **"Baixar relatório"** — um link para
+> `GET /analises/:id/relatorio` aberto em nova aba (ou desabilitado + aviso sem backend).
 
 ## Pré-requisitos
 
@@ -49,7 +51,10 @@ Rotas:
   `?requisitos=<slug>` na URL); em cada requisito: **"Alterar parecer"** (RF-008),
   **checkbox de "verificado"** (RF-011) e a **referência de página clicável** + editor de
   página inline (RF-014) — via `PATCH .../requisitos/:requisitoId`, `{ item, resumo }` sem
-  recarregar; polling enquanto a análise está processando.
+  recarregar; polling enquanto a análise está processando. No cabeçalho, conforme o status:
+  **"Concluir análise"** (`PRONTA_PARA_REVISAO` — trava por obrigatórios, `POST
+/analises/:id/concluir`, RF-012) ou **"Baixar relatório"** (`CONCLUIDA` — link para
+  `GET /analises/:id/relatorio` em nova aba, RF-016).
 
 ## Scripts
 
@@ -123,7 +128,7 @@ Ver `.env.example`. `NEXT_PUBLIC_API_BASE_URL` — base do backend LicIA. Vazia 
 Definida → `getAnalisesGateway()` usa o `HttpAnalisesGateway`, que fala os contratos já
 implementados no `backend/`: `GET /analises`, `POST /analises`, `GET /analises/:id`,
 `GET /analises/:id/pdf`, `PATCH /analises/:id/requisitos/:requisitoId`,
-`POST /analises/:id/concluir`.
+`POST /analises/:id/concluir` e o link para `GET /analises/:id/relatorio`.
 
 ## Rodar contra o backend real
 
@@ -145,21 +150,26 @@ Do lado do backend, deixe o CORS liberar a origem do frontend:
 
 Estado atual da integração:
 
-- **Smoke conjunto rodado contra o backend real** (NestJS + PostgreSQL 17) em 02/09/2026:
-  criar análise → processar → visor carregando `GET /analises/:id/pdf` no `<iframe>` →
-  editor de página gravando `PATCH { paginaReferencia }` no banco → navegação por `#page=N`
-  (RF-014). E, no mesmo dia (RF-012): botão "Concluir análise" bloqueado por obrigatórios →
-  verificar o último pela UI destrava sem reload → corrida real `POST /analises/:id/concluir`
-  `422` com a lista de `requisitosPendentes` → re-verificar → `200` → tela `CONCLUIDA`
-  read-only, `concluidaEm` gravado. Evidência em `docs/visual-reference/rf-014/rf014-real-*.png`
-  e `docs/visual-reference/rf-012/`.
-- **5 contratos consumidos** batem campo a campo com `backend/src/analises`:
-  `GET /analises`, `POST /analises`, `GET /analises/:id`, `PATCH /analises/:id/requisitos/:requisitoId`,
-  `POST /analises/:id/concluir`.
+- **Smoke conjunto rodado contra o backend real** (NestJS + PostgreSQL 17) em 02/09/2026,
+  cobrindo os quatro últimos ciclos:
+  - **RF-014:** criar análise → processar → visor carregando `GET /analises/:id/pdf` no
+    `<iframe>` → editor de página gravando `PATCH { paginaReferencia }` no banco → `#page=N`.
+  - **RF-012:** "Concluir análise" bloqueado por obrigatórios → verificar o último pela UI
+    destrava sem reload → corrida real `POST /analises/:id/concluir` `422` com a lista de
+    `requisitosPendentes` → re-verificar → `200` → tela `CONCLUIDA` read-only, `concluidaEm` gravado.
+  - **RF-016:** análise `CONCLUIDA` → o cabeçalho troca para "Baixar relatório" → clicar abre
+    nova aba em `GET /analises/:id/relatorio` → `200 application/pdf`, `Content-Disposition:
+inline`, o visor nativo renderiza o relatório; `409` numa análise não `CONCLUIDA`.
+  - Evidência em `docs/visual-reference/rf-014/`, `rf-012/`, `rf-016/`.
+- **6 contratos consumidos** batem campo a campo com `backend/src/analises` +
+  `backend/src/relatorio`: `GET /analises`, `POST /analises`, `GET /analises/:id`,
+  `GET /analises/:id/pdf`, `PATCH /analises/:id/requisitos/:requisitoId`,
+  `POST /analises/:id/concluir`, e o link para `GET /analises/:id/relatorio`.
 - **CORS:** habilitado no backend (`app.enableCors`, commit `35ee46d`) — os modais (fetch no
   navegador) passam; sem `CORS_ORIGINS` o backend reflete a origem.
-- `GET /analises/:id/relatorio` existe no backend mas ainda não tem consumidor no frontend
-  (RF-016 — último RF do MVP frontend).
+- **MVP frontend completo** — todos os RFs de frontend do roadmap estão implementados,
+  aprovados pelo Crítico e com smoke conjunto. Segue como acabamento: smoke de `/` + "Nova
+  análise" contra o backend real e os follow-ups do checkpoint §5.
 
 ## Notas / follow-ups
 

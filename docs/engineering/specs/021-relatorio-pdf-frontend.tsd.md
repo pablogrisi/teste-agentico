@@ -1,9 +1,9 @@
 ---
 title: TSD - Baixar o relatório PDF da análise concluída (RF-016, frontend)
 type: tsd
-status: em aprovação
+status: implementada
 created: 02/09/2026 // Vinicius
-updated: 02/09/2026 // Vinicius
+updated: 02/09/2026 // Vinicius (Crítico ✅; decisão §9 validada = link em nova aba)
 related:
   - docs/product/prd.md
   - docs/architecture/sdd.md
@@ -177,14 +177,14 @@ npm run ci
 
 ## 8. Critérios de aceite
 
-- [ ] Numa análise `CONCLUIDA`, o cabeçalho mostra **"Baixar relatório"**; com backend, é um link para `GET /analises/:id/relatorio` que abre em nova aba (`target="_blank" rel="noopener noreferrer"`).
-- [ ] Numa análise `PRONTA_PARA_REVISAO` aparece o "Concluir análise" (RF-012), **não** o "Baixar relatório"; em `PENDENTE`/`PROCESSANDO`/`ERRO_PROCESSAMENTO` não aparece nenhum dos dois.
-- [ ] Concluir a análise pelo modal do RF-012 troca o botão do cabeçalho para "Baixar relatório" **sem reload**.
-- [ ] Sem `NEXT_PUBLIC_API_BASE_URL`, o botão aparece **desabilitado** com o aviso; nenhuma requisição é feita; não há `role="link"`.
-- [ ] `AnalisesGateway.urlRelatorio` implementado em `Http` (monta `${base}/analises/${id}/relatorio`, id encodado) e `Fixtures` (`null`); **nenhum componente monta a URL sozinho**.
-- [ ] Nenhuma mudança de contrato; `npm run ci` verde; sem regressão em RF-012/014 (o `acao` do `TelaAnalise` só ganha um ramo).
-- [ ] §10 revisada; screenshots em `frontend/docs/visual-reference/rf-016/`; **smoke conjunto contra o NestJS real** registrado.
-- [ ] Marco "MVP frontend completo" registrado no roadmap e no checkpoint.
+- [x] Numa análise `CONCLUIDA`, o cabeçalho mostra **"Baixar relatório"**; com backend, é um link para `GET /analises/:id/relatorio` que abre em nova aba (`target="_blank" rel="noopener noreferrer"`).
+- [x] Numa análise `PRONTA_PARA_REVISAO` aparece o "Concluir análise" (RF-012), **não** o "Baixar relatório"; em `PENDENTE`/`PROCESSANDO`/`ERRO_PROCESSAMENTO` não aparece nenhum dos dois.
+- [x] Concluir a análise pelo modal do RF-012 troca o botão do cabeçalho para "Baixar relatório" **sem reload**.
+- [x] Sem `NEXT_PUBLIC_API_BASE_URL`, o botão aparece **desabilitado** com o aviso; nenhuma requisição é feita; não há `role="link"`.
+- [x] `AnalisesGateway.urlRelatorio` implementado em `Http` (monta `${base}/analises/${id}/relatorio`, id encodado) e `Fixtures` (`null`); **nenhum componente monta a URL sozinho**.
+- [x] Nenhuma mudança de contrato; `npm run ci` verde; sem regressão em RF-012/014 (o `acao` do `TelaAnalise` só ganha um ramo).
+- [x] §10 revisada; screenshots em `frontend/docs/visual-reference/rf-016/`; **smoke conjunto contra o NestJS real** registrado.
+- [x] Marco "MVP frontend completo" registrado no roadmap e no checkpoint.
 
 ## 9. Riscos e decisões abertas
 
@@ -236,9 +236,9 @@ RF-012 (que também é acréscimo sem origem no protótipo): retângulo com fund
 no estado desabilitado, fundo `--color-icon-disabled` + o aviso em `--color-text-secondary`
 (mesmo tratamento do motivo travado do `ConcluirAnalise`).
 
-| ID     | Papel na aplicação                    | Link/localização                               | Nome na origem | Estados representados                    | Status de inspeção                                |
-| ------ | ------------------------------------- | ---------------------------------------------- | -------------- | ---------------------------------------- | ------------------------------------------------- |
-| REF-11 | Botão "Baixar relatório" no cabeçalho | — (sem origem no protótipo; ver RF-012 REF-10) | —              | habilitado (link) / desabilitado + aviso | A inspecionar nesta slice (contra o backend real) |
+| ID     | Papel na aplicação                    | Link/localização                               | Nome na origem | Estados representados                    | Status de inspeção                                                                                          |
+| ------ | ------------------------------------- | ---------------------------------------------- | -------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| REF-11 | Botão "Baixar relatório" no cabeçalho | — (sem origem no protótipo; ver RF-012 REF-10) | —              | habilitado (link) / desabilitado + aviso | Inspecionado 02/09/2026 — enquadramento OK contra o backend real (`frontend/docs/visual-reference/rf-016/`) |
 
 **Divergências intencionais a registrar:** afordância inexistente no protótipo; reaproveita o
 vocabulário visual do botão do cabeçalho do RF-012; abre em nova aba (não baixa forçado).
