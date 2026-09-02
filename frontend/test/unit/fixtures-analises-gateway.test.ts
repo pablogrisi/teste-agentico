@@ -268,6 +268,10 @@ describe("FixturesAnalisesGateway", () => {
       expect(new FixturesAnalisesGateway().urlPdf("1")).toBeNull();
     });
 
+    it("urlRelatorio → null (sem relatório real nas fixtures) — RF-016", () => {
+      expect(new FixturesAnalisesGateway().urlRelatorio("1")).toBeNull();
+    });
+
     it("corrigirPaginaReferencia aplica a página e recalcula o resumo, sem persistir", async () => {
       const gw = new FixturesAnalisesGateway();
       const detalhe = await gw.abrirAnalise("1");

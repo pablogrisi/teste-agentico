@@ -146,6 +146,11 @@ export class FixturesAnalisesGateway implements AnalisesGateway {
     return null;
   }
 
+  /** Sem backend não há relatório real — o botão "Baixar relatório" fica desabilitado. */
+  urlRelatorio(_analiseId: string): string | null {
+    return null;
+  }
+
   /**
    * Sem backend: aplica `paginaReferencia` (TSD-009). **Não persiste** (andaime; ver TSD-019 §9).
    */

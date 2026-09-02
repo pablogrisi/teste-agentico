@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import type { AnaliseDetalhe } from "@/lib/data";
 import { AnaliseHeader } from "./AnaliseHeader";
 import { AnaliseVisor } from "./AnaliseVisor";
+import { BaixarRelatorio } from "./BaixarRelatorio";
 import { ConcluirAnalise } from "./ConcluirAnalise";
 import { PainelRevisao } from "./PainelRevisao";
 import styles from "./TelaAnalise.module.css";
@@ -34,6 +35,8 @@ export function TelaAnalise({ detalhe }: { detalhe: AnaliseDetalhe }) {
         obrigatoriosPendentes={resumoAtual.obrigatoriosPendentes}
         onConcluida={setDetalheEfetivo}
       />
+    ) : detalheEfetivo.status === "CONCLUIDA" ? (
+      <BaixarRelatorio analiseId={detalheEfetivo.id} />
     ) : undefined;
 
   return (

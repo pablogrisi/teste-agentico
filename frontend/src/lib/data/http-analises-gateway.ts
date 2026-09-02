@@ -142,6 +142,10 @@ export class HttpAnalisesGateway implements AnalisesGateway {
     return `${this.baseUrl.replace(/\/+$/, "")}/analises/${encodeURIComponent(analiseId)}/pdf`;
   }
 
+  urlRelatorio(analiseId: string): string {
+    return `${this.baseUrl.replace(/\/+$/, "")}/analises/${encodeURIComponent(analiseId)}/relatorio`;
+  }
+
   async corrigirPaginaReferencia(
     analiseId: string,
     requisitoId: string,

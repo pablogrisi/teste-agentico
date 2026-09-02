@@ -647,6 +647,12 @@ describe("HttpAnalisesGateway.urlPdf / corrigirPaginaReferencia (RF-014 / TSD-00
     expect(new HttpAnalisesGateway(`${BASE}/`).urlPdf("a 1")).toBe(`${BASE}/analises/a%201/pdf`);
   });
 
+  it("urlRelatorio monta {base}/analises/{id}/relatorio (id encodado, sem barra dupla) — RF-016 / TSD-011", () => {
+    expect(new HttpAnalisesGateway(`${BASE}/`).urlRelatorio("a 1")).toBe(
+      `${BASE}/analises/a%201/relatorio`,
+    );
+  });
+
   it("corrigirPaginaReferencia faz PATCH na URL de revisão com o corpo { paginaReferencia }", async () => {
     const fetchSpy = stubFetch({ jsonData: { item: ITEM, resumo: RESUMO } });
     await new HttpAnalisesGateway(BASE).corrigirPaginaReferencia("a1", "req-1", 7);

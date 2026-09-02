@@ -136,6 +136,8 @@ describe("TelaAnalise", () => {
       expect(
         screen.queryByRole("checkbox", { name: /Marcar como verificado/ }),
       ).not.toBeInTheDocument();
+      // RF-016: o slot do cabeçalho troca "Concluir análise" → "Baixar relatório"
+      expect(screen.getByText("Baixar relatório")).toBeInTheDocument();
     });
 
     it("análise já CONCLUIDA não mostra o botão 'Concluir análise'", () => {
@@ -149,6 +151,48 @@ describe("TelaAnalise", () => {
         />,
       );
       expect(screen.queryByRole("button", { name: "Concluir análise" })).not.toBeInTheDocument();
+    });
+  });
+
+  describe("relatório (RF-016)", () => {
+    function detalhe(status: AnaliseDetalhe["status"]): AnaliseDetalhe {
+      const grupos = [{ area: "CHECKLIST_A", itens: [item({ verificado: true })] }];
+      return {
+        id: "1",
+        nup: "n",
+        objeto: "o",
+        status,
+        motivoErro: null,
+        analistaId: "u",
+        analistaNome: "Analista",
+        iniciadaEm: "2024-01-01T00:00:00.000Z",
+        concluidaEm: status === "CONCLUIDA" ? "2024-01-03T10:00:00.000Z" : null,
+        totalPaginasPdf: 24,
+        resumo: calcularResumo(grupos),
+        avaliacoesPorArea: grupos,
+      };
+    }
+
+    it("análise CONCLUIDA mostra 'Baixar relatório' no cabeçalho, não 'Concluir análise'", () => {
+      render(<TelaAnalise detalhe={detalhe("CONCLUIDA")} />);
+      expect(screen.getByText("Baixar relatório")).toBeInTheDocument();
+      expect(screen.queryByText("Concluir análise")).not.toBeInTheDocument();
+    });
+
+    it("análise PRONTA_PARA_REVISAO não mostra 'Baixar relatório'", () => {
+      render(<TelaAnalise detalhe={detalhe("PRONTA_PARA_REVISAO")} />);
+      expect(screen.queryByText("Baixar relatório")).not.toBeInTheDocument();
+    });
+
+    it("com backend (urlRelatorio) o 'Baixar relatório' é um link para GET /analises/:id/relatorio", () => {
+      vi.spyOn(FixturesAnalisesGateway.prototype, "urlRelatorio").mockReturnValue(
+        "https://api.test/analises/1/relatorio",
+      );
+      render(<TelaAnalise detalhe={detalhe("CONCLUIDA")} />);
+      expect(screen.getByRole("link", { name: "Baixar relatório" })).toHaveAttribute(
+        "href",
+        "https://api.test/analises/1/relatorio",
+      );
     });
   });
 });

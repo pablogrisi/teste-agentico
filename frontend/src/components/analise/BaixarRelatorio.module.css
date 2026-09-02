@@ -1,0 +1,50 @@
+/* Segue o vocabulário visual do botão "Concluir análise" do RF-012
+   (ConcluirAnalise.module.css .botao / .motivo). */
+
+.raiz {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12);
+}
+
+.botao,
+.botaoOff {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-8) var(--spacing-24);
+  border: 1px solid transparent;
+  border-radius: var(--radius-8);
+  font-family: var(--font-family-base);
+  font-size: var(--text-small-semibold-size);
+  font-weight: var(--text-small-semibold-weight);
+  line-height: var(--text-small-semibold-line-height);
+}
+
+.botao {
+  border-color: var(--color-brand-default);
+  background: var(--color-brand-default);
+  color: var(--color-text-inverse);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.botao:hover {
+  background: var(--color-brand-hover);
+}
+
+.botaoOff {
+  border-color: var(--color-icon-disabled);
+  background: var(--color-icon-disabled);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+}
+
+.aviso {
+  max-width: 22ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--line-height-16);
+  color: var(--color-text-secondary);
+  text-align: right;
+}

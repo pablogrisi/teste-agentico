@@ -100,6 +100,13 @@ export interface AnalisesGateway {
   urlPdf(analiseId: string): string | null;
 
   /**
+   * URL do relatório PDF final da análise concluída (`GET /analises/:id/relatorio`, TSD-011 —
+   * `application/pdf`, `Content-Disposition: inline`). `null` sem backend real (fixtures) — o
+   * botão "Baixar relatório" aparece desabilitado com um aviso.
+   */
+  urlRelatorio(analiseId: string): string | null;
+
+  /**
    * Corrige/define a `paginaReferencia` de um requisito — mesmo `PATCH` da TSD-008/009, corpo
    * `{ paginaReferencia }` (`1..totalPaginasPdf` \| `≥ 1` \| `null` para limpar). Não dispara a
    * R-06. `422` → `AnaliseValidacaoError`; `409` → `AnaliseConflitoError`; `404` → `AnaliseNaoEncontradaError`.
