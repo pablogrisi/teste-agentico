@@ -32,16 +32,13 @@ export function ConcluirAnalise({
 }: ConcluirAnaliseProps) {
   const [aberto, setAberto] = useState(false);
   const bloqueado = obrigatoriosPendentes > 0;
-  const motivo = `Faltam ${obrigatoriosPendentes} requisito${
-    obrigatoriosPendentes === 1 ? "" : "s"
-  } obrigatório${obrigatoriosPendentes === 1 ? "" : "s"} não verificado${
-    obrigatoriosPendentes === 1 ? "" : "s"
-  }.`;
+  const s = obrigatoriosPendentes === 1 ? "" : "s";
+  const motivo = `Faltam ${obrigatoriosPendentes} requisito${s} obrigatório${s} não verificado${s}.`;
 
   return (
     <div className={styles.raiz}>
       {bloqueado && (
-        <span className={styles.motivo} role="note">
+        <span id="concluir-analise-motivo" className={styles.motivo} role="note">
           {motivo}
         </span>
       )}
@@ -51,6 +48,7 @@ export function ConcluirAnalise({
         onClick={() => setAberto(true)}
         disabled={bloqueado}
         title={bloqueado ? motivo : undefined}
+        aria-describedby={bloqueado ? "concluir-analise-motivo" : undefined}
       >
         Concluir análise
       </button>
@@ -81,8 +79,12 @@ function ConcluirAnaliseModal({ analiseId, onFechar, onConcluida }: ModalProps) 
 
   useEffect(() => {
     setMontado(true);
-    confirmarRef.current?.focus();
   }, []);
+
+  // O portal só existe depois de `montado` — foca o "Concluir" no commit seguinte.
+  useEffect(() => {
+    if (montado) confirmarRef.current?.focus();
+  }, [montado]);
 
   useEffect(() => {
     function aoTeclar(evento: KeyboardEvent) {

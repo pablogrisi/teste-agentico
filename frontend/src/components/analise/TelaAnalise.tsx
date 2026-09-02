@@ -30,7 +30,7 @@ export function TelaAnalise({ detalhe }: { detalhe: AnaliseDetalhe }) {
   const acao =
     detalheEfetivo.status === "PRONTA_PARA_REVISAO" ? (
       <ConcluirAnalise
-        analiseId={detalhe.id}
+        analiseId={detalheEfetivo.id}
         obrigatoriosPendentes={resumoAtual.obrigatoriosPendentes}
         onConcluida={setDetalheEfetivo}
       />

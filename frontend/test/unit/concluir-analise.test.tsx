@@ -39,12 +39,11 @@ afterEach(() => {
 });
 
 describe("ConcluirAnalise", () => {
-  it("com obrigatórios pendentes → botão desabilitado e o motivo à vista", () => {
+  it("com obrigatórios pendentes → botão desabilitado, motivo à vista e associado por aria-describedby", () => {
     render(<ConcluirAnalise analiseId="1" obrigatoriosPendentes={3} onConcluida={vi.fn()} />);
-    expect(screen.getByRole("button", { name: "Concluir análise" })).toBeDisabled();
-    expect(
-      screen.getByText(/Faltam 3 requisitos obrigatórios não verificados/),
-    ).toBeInTheDocument();
+    const botao = screen.getByRole("button", { name: "Concluir análise" });
+    expect(botao).toBeDisabled();
+    expect(botao).toHaveAccessibleDescription("Faltam 3 requisitos obrigatórios não verificados.");
   });
 
   it("singular no motivo quando falta 1", () => {
