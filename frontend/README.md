@@ -139,14 +139,17 @@ npm run dev -- -p 3001
 Do lado do backend, deixe o CORS liberar a origem do frontend:
 `CORS_ORIGINS=http://localhost:3001` no `backend/.env` (vazio já reflete a origem).
 
-Estado atual da integração (checado contra o `main` do backend, pós-RF-016):
+Estado atual da integração:
 
-- Os 4 contratos consumidos batem campo a campo com `backend/src/analises` (mesmos nomes em
-  `AvaliacaoItem` / `AnaliseDetalhe` / `resumo`; `PATCH` devolve `{ item, resumo }`).
+- **Smoke conjunto rodado contra o backend real** (NestJS + PostgreSQL 17) em 02/09/2026:
+  criar análise → processar → visor carregando `GET /analises/:id/pdf` no `<iframe>` →
+  editor de página gravando `PATCH { paginaReferencia }` no banco → navegação por `#page=N`.
+  Evidência em `docs/visual-reference/rf-014/rf014-real-*.png`.
+- Os 4 contratos consumidos batem campo a campo com `backend/src/analises`.
 - **CORS:** habilitado no backend (`app.enableCors`, commit `35ee46d`) — os modais (fetch no
-  navegador) já passam; sem `CORS_ORIGINS` o backend reflete a origem.
-- `GET /analises/:id/pdf`, `POST /analises/:id/concluir` e `GET /analises/:id/relatorio`
-  existem no backend mas ainda não têm consumidor no frontend (RF-014 / RF-012 / RF-016).
+  navegador) passam; sem `CORS_ORIGINS` o backend reflete a origem.
+- `POST /analises/:id/concluir` e `GET /analises/:id/relatorio` existem no backend mas ainda
+  não têm consumidor no frontend (RF-012 / RF-016).
 
 ## Notas / follow-ups
 
@@ -154,7 +157,6 @@ Estado atual da integração (checado contra o `main` do backend, pós-RF-016):
   passo de acabamento posterior (TSD-002 §10.2).
 - **Lint:** migrado de `next lint` (deprecado no Next 15) para `eslint .` com flat config
   (`eslint.config.mjs`). `next build` não repete o lint — ele roda no `npm run ci`.
-- **`HttpAnalisesGateway`:** validado por teste de contrato (formato do payload) e conferido
-  campo a campo contra o `backend/src/analises` do `main`. Falta um smoke com os dois
-  processos de pé (agora possível — o backend já tem CORS; ver "Rodar contra o backend real").
+- **`HttpAnalisesGateway`:** validado por teste de contrato + smoke conjunto contra o
+  NestJS real (02/09/2026 — ver "Rodar contra o backend real").
 - Sem trava de largura (`min-width: 1440px` do protótipo não replicado).

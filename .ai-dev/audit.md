@@ -34,7 +34,15 @@ Papéis:
 
 Evidência visual: `frontend/docs/visual-reference/rf-014/` — `rf014-visor-sem-backend.png`, `rf014-referencia-clicavel.png`, `rf014-editor-pagina.png`, `rf014-smoke-page2.png` (o `<iframe>` renderizando o PDF na página 2 após o clique) + `README.md` (REF-09 / `PdfPanel`; divergências: `<iframe>` nativo vs documento desenhado, sem PDF nas fixtures, editor inline vs modal).
 
-Estado: ciclo fechado com Crítico ✅, `npm run ci` verde, **branch aguardando push + merge na `main`**. Próximo frontend: RF-012 (modal de conclusão). Follow-ups: e2e conjunto contra o backend real; CSP/`frame-src`; fallback para browser sem visor de PDF nativo.
+Estado: ciclo fechado com Crítico ✅, `npm run ci` verde, mergeado na `main` (`d9fc9b4`). Próximo frontend: RF-012 (modal de conclusão).
+
+**Smoke conjunto contra o backend real — feito em 02/09/2026 (pós-merge).** Descobri que a máquina tem um serviço **PostgreSQL 17** rodando (o `@embedded-postgres` do `test:e2e` é que recusa sob usuário admin; o Postgres do sistema roda normal). Criada a base `licia` (`CREATE ROLE licia` + `CREATE DATABASE licia`), `prisma migrate deploy`, `seed` (12 requisitos), `npm run start` do NestJS em `:3000` (`IA_ADAPTER=stub`, `PROCESSAMENTO_AUTO=true`), frontend buildado com `NEXT_PUBLIC_API_BASE_URL=http://localhost:3000` em `:3201`. Verificado ponta a ponta:
+- `POST /analises` (multipart, PDF de 4 páginas) → `PENDENTE` → worker processa → `PRONTA_PARA_REVISAO` com `totalPaginasPdf = 4` (contagem `pdf-lib` do PDF real) e 12 avaliações (Checklist 8 + Técnica 4).
+- `GET /analises/:id/pdf` → `200 application/pdf`, `Content-Disposition: inline`, **sem** `X-Frame-Options`/CSP → o `<iframe>` do visor renderiza o PDF; a toolbar navega e o `#page=N` abre a folha no visor nativo do browser.
+- Editor inline de página → `PATCH /analises/:id/requisitos/:requisitoId` `{ paginaReferencia: 3 }` → `{ item, resumo }`, **gravado no banco** (`CHK-001.paginaReferencia = 3`), **sem** disparar a R-06; o requisito re-renderizou com "Página 3" sem reload.
+- Clicar em "Página 3" no requisito → `<iframe>` para `…/analises/:id/pdf#page=3&view=FitH`.
+- Preflight `OPTIONS` em `/analises/:id/requisitos/:id` → `204` com `Access-Control-Allow-Origin` da origem do frontend (CORS `35ee46d`).
+Evidência: `frontend/docs/visual-reference/rf-014/rf014-real-{visor,editou-pagina,page-nav}.png`. O `stub-backend.mjs` do 1º smoke foi andaime, não entrou no repo. **RF-014 validado contra o backend real** — não precisa mais do Pablo para essa parte.
 
 ## 01/09/2026 — RF-017 / TSD-018: justificativa visível + erro de revisão fiel (frontend) + CORS no backend
 
