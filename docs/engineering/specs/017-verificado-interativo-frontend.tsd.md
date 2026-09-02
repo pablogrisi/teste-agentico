@@ -3,7 +3,7 @@
 ---
 title: TSD - Verificado interativo (RF-011, frontend)
 type: tsd
-status: em aprovação
+status: implementada
 created: 01/09/2026 // Vinicius
 updated: 01/09/2026 // Vinicius
 related:
@@ -170,16 +170,16 @@ npm run ci
 
 ## 8. Critérios de aceite
 
-- [ ] Numa análise `PRONTA_PARA_REVISAO`, o checkbox de "verificado" de cada `RequisitoItem` é **operável** (sem `disabled`); numa `CONCLUIDA` fica desabilitado.
-- [ ] Clicar chama `AnalisesGateway.marcarVerificado(analiseId, requisitoId, !verificadoAtual)` — nenhum componente fala HTTP direto.
-- [ ] No **sucesso**: o item passa a mostrar o novo `verificado`; a barra de **progresso** e o texto **`X/Y verificados`** (e `obrigatoriosPendentes`, quando exibido) se ajustam pelo `resumo` devolvido — **sem recarregar**.
-- [ ] Durante a chamada o checkbox fica `disabled` e não aceita novo clique.
-- [ ] Num erro (`409`/`404`/rede) o checkbox **volta ao valor anterior** e o item mostra uma mensagem curta (`role="alert"`).
-- [ ] O corpo do `PATCH` é **exatamente** `{ verificado: boolean }` — nunca `statusFinal`/`comentario`.
-- [ ] Alterar o parecer pelo modal (RF-008) continua marcando `verificado = true` (sem regressão nos testes existentes).
-- [ ] `HttpAnalisesGateway` e `FixturesAnalisesGateway` implementam `marcarVerificado`; a fixture **não persiste** (andaime — §9).
-- [ ] `npm run ci` verde: `eslint .` + prettier, `tsc --noEmit`, testes, `next build`.
-- [ ] §10 revisada; screenshots (operável / progresso após marcar / erro) — `frontend/docs/visual-reference/rf-011/`.
+- [x] Numa análise `PRONTA_PARA_REVISAO`, o checkbox de "verificado" de cada `RequisitoItem` é **operável** (sem `disabled`); numa `CONCLUIDA` fica desabilitado.
+- [x] Clicar chama `AnalisesGateway.marcarVerificado(analiseId, requisitoId, !verificadoAtual)` — nenhum componente fala HTTP direto.
+- [x] No **sucesso**: o item passa a mostrar o novo `verificado`; a barra de **progresso** e o texto **`X/Y verificados`** (e `obrigatoriosPendentes`, quando exibido) se ajustam pelo `resumo` devolvido — **sem recarregar**.
+- [x] Durante a chamada o checkbox fica `disabled` e não aceita novo clique.
+- [x] Num erro (`409`/`404`/rede) o checkbox **volta ao valor anterior** e o item mostra uma mensagem curta (`role="alert"`).
+- [x] O corpo do `PATCH` é **exatamente** `{ verificado: boolean }` — nunca `statusFinal`/`comentario`.
+- [x] Alterar o parecer pelo modal (RF-008) continua marcando `verificado = true` (sem regressão nos testes existentes).
+- [x] `HttpAnalisesGateway` e `FixturesAnalisesGateway` implementam `marcarVerificado`; a fixture **não persiste** (andaime — §9).
+- [x] `npm run ci` verde: `eslint .` + prettier, `tsc --noEmit`, testes, `next build`.
+- [x] §10 revisada; screenshots (operável / progresso após marcar / erro) — `frontend/docs/visual-reference/rf-011/`.
 
 ## 9. Riscos e decisões abertas
 
