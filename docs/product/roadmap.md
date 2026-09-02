@@ -56,20 +56,20 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 
 ## Tabela de sequenciamento — Frente Frontend (`frontend/`)
 
-| Sequência | ID     | Feature (recorte frontend)                                        | Prioridade | Status                                                          |
-| --------- | ------ | ----------------------------------------------------------------- | ---------- | --------------------------------------------------------------- |
-| 1         | RF-002 | Tela de listagem de análises + estado vazio                       | Must       | implementada (branch `frontend/rf-002-listagem`)                |
-| 2         | RF-001 | Modal "Nova análise" (NUP, objeto) + validação                    | Must       | implementada (branch `frontend/rf-001-nova-analise`)            |
-| 3         | RF-004 | Campo de upload de PDF no modal + estados de erro                 | Must       | implementada com RF-001 (branch `frontend/rf-001-nova-analise`) |
-| 4         | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre         | Must       | implementada (branch `frontend/rf-010-tela-analise`)            |
-| 5         | RF-007 | Exibição dos requisitos com status sugerido pela IA               | Must       | implementada (branch `frontend/rf-007-status-ia`)               |
-| 6         | RF-009 | Visão inicial priorizando não conformes + filtros por status      | Must       | implementada — Crítico ✅ (branch `frontend/rf-009-filtros`)    |
-| 7         | RF-008 | Modal de alteração de status final ("parecer")                    | Must       | implementada — Crítico ✅ (branch `frontend/rf-008-parecer`)    |
-| 8         | RF-011 | Controle de "marcar como verificado"                              | Must       | implementada — Crítico ✅ (branch `frontend/rf-011-verificado`) |
-| 9         | RF-017 | Campo de comentário obrigatório nas ações de revisão              | Must       | implementada — Crítico ✅ (branch `frontend/rf-017-comentario`) |
-| 10        | RF-014 | Visor de PDF + referência de página clicável / ausência explícita | Must       | implementada — Crítico ✅ (branch `frontend/rf-014-visor`)      |
-| 11        | RF-012 | Modal de conclusão + botão global bloqueado até tudo verificado   | Must       | implementada — Crítico ✅ (branch `frontend/rf-012-conclusao`)  |
-| 12        | RF-016 | Ação de baixar o relatório PDF da análise concluída               | Must       | não iniciada — **último RF do frontend**                        |
+| Sequência | ID     | Feature (recorte frontend)                                        | Prioridade | Status                                                                                             |
+| --------- | ------ | ----------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------- |
+| 1         | RF-002 | Tela de listagem de análises + estado vazio                       | Must       | implementada (branch `frontend/rf-002-listagem`)                                                   |
+| 2         | RF-001 | Modal "Nova análise" (NUP, objeto) + validação                    | Must       | implementada (branch `frontend/rf-001-nova-analise`)                                               |
+| 3         | RF-004 | Campo de upload de PDF no modal + estados de erro                 | Must       | implementada com RF-001 (branch `frontend/rf-001-nova-analise`)                                    |
+| 4         | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre         | Must       | implementada (branch `frontend/rf-010-tela-analise`)                                               |
+| 5         | RF-007 | Exibição dos requisitos com status sugerido pela IA               | Must       | implementada (branch `frontend/rf-007-status-ia`)                                                  |
+| 6         | RF-009 | Visão inicial priorizando não conformes + filtros por status      | Must       | implementada — Crítico ✅ (branch `frontend/rf-009-filtros`)                                       |
+| 7         | RF-008 | Modal de alteração de status final ("parecer")                    | Must       | implementada — Crítico ✅ (branch `frontend/rf-008-parecer`)                                       |
+| 8         | RF-011 | Controle de "marcar como verificado"                              | Must       | implementada — Crítico ✅ (branch `frontend/rf-011-verificado`)                                    |
+| 9         | RF-017 | Campo de comentário obrigatório nas ações de revisão              | Must       | implementada — Crítico ✅ (branch `frontend/rf-017-comentario`)                                    |
+| 10        | RF-014 | Visor de PDF + referência de página clicável / ausência explícita | Must       | implementada — Crítico ✅ (branch `frontend/rf-014-visor`)                                         |
+| 11        | RF-012 | Modal de conclusão + botão global bloqueado até tudo verificado   | Must       | implementada — Crítico ✅ (branch `frontend/rf-012-conclusao`)                                     |
+| 12        | RF-016 | Ação de baixar o relatório PDF da análise concluída               | Must       | user story + TSD-021 em aprovação (branch `frontend/rf-016-relatorio`) — **último RF do frontend** |
 
 Status possíveis, nessa ordem de progresso dentro de um ciclo: `não iniciada` → `user story em aprovação` → `user story aprovada` → `TSD em aprovação` → `TSD aprovada` → `em construção` → `em validação` → `implementada`.
 
@@ -629,7 +629,31 @@ Recorte backend deste ciclo:
 
 **Frentes:** Backend · Frontend
 **Status (backend):** implementada (mergeada na `main`)
-**Status (frontend):** não iniciada
+**Status (frontend):** user story + TSD-021 em aprovação — branch `frontend/rf-016-relatorio`
+
+**User Story (frontend — RF-016)**
+
+Como analista técnico, quando uma análise está **concluída**, quero um botão **"Baixar relatório"** na tela dela para abrir/salvar o relatório PDF final — sem sair da tela, para arquivar ou compartilhar o resultado fora do sistema.
+
+Recorte deste ciclo (frontend), em cima da tela do RF-010/…/RF-012:
+
+- **Botão "Baixar relatório"** no cabeçalho da tela (mesmo lugar do "Concluir análise"), visível **apenas quando `status === "CONCLUIDA"`**. Nas demais situações não aparece (numa análise `PRONTA_PARA_REVISAO` o slot é o "Concluir análise" do RF-012).
+- Ao concluir a análise pelo modal do RF-012, o cabeçalho troca "Concluir análise" → "Baixar relatório" **na hora** (sem reload) — o `TelaAnalise` já segura o `detalheEfetivo`.
+- Com `NEXT_PUBLIC_API_BASE_URL` definida → o botão é um link para `GET /analises/:id/relatorio` (contrato TSD-011: `application/pdf`, `Content-Disposition: inline`), aberto em nova aba (`target="_blank" rel="noopener noreferrer"`); o visor nativo do browser abre o PDF e o usuário salva se quiser — consistente com o visor do RF-014 (`GET /analises/:id/pdf`).
+- **Sem backend** (fixtures) → o botão aparece desabilitado com um aviso curto ("Disponível com a tela conectada ao backend"), como o visor de PDF faz sem `NEXT_PUBLIC_API_BASE_URL`. As fixtures não têm relatório real e não vale forjar um.
+- **Nenhum componente fala HTTP direto:** a URL do relatório vem de um seam no gateway (`AnalisesGateway.urlRelatorio(analiseId): string | null`), como o `urlPdf` do RF-014.
+- **Fora do escopo:** pré-visualizar o relatório embutido na tela; escolher formato/idioma; baixar o PDF **de entrada** (não é RF); reabrir análise concluída; qualquer mudança no conteúdo do relatório (é o backend TSD-011 que define — este ciclo só entrega o acesso).
+
+**Critério de aceite (frontend)**
+
+- Numa análise `CONCLUIDA`, o cabeçalho mostra **"Baixar relatório"**; ao clicar (com backend), abre `GET /analises/:id/relatorio` (PDF) numa nova aba.
+- Numa análise `PRONTA_PARA_REVISAO`/`PROCESSANDO`/`ERRO_PROCESSAMENTO`/`PENDENTE`, o botão **não aparece**.
+- Concluir a análise pelo modal do RF-012 troca o botão do cabeçalho para "Baixar relatório" sem reload.
+- Sem `NEXT_PUBLIC_API_BASE_URL`, o botão aparece **desabilitado** com o aviso; nenhuma chamada é feita.
+- `AnalisesGateway.urlRelatorio` implementado em `Http` (monta `${base}/analises/${id}/relatorio`) e `Fixtures` (`null`); nenhum componente monta a URL sozinho.
+- Nenhuma mudança de contrato; `npm run ci` verde; sem regressão em RF-012/014.
+
+**TSD associada (frontend):** `docs/engineering/specs/021-relatorio-pdf-frontend.tsd.md`.
 
 **User Story** — _validada em 01/09/2026_
 
