@@ -111,8 +111,36 @@ Tokens portados de `Prototipo Licia Analisadora/src/theme/` para CSS custom prop
 
 ## Variáveis de ambiente
 
-Ver `.env.example`. `NEXT_PUBLIC_API_BASE_URL` — base do backend LicIA. Definida →
-`getAnalisesGateway()` usa o gateway HTTP (contrato TSD-005). Vazia → fixtures.
+Ver `.env.example`. `NEXT_PUBLIC_API_BASE_URL` — base do backend LicIA. Vazia → fixtures.
+Definida → `getAnalisesGateway()` usa o `HttpAnalisesGateway`, que fala os contratos já
+implementados no `backend/`: `GET /analises`, `POST /analises`, `GET /analises/:id`,
+`PATCH /analises/:id/requisitos/:requisitoId`.
+
+## Rodar contra o backend real
+
+O `backend/` (NestJS) sobe um PostgreSQL embutido nos testes, mas em dev precisa de um
+Postgres (`cd backend && docker compose up -d db`). Com o banco de pé:
+
+```bash
+# terminal 1 — backend na :3000
+cd backend && npm install && npm run prisma:migrate && npm run seed && npm run start:dev
+
+# terminal 2 — frontend na :3001 apontando para o backend
+cd frontend
+echo 'NEXT_PUBLIC_API_BASE_URL=http://localhost:3000' > .env.local
+npm run dev -- -p 3001
+```
+
+Estado atual da integração (checado contra o `main` do backend, pós-RF-016):
+
+- Os 4 contratos consumidos batem campo a campo com `backend/src/analises` (mesmos nomes em
+  `AvaliacaoItem` / `AnaliseDetalhe` / `resumo`; `PATCH` devolve `{ item, resumo }`).
+- **CORS:** o backend ainda não chama `app.enableCors()`. As telas `/` e `/analise/[id]`
+  funcionam (fetch server-side), mas os modais "Nova análise" e "Alterar parecer" (fetch no
+  navegador) só passam depois que o backend habilitar CORS para a origem do frontend —
+  alternativa no frontend seria um proxy via route handler (não feito).
+- `GET /analises/:id/pdf`, `POST /analises/:id/concluir` e `GET /analises/:id/relatorio`
+  existem no backend mas ainda não têm consumidor no frontend (RF-014 / RF-012 / RF-016).
 
 ## Notas / follow-ups
 
@@ -120,6 +148,7 @@ Ver `.env.example`. `NEXT_PUBLIC_API_BASE_URL` — base do backend LicIA. Defini
   passo de acabamento posterior (TSD-002 §10.2).
 - **Lint:** migrado de `next lint` (deprecado no Next 15) para `eslint .` com flat config
   (`eslint.config.mjs`). `next build` não repete o lint — ele roda no `npm run ci`.
-- **`HttpAnalisesGateway`:** validado por teste de contrato (formato do payload). Falta um
-  smoke contra o backend real (sem ambiente conjunto neste momento).
+- **`HttpAnalisesGateway`:** validado por teste de contrato (formato do payload) e conferido
+  campo a campo contra o `backend/src/analises` do `main`. Falta um smoke com os dois
+  processos de pé (bloqueado por CORS no backend — ver "Rodar contra o backend real").
 - Sem trava de largura (`min-width: 1440px` do protótipo não replicado).
