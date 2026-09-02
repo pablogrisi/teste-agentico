@@ -132,6 +132,18 @@ export interface RevisaoRequisitoResultado {
   resumo: ResumoAnalise;
 }
 
+/**
+ * Requisito obrigatório ainda não verificado, devolvido pelo backend no `422` de
+ * `POST /analises/:id/concluir` (`requisitosPendentes[]` — TSD-010). Formato espelha
+ * `backend/src/analises/conclusao-analise.ts`.
+ */
+export interface RequisitoPendente {
+  requisitoId: string;
+  codigo: string;
+  titulo: string;
+  area: string;
+}
+
 /** Parâmetros de consulta de `GET /analises` (TSD-005). */
 export interface ListarAnalisesQuery {
   /** Busca em `nup` + `objeto`, contém, case/acento-insensitive. */

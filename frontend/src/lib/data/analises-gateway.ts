@@ -5,6 +5,7 @@ import type {
   AnalisesPagina,
   ListarAnalisesQuery,
   NovaAnaliseInput,
+  RequisitoPendente,
   RevisaoRequisitoResultado,
 } from "./types";
 
@@ -40,6 +41,17 @@ export class AnaliseConflitoError extends AnalisesGatewayError {
   constructor(message = "Esta análise não está mais em revisão.") {
     super(message);
     this.name = "AnaliseConflitoError";
+  }
+}
+
+/**
+ * Conclusão recusada porque ainda há requisitos **obrigatórios** sem verificar
+ * (`422` de `POST /analises/:id/concluir` — TSD-010). Carrega a lista devolvida pelo backend.
+ */
+export class AnaliseRequisitosPendentesError extends AnalisesGatewayError {
+  constructor(readonly pendentes: RequisitoPendente[]) {
+    super("Ainda há requisitos obrigatórios não verificados.");
+    this.name = "AnaliseRequisitosPendentesError";
   }
 }
 
@@ -97,4 +109,12 @@ export interface AnalisesGateway {
     requisitoId: string,
     pagina: number | null,
   ): Promise<RevisaoRequisitoResultado>;
+
+  /**
+   * Conclui a análise — `POST /analises/:id/concluir` (TSD-010), sem corpo. Devolve o
+   * `AnaliseDetalhe` já `CONCLUIDA`. `CONCLUIDA` → idempotente (`200`).
+   * `422` → `AnaliseRequisitosPendentesError` (com `pendentes`); `409` → `AnaliseConflitoError`;
+   * `404` → `AnaliseNaoEncontradaError`.
+   */
+  concluirAnalise(analiseId: string): Promise<AnaliseDetalhe>;
 }

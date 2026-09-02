@@ -1,6 +1,7 @@
 import {
   AnaliseConflitoError,
   AnaliseNaoEncontradaError,
+  AnaliseRequisitosPendentesError,
   AnaliseValidacaoError,
   AnalisesGatewayError,
   type AnalisesGateway,
@@ -19,6 +20,7 @@ import type {
   ListarAnalisesQuery,
   NormaReferencia,
   NovaAnaliseInput,
+  RequisitoPendente,
   ResumoAnalise,
   RevisaoRequisitoResultado,
 } from "./types";
@@ -148,6 +150,40 @@ export class HttpAnalisesGateway implements AnalisesGateway {
     return this.patchRevisao(analiseId, requisitoId, { paginaReferencia: pagina });
   }
 
+  async concluirAnalise(analiseId: string): Promise<AnaliseDetalhe> {
+    const url = `${this.baseUrl.replace(/\/+$/, "")}/analises/${encodeURIComponent(
+      analiseId,
+    )}/concluir`;
+
+    let resposta: Response;
+    try {
+      resposta = await fetch(url, {
+        method: "POST",
+        headers: { accept: "application/json" },
+        cache: "no-store",
+      });
+    } catch (causa) {
+      throw new AnalisesGatewayError("Não foi possível contatar o serviço de análises.", causa);
+    }
+
+    if (resposta.status === 422) {
+      throw new AnaliseRequisitosPendentesError(await extrairPendentes(resposta));
+    }
+    if (resposta.status === 409) throw new AnaliseConflitoError();
+    if (resposta.status === 404) throw new AnaliseNaoEncontradaError(analiseId);
+    if (!resposta.ok) {
+      throw new AnalisesGatewayError(`Falha ao concluir a análise (HTTP ${resposta.status}).`);
+    }
+
+    let corpo: unknown;
+    try {
+      corpo = await resposta.json();
+    } catch (causa) {
+      throw new AnalisesGatewayError("Resposta do serviço de análises não é JSON válido.", causa);
+    }
+    return validarAnaliseDetalhe(corpo);
+  }
+
   /** `PATCH /analises/:id/requisitos/:requisitoId` com o corpo dado — comum a revisar e verificar (TSD-008). */
   private async patchRevisao(
     analiseId: string,
@@ -185,6 +221,33 @@ export class HttpAnalisesGateway implements AnalisesGateway {
       throw new AnalisesGatewayError("Resposta do serviço de análises não é JSON válido.", causa);
     }
     return validarRevisaoResultado(corpo);
+  }
+}
+
+/**
+ * Lê `requisitosPendentes[]` do corpo do `422` de `POST /analises/:id/concluir` (TSD-010).
+ * Se o backend não trouxer a lista (formato inesperado), devolve `[]` — o modal degrada
+ * para a mensagem genérica.
+ */
+async function extrairPendentes(resposta: Response): Promise<RequisitoPendente[]> {
+  try {
+    const corpo = (await resposta.json()) as { requisitosPendentes?: unknown };
+    if (!Array.isArray(corpo.requisitosPendentes)) return [];
+    return corpo.requisitosPendentes.flatMap((bruto) => {
+      if (typeof bruto !== "object" || bruto === null) return [];
+      const p = bruto as Record<string, unknown>;
+      if (
+        typeof p.requisitoId !== "string" ||
+        typeof p.codigo !== "string" ||
+        typeof p.titulo !== "string" ||
+        typeof p.area !== "string"
+      ) {
+        return [];
+      }
+      return [{ requisitoId: p.requisitoId, codigo: p.codigo, titulo: p.titulo, area: p.area }];
+    });
+  } catch {
+    return [];
   }
 }
 

@@ -3,7 +3,7 @@
 ---
 title: TSD - Conclusão da análise (RF-012, frontend)
 type: tsd
-status: em aprovação
+status: aprovada — em implementação (seguir CompletionModal do protótipo)
 created: 02/09/2026 // Vinicius
 updated: 02/09/2026 // Vinicius
 related:
@@ -226,8 +226,11 @@ npm run ci
 - **Sem toast de sucesso** (padrão das slices anteriores); a mudança do badge + o read-only já
   sinalizam. Um lugar reservado para "baixar relatório" (RF-016) pode entrar como texto
   desabilitado, ou ficar totalmente para o RF-016 — **fica para o RF-016** (nada nesta slice).
-- **Modal simples de confirmação** (título + texto + 2 botões), reaproveitando o esqueleto/A11y
-  do `AlterarParecerModal`. Sem checkbox "não perguntar de novo".
+- **Modal de confirmação seguindo o `CompletionModal` de alta fidelidade** (instrução do
+  usuário, 02/09/2026): card central com o círculo `--color-brand-muted` + ícone de check,
+  `<h2>` de título, `<p>` de texto e 2 botões ("Cancelar" / "Concluir"). A11y (`role="dialog"`,
+  foco, Escape, `overflow:hidden` no body) reaproveitada do `AlterarParecerModal`. Sem checkbox
+  "não perguntar de novo".
 
 ### Riscos remanessantes
 
@@ -249,7 +252,7 @@ Referência: `Prototipo Licia Analisadora/src/routes/AnalysisPage/components/Com
 
 | ID | Papel na aplicação | Link/localização | Nome na origem | Estados representados | Status de inspeção |
 |---|---|---|---|---|---|
-| REF-10 | Modal de conclusão da análise | `.../components/CompletionModal.{tsx,module.css}` | `CompletionModal` | aberto (título + texto + confirmar) | A inspecionar nesta slice |
+| REF-10 | Modal de conclusão da análise | `.../components/CompletionModal.{tsx,module.css}` | `CompletionModal` | aberto (círculo+check, título, texto, ações); erro `422` com lista | Inspecionado 02/09/2026 — enquadramento OK (`frontend/docs/visual-reference/rf-012/`) |
 
 Do protótipo: `CompletionModal` é um card central com ícone, título, um parágrafo e um botão
 de confirmação (o protótipo usa vários — "Não-conformes verificados!", "Checklist concluído!"
@@ -260,8 +263,9 @@ implícita ao marcar tudo).
 
 **Divergências intencionais a registrar:** conclusão **única** (não uma cadeia de modais por
 etapa); botão explícito no cabeçalho com trava por obrigatórios + motivo; a lista de
-`requisitosPendentes` no `422` é acréscimo (o protótipo não falha); sem ícone comemorativo
-grande (um modal sóbrio de confirmação).
+`requisitosPendentes` no `422` é acréscimo (o protótipo não falha); **duas** ações no modal
+(Cancelar / Concluir) em vez do botão único do protótipo — é uma confirmação de ação
+irreversível. O círculo com o ícone de check **é** mantido (alta fidelidade ao `CompletionModal`).
 
 Screenshots obrigatórios: botão desabilitado com o motivo; modal de confirmação; tela após
 concluir (badge "Concluída" + "Concluída em" + read-only); `422` com a lista de pendentes.

@@ -5,6 +5,7 @@ import { HttpAnalisesGateway } from "./http-analises-gateway";
 export {
   AnaliseConflitoError,
   AnaliseNaoEncontradaError,
+  AnaliseRequisitosPendentesError,
   AnaliseValidacaoError,
   AnalisesGatewayError,
 } from "./analises-gateway";
@@ -83,6 +84,7 @@ export type {
   NovaAnaliseInput,
   OrdemListagem,
   OrdenarAnalisesPor,
+  RequisitoPendente,
   ResumoAnalise,
   RevisaoRequisitoResultado,
   StatusAnalise,

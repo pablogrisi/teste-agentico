@@ -1,6 +1,7 @@
 import {
   AnaliseConflitoError,
   AnaliseNaoEncontradaError,
+  AnaliseRequisitosPendentesError,
   AnaliseValidacaoError,
   type AnalisesGateway,
 } from "./analises-gateway";
@@ -155,6 +156,35 @@ export class FixturesAnalisesGateway implements AnalisesGateway {
   ): Promise<RevisaoRequisitoResultado> {
     const { grupos, atual } = await this.localizarAvaliacao(analiseId, requisitoId);
     return resultadoComItem(grupos, { ...atual, paginaReferencia: pagina });
+  }
+
+  /**
+   * Sem backend: aplica as regras de `POST /analises/:id/concluir` (TSD-010) sobre o detalhe
+   * das fixtures. **Não persiste** — a próxima `abrirAnalise` volta ao estado das fixtures
+   * (andaime; ver TSD-020 §9).
+   */
+  async concluirAnalise(analiseId: string): Promise<AnaliseDetalhe> {
+    const detalhe = await this.abrirAnalise(analiseId);
+
+    if (detalhe.status === "CONCLUIDA") return detalhe; // idempotente
+    if (detalhe.status !== "PRONTA_PARA_REVISAO") throw new AnaliseConflitoError();
+
+    const pendentes = detalhe.avaliacoesPorArea
+      .flatMap((g) => g.itens)
+      .filter((i) => i.obrigatorio && !i.verificado)
+      .map((i) => ({
+        requisitoId: i.requisitoId,
+        codigo: i.codigo,
+        titulo: i.titulo,
+        area: i.area,
+      }));
+    if (pendentes.length > 0) throw new AnaliseRequisitosPendentesError(pendentes);
+
+    return {
+      ...clonarDetalhe(detalhe),
+      status: "CONCLUIDA",
+      concluidaEm: new Date().toISOString(),
+    };
   }
 
   /** `409` se a análise não está em revisão; `404` se a avaliação não existe. */

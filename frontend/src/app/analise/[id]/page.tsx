@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { PageShell } from "@/components/layout/PageShell";
-import { AnaliseHeader } from "@/components/analise/AnaliseHeader";
 import { AutoRefreshAnalise } from "@/components/analise/AutoRefreshAnalise";
 import { TelaAnalise } from "@/components/analise/TelaAnalise";
 import { AnaliseNaoEncontradaError, getAnalisesGateway } from "@/lib/data";
@@ -26,7 +25,6 @@ export default async function AnalisePage({ params }: { params: Promise<{ id: st
     <PageShell fill>
       <AutoRefreshAnalise status={detalhe.status} />
       <div className={styles.coluna}>
-        <AnaliseHeader detalhe={detalhe} />
         <TelaAnalise detalhe={detalhe} />
       </div>
     </PageShell>

@@ -1,0 +1,183 @@
+/* Modal: enquadramento do CompletionModal do protótipo
+   (Prototipo Licia Analisadora/src/routes/AnalysisPage/components/CompletionModal.module.css) —
+   card central, ícone circular, título, texto, ações. */
+
+.raiz {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-12);
+}
+
+.motivo {
+  max-width: 22ch;
+  font-size: var(--text-caption-size);
+  line-height: var(--line-height-16);
+  color: var(--color-text-secondary);
+  text-align: right;
+}
+
+.botao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-8) var(--spacing-24);
+  border: 1px solid var(--color-brand-default);
+  border-radius: var(--radius-8);
+  background: var(--color-brand-default);
+  color: var(--color-text-inverse);
+  font-family: var(--font-family-base);
+  font-size: var(--text-small-semibold-size);
+  font-weight: var(--text-small-semibold-weight);
+  line-height: var(--text-small-semibold-line-height);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.botao:hover:not(:disabled) {
+  background: var(--color-brand-hover);
+}
+
+.botao:disabled {
+  border-color: var(--color-icon-disabled);
+  background: var(--color-icon-disabled);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-16);
+  background: color-mix(in srgb, var(--color-preto-1000) 45%, transparent);
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-16);
+  width: 100%;
+  max-width: 440px;
+  max-height: calc(100vh - 2 * var(--spacing-16));
+  padding: var(--spacing-32) var(--spacing-40);
+  background: var(--color-bg-card);
+  border-radius: var(--radius-8);
+  box-shadow: var(--shadow-modal);
+  text-align: center;
+  overflow-y: auto;
+}
+
+.icone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-full);
+  background: var(--color-brand-muted);
+  color: var(--color-brand-default);
+}
+
+.titulo {
+  font-size: var(--text-body-semibold-size);
+  font-weight: var(--text-body-semibold-weight);
+  line-height: var(--text-body-semibold-line-height);
+  color: var(--color-text-title);
+}
+
+.texto {
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-line-height);
+  color: var(--color-text-secondary);
+}
+
+.texto strong {
+  color: var(--color-text-title);
+}
+
+.erro {
+  width: 100%;
+  padding: var(--spacing-12) var(--spacing-16);
+  background: var(--color-error-subtle);
+  border-left: 3px solid var(--color-error-default);
+  border-radius: var(--radius-4);
+  text-align: left;
+}
+
+.erroTitulo {
+  font-size: var(--text-small-semibold-size);
+  font-weight: var(--text-small-semibold-weight);
+  line-height: var(--text-small-semibold-line-height);
+  color: var(--color-error-text);
+}
+
+.pendentes {
+  margin-top: var(--spacing-8);
+  padding-left: var(--spacing-16);
+  list-style: disc;
+  font-size: var(--text-small-size);
+  line-height: var(--text-small-line-height);
+  color: var(--color-text-body);
+}
+
+.pendenteCodigo {
+  font-weight: var(--text-small-semibold-weight);
+  color: var(--color-text-title);
+}
+
+.acoes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-8);
+  margin-top: var(--spacing-4);
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  padding: var(--spacing-10) var(--spacing-24);
+  border-radius: var(--radius-8);
+  font-family: var(--font-family-base);
+  font-size: var(--text-small-semibold-size);
+  font-weight: var(--text-small-semibold-weight);
+  line-height: var(--text-small-semibold-line-height);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+}
+
+.cancelar {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-default);
+  color: var(--color-text-body);
+}
+
+.cancelar:hover:not(:disabled) {
+  background: var(--color-bg-hover);
+}
+
+.confirmar {
+  background: var(--color-brand-default);
+  border: 1px solid var(--color-brand-default);
+  color: var(--color-text-inverse);
+}
+
+.confirmar:hover:not(:disabled) {
+  background: var(--color-brand-hover);
+}
+
+.confirmar:disabled {
+  background: var(--color-icon-disabled);
+  border-color: var(--color-icon-disabled);
+  color: var(--color-text-secondary);
+}

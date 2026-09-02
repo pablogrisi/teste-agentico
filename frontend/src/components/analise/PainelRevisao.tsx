@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   contarItens,
@@ -18,6 +18,7 @@ import type {
   AreaComItens,
   AvaliacaoItem,
   FiltroRequisito,
+  ResumoAnalise,
 } from "@/lib/data";
 import { AlterarParecerModal } from "./AlterarParecerModal";
 import { FiltroStatus } from "./FiltroStatus";
@@ -30,10 +31,16 @@ const EM_PROCESSAMENTO = new Set(["PENDENTE", "PROCESSANDO"]);
 export function PainelRevisao({
   detalhe,
   onIrParaPagina,
+  onResumoChange,
 }: {
   detalhe: AnaliseDetalhe;
   /** RF-014 — clicar na referência de página de um requisito move o visor. */
   onIrParaPagina?: (n: number) => void;
+  /**
+   * RF-012 — espelha o `resumo` corrente da sessão para o pai (gate do botão "Concluir
+   * análise"). Dispara no mount e a cada revisão aplicada.
+   */
+  onResumoChange?: (resumo: ResumoAnalise) => void;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -69,10 +76,16 @@ export function PainelRevisao({
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }
 
+  // Espelha o resumo inicial para o pai (gate do botão "Concluir análise", RF-012).
+  // Só o valor inicial: as revisões seguintes passam por `aplicarRevisao`.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => onResumoChange?.(resumo), []);
+
   /** Aplica um `{ item, resumo }` devolvido pelo backend/fixture (RF-008/RF-011). */
   function aplicarRevisao(it: AvaliacaoItem, rs: typeof detalhe.resumo) {
     setOverrides((atual) => new Map(atual).set(it.id, it));
     setResumo(rs);
+    onResumoChange?.(rs);
   }
 
   async function alternarVerificado(item: AvaliacaoItem, verificado: boolean) {

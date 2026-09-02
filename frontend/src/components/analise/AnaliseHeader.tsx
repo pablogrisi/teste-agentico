@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { StatusBadge } from "@/components/analises/StatusBadge";
 import type { AnaliseDetalhe } from "@/lib/data";
@@ -11,7 +12,14 @@ function dataLegivel(iso: string | null): string | null {
 }
 
 /** Cabeçalho da tela de análise: identificação, status e responsável. */
-export function AnaliseHeader({ detalhe }: { detalhe: AnaliseDetalhe }) {
+export function AnaliseHeader({
+  detalhe,
+  acao,
+}: {
+  detalhe: AnaliseDetalhe;
+  /** RF-012 — ação global da tela (botão "Concluir análise"), ao lado do status. */
+  acao?: ReactNode;
+}) {
   const iniciada = dataLegivel(detalhe.iniciadaEm);
   const concluida = dataLegivel(detalhe.concluidaEm);
 
@@ -25,7 +33,10 @@ export function AnaliseHeader({ detalhe }: { detalhe: AnaliseDetalhe }) {
           <span aria-hidden="true"> / </span>
           <span className={styles.trilhaAtual}>Análise</span>
         </nav>
-        <StatusBadge status={detalhe.status} />
+        <div className={styles.acoes}>
+          {acao}
+          <StatusBadge status={detalhe.status} />
+        </div>
       </div>
 
       <h1 className={styles.nup}>{detalhe.nup}</h1>
