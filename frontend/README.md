@@ -7,15 +7,16 @@ vivem na raiz.
 > **Estado:** fundação (TSD-002) + **RF-002** (listagem, TSD-011) + **RF-001/RF-004** (modal
 > "Nova análise", TSD-012) + **RF-010** (tela de análise, TSD-013) + **RF-007** (status
 > sugerido pela IA, TSD-014) + **RF-009** (filtros por status, TSD-015) + **RF-008** (modal
-> "Alterar parecer", TSD-016) + **RF-011** (checkbox de "verificado" interativo, TSD-017).
-> `/` lista as análises e abre o modal de criação; `/analise/[id]` mostra cabeçalho + abas
-> Checklist/Técnica (navegação livre) com os requisitos em acordeão, cada um indicando o
-> status **sugerido pela IA** e a divergência quando o parecer atual difere; a lista abre
-> filtrada por **não conformes** com chips de filtro por status (persistidos na URL); cada
-> requisito tem **"Alterar parecer"** (modal que grava `statusFinal` + comentário) e um
-> **checkbox de "verificado"** operável — ambos via `PATCH /analises/:id/requisitos/:requisitoId`,
-> aplicando `{ item, resumo }` na lista e no progresso sem recarregar. O visor de PDF e o
-> modal de conclusão entram em RF-014/012.
+> "Alterar parecer", TSD-016) + **RF-011** (checkbox de "verificado" interativo, TSD-017) +
+> **RF-017** (justificativa da alteração visível, TSD-018). `/` lista as análises e abre o
+> modal de criação; `/analise/[id]` mostra cabeçalho + abas Checklist/Técnica (navegação
+> livre) com os requisitos em acordeão, cada um indicando o status **sugerido pela IA** e,
+> quando o parecer atual difere, a **justificativa da alteração**; a lista abre filtrada por
+> **não conformes** com chips de filtro por status (persistidos na URL); cada requisito tem
+> **"Alterar parecer"** (modal que grava `statusFinal` + comentário) e um **checkbox de
+> "verificado"** operável — ambos via `PATCH /analises/:id/requisitos/:requisitoId`, aplicando
+> `{ item, resumo }` na lista e no progresso sem recarregar. O visor de PDF e o modal de
+> conclusão entram em RF-014/012.
 
 ## Pré-requisitos
 
@@ -133,14 +134,15 @@ echo 'NEXT_PUBLIC_API_BASE_URL=http://localhost:3000' > .env.local
 npm run dev -- -p 3001
 ```
 
+Do lado do backend, deixe o CORS liberar a origem do frontend:
+`CORS_ORIGINS=http://localhost:3001` no `backend/.env` (vazio já reflete a origem).
+
 Estado atual da integração (checado contra o `main` do backend, pós-RF-016):
 
 - Os 4 contratos consumidos batem campo a campo com `backend/src/analises` (mesmos nomes em
   `AvaliacaoItem` / `AnaliseDetalhe` / `resumo`; `PATCH` devolve `{ item, resumo }`).
-- **CORS:** o backend ainda não chama `app.enableCors()`. As telas `/` e `/analise/[id]`
-  funcionam (fetch server-side), mas os modais "Nova análise" e "Alterar parecer" (fetch no
-  navegador) só passam depois que o backend habilitar CORS para a origem do frontend —
-  alternativa no frontend seria um proxy via route handler (não feito).
+- **CORS:** habilitado no backend (`app.enableCors`, commit `35ee46d`) — os modais (fetch no
+  navegador) já passam; sem `CORS_ORIGINS` o backend reflete a origem.
 - `GET /analises/:id/pdf`, `POST /analises/:id/concluir` e `GET /analises/:id/relatorio`
   existem no backend mas ainda não têm consumidor no frontend (RF-014 / RF-012 / RF-016).
 
@@ -152,5 +154,5 @@ Estado atual da integração (checado contra o `main` do backend, pós-RF-016):
   (`eslint.config.mjs`). `next build` não repete o lint — ele roda no `npm run ci`.
 - **`HttpAnalisesGateway`:** validado por teste de contrato (formato do payload) e conferido
   campo a campo contra o `backend/src/analises` do `main`. Falta um smoke com os dois
-  processos de pé (bloqueado por CORS no backend — ver "Rodar contra o backend real").
+  processos de pé (agora possível — o backend já tem CORS; ver "Rodar contra o backend real").
 - Sem trava de largura (`min-width: 1440px` do protótipo não replicado).

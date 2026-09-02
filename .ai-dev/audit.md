@@ -20,6 +20,30 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 01/09/2026 — RF-017 / TSD-018: justificativa visível + erro de revisão fiel (frontend) + CORS no backend
+
+Contexto: 8º ciclo de RF do frontend, na branch `frontend/rf-017-comentario` (a partir da `main` `35ee46d`). Ciclo completo dos 6 papéis, incluindo o subagente `critico`. O usuário aprovou a User Story + TSD e, na mesma mensagem, pediu para **habilitar CORS no backend** para destravar o smoke frontend↔backend.
+
+**Mudança no backend (antes do ciclo do RF-017), autorizada pelo responsável do frontend:**
+- Branch `backend/cors` (a partir da `main` `5fc5730`) → `35ee46d`, mergeada na `main`.
+- `backend/src/main.ts`: `app.enableCors({ origin: corsOrigins.length ? corsOrigins : true, methods: ['GET','POST','PATCH','DELETE','OPTIONS'] })`.
+- `backend/src/config/configuration.ts`: campo `corsOrigins` + função pura `parseCorsOrigins` (lista de `CORS_ORIGINS` separada por vírgula). Vazio = reflete a origem — ok no MVP sem autenticação (SDD §2/§9).
+- `backend/.env.example`: documenta `CORS_ORIGINS`.
+- `backend/test/unit/configuration.spec.ts` (novo): `parseCorsOrigins` + `configuration().corsOrigins`.
+- Validação: `npm install` no `backend/` (deps estavam ausentes) + `npx prisma generate`; `npm run ci` do backend **verde** (lint, typecheck, `prisma:validate` com `.env` local gitignored, **110 unit**, build). `npm run test:e2e` **não roda nesta máquina** — o Postgres embutido recusa iniciar sob usuário administrador ("Execution of PostgreSQL by a user with administrative permissions is not permitted"); sem relação com a mudança, e o gate `ci` do backend não inclui e2e. Pablo pode querer re-rodar o `test:e2e`.
+
+**Ciclo RF-017 (frontend):**
+- **PM**: User Story no `roadmap.md` — a *exigência* de comentário nas ações de revisão do frontend **já vem do RF-008** (modal sempre pede) + backend (R-06 no `PATCH`); RF-017 frontend fecha **visibilidade** da justificativa + **mensageria** do erro. **Apresentada e parada.**
+- **Engenheiro**: `docs/engineering/specs/018-comentario-revisao-frontend.tsd.md` — slice pequena de acabamento; sem componente novo, sem mudança de contrato. **Apresentada e parada** (o usuário perguntou por que a §9 "decisões a validar" existe; expliquei que são as escolhas de forma não fixadas em nenhum doc, o ponto de aprovação PM→Engenheiro→Dev).
+- **Dev**: `StatusIaResumo.tsx` (+ CSS) — linha "Justificativa da alteração: {comentario}" quando `diverge && item.comentario?.trim()`; `RequisitoItem.tsx` — a linha "Comentário:" passa a `!diverge && item.comentario?.trim()`; `catch (erro)` do toggle usa `erro instanceof AnaliseValidacaoError ? erro.motivos[0] : GENÉRICA`.
+- **Testes (mecânico)**: `npm run ci` ✅ — `eslint .` + prettier, `tsc --noEmit`, **vitest 185 → 186/186 (21 arquivos)**, `next build`. Novos: `status-ia-resumo.test.tsx` (justificativa só quando diverge + comentário, com `trim`); `requisito-item.test.tsx` (+ "Comentário:" vs "Justificativa"; + 422 mostra a mensagem do backend; + 404/409 caem na genérica).
+- **Crítico** (subagente `critico`): **APROVADO**, sem bloqueantes. Ajustes após o Crítico: `?.trim()` também na condição da linha "Comentário:" (simetria); + caso 404 no toggle. Não-bloqueantes no checkpoint §3.1.
+- **Documentador**: TSD-018 (status `implementada` + §8), `roadmap.md` (RF-017 frontend → implementada; tabela linha 9), checkpoint §1/§2/§3.1/§5/§7, este arquivo, `frontend/README.md`.
+
+Evidência visual: `frontend/docs/visual-reference/rf-017/` — `rf017-justificativa.png` (requisito divergente `av-6` expandido com "Justificativa da alteração" no `StatusIaResumo`, sem a linha "Comentário:") + `README.md` (REF-07).
+
+Estado: ciclo fechado com Crítico ✅, `npm run ci` verde, **branch aguardando push + merge na `main`**. Próximo frontend: RF-014 (visor de PDF + referência de página). Com o CORS no backend, o smoke frontend↔backend real fica destravado (`frontend/README.md` > "Rodar contra o backend real").
+
 ## 01/09/2026 — RF-011 / TSD-017: checkbox de "verificado" interativo (frontend)
 
 Contexto: 7º ciclo de RF do frontend, na branch `frontend/rf-011-verificado` (a partir da `main` `e3e19a8`). Ciclo completo dos 6 papéis, incluindo o subagente `critico`. O usuário validou a User Story + TSD ("aprovar"). Antes deste ciclo, o usuário pediu para conferir o GitHub: o backend do MVP está completo (Pablo mergeou RF-016 / relatório PDF), e os 4 contratos que o frontend consome foram **conferidos campo a campo** contra `backend/src/analises` do `main` e batem — commit `chore(frontend): notas de integração` (`.env.example`/README com o passo de rodar os dois juntos; gap conhecido: backend sem `app.enableCors()`). Colisão de numeração anotada: Pablo criou `docs/engineering/specs/011-relatorio-pdf.tsd.md` (há dois "TSD-011").

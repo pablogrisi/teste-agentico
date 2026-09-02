@@ -63,7 +63,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 6 | RF-009 | Visão inicial priorizando não conformes + filtros por status | Must | implementada — Crítico ✅ (branch `frontend/rf-009-filtros`) |
 | 7 | RF-008 | Modal de alteração de status final ("parecer") | Must | implementada — Crítico ✅ (branch `frontend/rf-008-parecer`) |
 | 8 | RF-011 | Controle de "marcar como verificado" | Must | implementada — Crítico ✅ (branch `frontend/rf-011-verificado`) |
-| 9 | RF-017 | Campo de comentário obrigatório nas ações de revisão | Must | user story + TSD-018 em aprovação (branch `frontend/rf-017-comentario`) |
+| 9 | RF-017 | Campo de comentário obrigatório nas ações de revisão | Must | implementada — Crítico ✅ (branch `frontend/rf-017-comentario`) |
 | 10 | RF-014 | Visor de PDF + referência de página clicável / ausência explícita | Must | não iniciada |
 | 11 | RF-012 | Modal de conclusão + botão global bloqueado até tudo verificado | Must | não iniciada |
 | 12 | RF-016 | Ação de baixar o relatório PDF da análise concluída | Must | não iniciada |
@@ -441,7 +441,7 @@ Recorte deste ciclo (frontend), em cima do painel do RF-010/007/009/008:
 
 **Frentes:** Backend · Frontend
 **Status (backend):** coberto no ciclo de RF-008 (ver seção RF-008); regra exata em P-03
-**Status (frontend):** user story + TSD-018 em aprovação — branch `frontend/rf-017-comentario`
+**Status (frontend):** implementada — Crítico ✅ (01/09/2026), branch `frontend/rf-017-comentario`; `npm run ci` verde (186 testes). Aguardando push + merge.
 
 **User Story (frontend — RF-017)**
 
