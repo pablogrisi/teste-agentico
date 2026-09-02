@@ -184,6 +184,15 @@ describe("TelaAnalise", () => {
       expect(screen.queryByText("Baixar relatório")).not.toBeInTheDocument();
     });
 
+    it.each(["PENDENTE", "PROCESSANDO", "ERRO_PROCESSAMENTO"] as const)(
+      "análise %s não mostra nem 'Baixar relatório' nem 'Concluir análise'",
+      (status) => {
+        render(<TelaAnalise detalhe={detalhe(status)} />);
+        expect(screen.queryByText("Baixar relatório")).not.toBeInTheDocument();
+        expect(screen.queryByText("Concluir análise")).not.toBeInTheDocument();
+      },
+    );
+
     it("com backend (urlRelatorio) o 'Baixar relatório' é um link para GET /analises/:id/relatorio", () => {
       vi.spyOn(FixturesAnalisesGateway.prototype, "urlRelatorio").mockReturnValue(
         "https://api.test/analises/1/relatorio",
