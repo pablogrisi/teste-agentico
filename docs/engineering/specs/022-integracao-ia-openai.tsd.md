@@ -3,9 +3,9 @@
 ---
 title: TSD - Integração da IA real (adaptador OpenAI, A-02, backend)
 type: tsd
-status: em aprovação
+status: implementada
 created: 02/09/2026 // Pablo Grisi (Engenheiro)
-updated: 02/09/2026 // Pablo Grisi
+updated: 02/09/2026 // Pablo Grisi (Documentador — implementada na branch backend/ia-openai; aguardando merge + smoke real)
 related:
 - docs/product/prd.md
 - docs/product/roadmap.md
@@ -181,25 +181,41 @@ npm run build
 
 ## 8. Critérios de aceite
 
-- [ ] `npm i openai`; `AnaliseIaOpenAiAdapter implements AnaliseIaPort` existe.
-- [ ] `IA_ADAPTER` ausente ou `stub` → `CoreModule` injeta o stub; toda a bateria
+- [x] `npm i openai`; `AnaliseIaOpenAiAdapter implements AnaliseIaPort` existe.
+      (Instalado `openai@^5.23.2` em vez de `^7` — ver §13, desvio 2.)
+- [x] `IA_ADAPTER` ausente ou `stub` → `CoreModule` injeta o stub; toda a bateria
       atual (`npm run ci`, `test:e2e`, `test:contract`) segue verde, sem mudança de
-      resultado.
-- [ ] `IA_ADAPTER=openai` **sem** `OPENAI_API_KEY` → boot falha com mensagem clara.
-- [ ] `IA_ADAPTER=openai` **com** `OPENAI_API_KEY` → `CoreModule` injeta o
-      `AnaliseIaOpenAiAdapter`.
-- [ ] O adapter faz upload do PDF (`purpose: "user_data"`), referencia por
+      resultado. (`npm run ci` 126 unit / 21 suites · `test:contract` 2/2 ·
+      `test:e2e` 39/39.)
+- [x] `IA_ADAPTER=openai` **sem** `OPENAI_API_KEY` → boot falha com mensagem clara.
+      (`test/unit/env.validation.spec.ts` + validação no construtor do adapter.)
+- [x] `IA_ADAPTER=openai` **com** `OPENAI_API_KEY` → `CoreModule` injeta o
+      `AnaliseIaOpenAiAdapter`. (Caminho da factory do `core.module.ts`; o boot
+      real com a chave é exercitado no smoke §7.1.)
+- [x] O adapter faz upload do PDF (`purpose: "user_data"`), referencia por
       `file_id` no `responses.create` com saída `json_schema` `strict`, e **deleta
-      o arquivo** ao fim (inclusive em erro).
-- [ ] `analisar` devolve `SugestaoRequisito[]` com `statusSugerido` sempre nos 3
+      o arquivo** ao fim (inclusive em erro). (`test/unit/analise-ia.openai-adapter.spec.ts`,
+      SDK mockado — via `files.delete`, não `files.del`; ver §13, desvio 1. A
+      aceitação da forma do request pela OpenAI real fica para o smoke §7.1.)
+- [x] `analisar` devolve `SugestaoRequisito[]` com `statusSugerido` sempre nos 3
       valores e `paginaReferencia` inteiro `≥ 1` ou ausente; entradas com `codigo`
-      desconhecido ou status inválido são descartadas.
-- [ ] `requisitos.length > IA_MAX_REQUISITOS_POR_CHAMADA` → o adapter divide em
-      lotes contra o mesmo arquivo e junta os resultados.
-- [ ] Erro/timeout do serviço → exceção propagada (o worker marca
-      `ERRO_PROCESSAMENTO`).
-- [ ] `questoes-abertas.md` A-02 marcada como resolvida; SDD §8/§9 atualizados.
-- [ ] `npm run ci` + `npm run test:contract` + `npm run test:e2e` verdes.
+      desconhecido ou status inválido são descartadas. (unit + contrato.)
+- [x] `requisitos.length > IA_MAX_REQUISITOS_POR_CHAMADA` → o adapter divide em
+      lotes contra o mesmo arquivo e junta os resultados. (unit; default 50 — ver
+      §13, desvio 4.)
+- [x] Erro/timeout do serviço → exceção propagada (o worker marca
+      `ERRO_PROCESSAMENTO`). (unit; resposta `incomplete` da OpenAI → erro claro.)
+- [x] `questoes-abertas.md` A-02 marcada como resolvida; SDD §8/§9 atualizados.
+      (A-02 → Resolvidas R-07; SDD §2/§6/§8/§9.)
+- [x] `npm run ci` + `npm run test:contract` + `npm run test:e2e` verdes.
+
+**Pendente — não bloqueia o fechamento do ciclo, bloqueia o "pronto para produção":**
+
+- [ ] **Smoke ponta-a-ponta com a OpenAI real** (§7.1, última linha da tabela) —
+      depende da `OPENAI_API_KEY` que o responsável vai fornecer. Enquanto não
+      roda, a feature está **implementada, aguardando smoke real**, e o plano B da
+      §9 (`chat.completions` + `response_format` `json_schema`) segue como contorno
+      caso a OpenAI recuse a forma do `responses.create`.
 
 ## 9. Riscos e decisões abertas
 
@@ -269,3 +285,35 @@ npm run test:e2e; registre a saída real. NÃO rode chamada real à OpenAI (sem
 chave). Atualize SDD §8/§9, questoes-abertas.md (A-02 resolvida), checkpoint,
 audit. Deixe pronto para o smoke manual quando a chave chegar.
 ```
+
+## 13. Nota de fechamento (Documentador — 02/09/2026)
+
+Ciclo A-02 / TSD-022 percorreu os 6 papéis na branch `backend/ia-openai` (PM abre
+ciclo → PM User Story → Engenheiro TSD-022 → Dev implementação → Dev retrabalho do
+Crítico). Crítico **aprovou (condicional)**; os não-bloqueadores foram aplicados e
+commitados. Gates reais: `npm run ci` OK (126 unit / 21 suites), `npm run
+test:contract` OK (2/2 — hoje só contra o stub), `npm run test:e2e` OK (39/39, sem
+`IA_ADAPTER` → stub, checagem de não-regressão). O worker `ProcessamentoService`
+não mudou — já consumia a porta.
+
+Desvios registrados (não-bloqueadores):
+
+1. **`client.files.delete(...)`** em vez do `client.files.del(...)` que a §2 desta
+   TSD citava — o SDK `openai@5` expõe `delete`.
+2. **`openai@^5.23.2`** em vez do `^7` previsto — `openai@7` exige
+   `engines.node >= 22` e o backend declara `>= 20`. Os shapes usados são
+   idênticos entre v5 e v7 (`responses.create`, `input_file`, `output_text`,
+   `text.format` `json_schema`, `purpose: 'user_data'`).
+3. Arquivo de contrato nomeado **`test/contract/analise-ia.contract.spec.ts`** (o
+   regex de `jest-contract.json` exige `.spec.ts` literal) — a TSD escrevia
+   `analise-ia.contract-spec.ts`.
+4. **`IA_MAX_REQUISITOS_POR_CHAMADA` default = 50** (não 200 da §2/§7) — ajuste
+   pedido pelo Crítico para dar margem ao `max_output_tokens` dimensionado por
+   lote.
+
+Pendências: o smoke ponta-a-ponta com a `OPENAI_API_KEY` real (§8, §7.1, e o risco
+residual da §9 — plano B `chat.completions` + `response_format` se a OpenAI
+recusar a forma do `responses.create`); e a decisão de versionar
+`backend/scripts/dev-db.mjs`, `backend/scripts/seed-demo.mjs` e
+`.claude/launch.json` (hoje untracked, deliberadamente não versionados neste
+ciclo).

@@ -20,6 +20,56 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 02/09/2026 — A-02 / TSD-022: integração da IA real — adapter OpenAI da `AnaliseIaPort` (backend)
+
+Contexto: último ciclo de backend do MVP — a integração da IA real, adiada desde 31/08 (o `AnaliseIaStubAdapter` sustentou todos os ciclos). O usuário decidiu, em 02/09, o provedor (OpenAI/GPT, não Claude), o modelo padrão (`gpt-4o`), o transporte do PDF (arquivo nativo via Files API, apagado após), o corte por lote e o endpoint (OpenAI direto, `IA_BASE_URL` opcional para proxy). Ciclo completo dos 6 papéis na branch `backend/ia-openai`.
+
+Papéis / commits:
+
+- **PM (abre ciclo)** + **PM (User Story)** — User Story do recorte backend no `roadmap.md` ("Fora da tabela — Integração da IA real (A-02)") + decisões do usuário (02/09).
+- **Engenheiro** — `docs/engineering/specs/022-integracao-ia-openai.tsd.md` (TSD-022).
+- **Dev (implementação)** + **Dev (retrabalho do Crítico)**.
+
+Alterações (produção):
+
+- `backend/src/core/adapters/analise-ia.openai-adapter.ts` (NOVO) — `AnaliseIaOpenAiAdapter implements AnaliseIaPort`. Sobe o PDF via `client.files.create({ purpose: 'user_data' })`; chama `client.responses.create` com `input` `[{role:'system'},{role:'user',content:[{type:'input_file',file_id},{type:'input_text',...}]}]`, `text.format` `json_schema` strict, `max_output_tokens` dimensionado ao lote; divide os requisitos em lotes de `IA_MAX_REQUISITOS_POR_CHAMADA`; sempre apaga o arquivo (`files.delete`, best-effort) no `finally`. Mapeia sugestões por `codigo → requisitoId`, descarta código desconhecido / status inválido, só aceita `paginaReferencia` inteiro `≥ 1`. Resposta `incomplete` da OpenAI → erro claro.
+- `backend/src/core/core.module.ts` — factory do `analiseIaProvider` devolve `new AnaliseIaOpenAiAdapter(config)` quando `ia.adapter === 'openai'`, senão o stub. O adapter OpenAI **não** está em `providers[]` (só é instanciado quando escolhido, então o construtor pode exigir a chave sem quebrar o boot em `stub`).
+- `backend/src/config/configuration.ts` + `backend/src/config/env.validation.ts` — bloco `ia`: `adapter` (`stub`|`openai`, default `stub`), `modelo` (default `gpt-4o`), `openaiApiKey` (obrigatória sse `adapter==='openai'`), `baseUrl` (opcional), `maxRequisitosPorChamada` (default **50**). `IA_ADAPTER='http'` agora dá erro de validação apontando para `openai`.
+- `backend/.env.example` — `IA_ADAPTER=stub` + `OPENAI_API_KEY=`, `IA_MODELO=gpt-4o`, `IA_BASE_URL=`, `IA_MAX_REQUISITOS_POR_CHAMADA=50`.
+- `backend/package.json` — dep `openai: "^5.23.2"`.
+- `backend/.gitignore` — ignora `.dev-pgdata/` (Postgres embutido do dev local).
+- Testes (NOVOS): `backend/test/unit/analise-ia.openai-adapter.spec.ts`, `backend/test/unit/env.validation.spec.ts`, `backend/test/contract/analise-ia.contract.spec.ts` (contrato roda hoje só contra o stub).
+- Commit posterior `e3999fe` — `fix(frontend): FixturesAnalisesGateway.urlPdf assina (_id: string)` (arrasto do RF-014, casa a interface `AnalisesGateway`).
+- O worker `ProcessamentoService` **não mudou** — já consome a porta.
+
+Validações (gates reais executados):
+
+- `npm run ci` (lint + prettier + `tsc --noEmit` + `prisma:validate` + test + build): **OK** — 126 testes unit / 21 suites.
+- `npm run test:contract`: **OK** — 2/2.
+- `npm run test:e2e`: **OK** — 39/39 (não-regressão; `IA_ADAPTER` não setado → stub).
+- **Smoke ponta-a-ponta com a OpenAI real: NÃO executado** — depende da `OPENAI_API_KEY` que o usuário vai fornecer.
+
+Crítico: **APROVADO (condicional)**. Não-bloqueadores exigidos e **já aplicados/commitados** na branch: (a) `IA_MAX_REQUISITOS_POR_CHAMADA` default 200 → **50** (margem de `max_output_tokens` por lote); (b) `FixturesAnalisesGateway.urlPdf` assinou `(_id: string)`.
+
+Desvios / não-bloqueadores registrados (TSD-022 §13):
+
+1. `client.files.delete(...)` em vez do `client.files.del(...)` da TSD — o SDK `openai@5` expõe `delete`.
+2. `openai@^5.23.2` em vez de `^7` — `openai@7` exige `engines.node >= 22`; o backend declara `>= 20`. Shapes idênticos (`responses.create`, `input_file`, `output_text`, `text.format` json_schema, `purpose:'user_data'`).
+3. Arquivo de contrato nomeado `analise-ia.contract.spec.ts` (o regex de `jest-contract.json` exige `.spec.ts` literal) — a TSD escrevia `analise-ia.contract-spec.ts`.
+4. `IA_MAX_REQUISITOS_POR_CHAMADA` default 50 (não 200 da TSD) — pedido do Crítico.
+5. Smoke ponta-a-ponta com a OpenAI real ainda não executado (depende da chave). Risco residual TSD-022 §9: se a OpenAI recusar a forma do `responses.create`, plano B = `chat.completions` + `response_format`.
+6. Untracked, decisão de versionamento pendente com o usuário: `backend/scripts/dev-db.mjs`, `backend/scripts/seed-demo.mjs`, `.claude/launch.json`. Não versionados neste ciclo.
+
+Decisões: o projeto **aciona** a OpenAI/GPT via SDK `openai` (não consome resultado pronto, não é `HttpAdapter` genérico); `stub` continua o padrão, `IA_ADAPTER=openai` é opt-in; PDF como arquivo nativo (Files API, apagado após); uma chamada com o PDF + todos os requisitos, com corte por lote (`IA_MAX_REQUISITOS_POR_CHAMADA`, default 50) contra o mesmo arquivo; OpenAI direto, `IA_BASE_URL` opcional para proxy; timeout reusa `IA_TIMEOUT_MS` via `comTimeout` no worker; sem retry próprio (o SDK já retenta; erro → `ERRO_PROCESSAMENTO`). A-02 fechada → `questoes-abertas.md` R-07.
+
+Docs atualizados pelo Documentador: TSD-022 (`status: implementada`, §8 marcado com o smoke real desmarcado e anotado, §13 nota de fechamento + desvios 1–4, frontmatter); `docs/product/questoes-abertas.md` (A-02 → **resolvida**, Resolvidas **R-07**; P-05 atualizada — a sugestão de página existe no adapter, confirma-se só no smoke); `docs/engineering/checkpoint.md` (§1 `main`/backend + bullet do ciclo + bullet "IA real" reescrito, §2 spec ativa backend, §3.1 Crítico + Documentador, §5 pendências, §6 risco, §7 próximo passo, frontmatter `updated`); `docs/product/roadmap.md` ("Fora da tabela — Integração da IA real (A-02)" → Status backend `implementada na branch backend/ia-openai — aguardando merge + smoke real`, TSD associada `implementada`, "Notas do ciclo (backend — 02/09/2026)", marco pós-RF-016); `docs/architecture/sdd.md` (§2 integrações, §4, §6 diagrama + tabela de componentes, §8 `AnaliseIaPort` interno + tabela de decisões, §9 checklist + questões — alinhados ao `AnaliseIaOpenAiAdapter` / `IA_ADAPTER=openai`, sem reescrever a arquitetura).
+
+Estado: ciclo A-02 / TSD-022 **fechado** — Crítico ✅ (condicional), não-bloqueadores aplicados, gates verdes. **Aguardando aprovação de merge do usuário para `backend/ia-openai` → `main` + smoke ponta-a-ponta com a `OPENAI_API_KEY` real.** Até lá: "implementada, aguardando smoke real".
+
+Pendências: (1) merge de `backend/ia-openai` na `main`; (2) **smoke ponta-a-ponta com a `OPENAI_API_KEY` real** — `IA_ADAPTER=openai` + `PROCESSAMENTO_AUTO=true` + PDF de licitação real; conferir que as sugestões vêm do GPT (não todas `NAO_SE_APLICA`) e que algumas trazem `paginaReferencia`; registrar em checkpoint/audit; plano B `chat.completions` + `response_format` se a OpenAI recusar a forma do `responses.create`; (3) decidir o versionamento de `backend/scripts/dev-db.mjs`, `backend/scripts/seed-demo.mjs` e `.claude/launch.json`. Com o merge + smoke, o **MVP backend fica completo**.
+
+Próximo passo recomendado: o usuário aprova o merge de `backend/ia-openai` e fornece a `OPENAI_API_KEY`; o Agente de Testes roda o smoke ponta-a-ponta com a chave e registra o resultado; em paralelo, decidir o versionamento de `backend/scripts/*` + `.claude/launch.json`. Não há próximo RF — o MVP fecha nesse smoke.
+
 ## 02/09/2026 — RF-016 / TSD-021: botão "Baixar relatório" na análise concluída (frontend) — FECHA O MVP FRONTEND
 
 Contexto: 11º e **último** ciclo de RF do frontend, na branch `frontend/rf-016-relatorio` (a partir da `main`, off a linha do RF-012). Ciclo completo dos 6 papéis, incluindo o subagente `critico`. O usuário aprovou a User Story + TSD-021 ("aprovado") e, na §9, a decisão "link em nova aba, não fetch+blob+download forçado" (recomendação do Engenheiro — consistente com o `urlPdf` do RF-014 e com a decisão do ciclo backend de entregar `Content-Disposition: inline`).

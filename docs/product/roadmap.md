@@ -58,7 +58,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 
 Não é um RF: é a fundação adiada desde 31/08 (o `AnaliseIaStubAdapter` sustentou os ciclos). É o **último ciclo de backend do MVP**.
 
-**Status (backend):** TSD em aprovação — branch `backend/ia-openai`
+**Status (backend):** implementada na branch `backend/ia-openai` — aguardando aprovação de merge e smoke ponta-a-ponta com `OPENAI_API_KEY` real
 
 **User Story**
 
@@ -90,7 +90,21 @@ Recorte deste ciclo (backend):
 6. **Saída estruturada:** `response_format` json_schema (`strict`) — array `[{ codigo, statusSugerido, paginaReferencia? }]`; o adaptador casa `codigo → requisitoId`.
 7. **`stub` continua o padrão**; `IA_ADAPTER=openai` é opt-in. Merge com o stub ativo — ninguém liga o OpenAI sem querer.
 
-**TSD associada:** `docs/engineering/specs/022-integracao-ia-openai.tsd.md` (redigida — em aprovação).
+**TSD associada:** `docs/engineering/specs/022-integracao-ia-openai.tsd.md` — **implementada**.
+
+**Notas do ciclo (backend — 02/09/2026)**
+
+Ciclo completo dos 6 papéis na branch `backend/ia-openai`; Crítico **aprovou (condicional)** e os não-bloqueadores foram aplicados e commitados. Gates reais: `npm run ci` OK (126 unit / 21 suites), `npm run test:contract` OK (2/2 — hoje só contra o stub), `npm run test:e2e` OK (39/39, não-regressão com `IA_ADAPTER` não setado → stub). O worker `ProcessamentoService` não mudou.
+
+O que se aprendeu / o que muda para os próximos ciclos:
+
+- **A-02 fechada** (ver `questoes-abertas.md` R-07): o projeto **aciona** a OpenAI/GPT pelo SDK `openai` (não consome resultado pronto, não é um `HttpAdapter` genérico). Entrada = PDF (Files API, `purpose: "user_data"`, apagado após) + lista de requisitos; saída = `SugestaoRequisito` por requisito (`statusSugerido` + `paginaReferencia` inteiro `≥ 1` ou ausente), mapeada por `codigo → requisitoId`. Timeout reusa `IA_TIMEOUT_MS` via `comTimeout` no worker; sem retry próprio (o SDK já retenta; erro → `ERRO_PROCESSAMENTO`).
+- **`stub` continua o padrão**; `IA_ADAPTER=openai` é opt-in — nenhum ciclo futuro liga a OpenAI sem querer, e a bateria de testes segue rodando sobre o stub.
+- **`IA_MAX_REQUISITOS_POR_CHAMADA` default caiu de 200 (TSD) para 50** por pedido do Crítico (margem de `max_output_tokens` por lote). Quando a base real de requisitos (P-07) entrar, o adapter já divide em lotes contra o mesmo arquivo — sem retrabalho, mas vale revisar o teto e o `IA_TIMEOUT_MS` para PDFs grandes.
+- **`openai@^5.23.2`** (não `^7`): `openai@7` exige `engines.node >= 22` e o backend declara `>= 20`. Se o backend subir o `engines.node`, dá para migrar para a v7 (shapes idênticos).
+- **Não altera a sequência do roadmap.** Não há próximo RF de backend. O MVP backend fica completo quando o merge + o smoke real com a chave forem feitos.
+
+**Pendências:** aprovação de merge do usuário; **smoke ponta-a-ponta com a `OPENAI_API_KEY` real** (`IA_ADAPTER=openai` + `PROCESSAMENTO_AUTO=true` + PDF de licitação real — conferir que as sugestões vêm do GPT e que algumas trazem `paginaReferencia`; registrar em checkpoint/audit); plano B `chat.completions` + `response_format` se a OpenAI recusar a forma do `responses.create` (TSD-022 §9); decidir o versionamento de `backend/scripts/dev-db.mjs`, `backend/scripts/seed-demo.mjs` e `.claude/launch.json`.
 
 ## Tabela de sequenciamento — Frente Frontend (`frontend/`)
 
@@ -740,7 +754,7 @@ Recorte backend deste ciclo:
 - **Documentador:** SDD §7 ("Relatório PDF" — contrato final); `questoes-abertas.md` **A-04 fechada para o MVP** (sob demanda, sem persistir); audit `01/09/2026`.
 - **Frente frontend:** botão "baixar relatório" na tela da análise concluída → `GET /analises/:id/relatorio` (abre inline / salva).
 
-> **Marco:** com RF-016 mergeado, o **backend de features do MVP está completo**. Resta só a integração com o serviço de IA real (`HttpAdapter` da `AnaliseIaPort` + A-02), adiada para o fim.
+> **Marco:** com RF-016 mergeado, o **backend de features do MVP está completo**. A integração com o serviço de IA real (A-02) foi implementada como `AnaliseIaOpenAiAdapter` na branch `backend/ia-openai` (TSD-022) — resta a aprovação de merge e o smoke ponta-a-ponta com a `OPENAI_API_KEY` real.
 
 > **Marco (frontend — 02/09/2026):** com RF-016 (frontend) mergeado, o **MVP frontend está completo**. As 12 linhas da tabela de sequenciamento do frontend estão `implementada — Crítico ✅`. `/` (listagem + "Nova análise") e `/analise/[id]` (visor de PDF + navegação por página, revisão de requisitos com status sugerido pela IA, "Alterar parecer", "verificado" interativo, justificativa visível, referência de página clicável + editor, "Concluir análise" com trava por obrigatórios, "Baixar relatório") cobrem todos os RFs de frontend. Consumidos 6 contratos do backend (`GET /analises`, `POST /analises`, `GET /analises/:id`, `GET /analises/:id/pdf`, `PATCH /analises/:id/requisitos/:requisitoId`, `POST /analises/:id/concluir`) + o link para `GET /analises/:id/relatorio`; todos com teste de contrato e smoke conjunto contra o NestJS real. Pendências gerais do MVP: a integração da IA real (backend, A-02) e os follow-ups de acabamento anotados no checkpoint.
 
