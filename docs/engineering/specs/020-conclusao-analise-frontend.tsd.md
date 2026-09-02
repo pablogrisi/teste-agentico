@@ -1,18 +1,21 @@
 # TSD — Botão "Concluir análise" + modal de confirmação (RF-012, frontend)
 
 ---
+
 title: TSD - Conclusão da análise (RF-012, frontend)
 type: tsd
 status: aprovada — em implementação (seguir CompletionModal do protótipo)
 created: 02/09/2026 // Vinicius
 updated: 02/09/2026 // Vinicius
 related:
+
 - docs/product/prd.md
 - docs/architecture/sdd.md
 - docs/engineering/specs/010-conclusao-analise.tsd.md
 - docs/engineering/specs/016-alterar-parecer-frontend.tsd.md
 - docs/engineering/specs/019-visor-pdf-frontend.tsd.md
 - .ai-dev/visual-reference-workflow.md
+
 ---
 
 ## 1. Resumo
@@ -33,7 +36,7 @@ o smoke conjunto contra o NestJS real está previsto no §7.1. Sem mudança de c
 - `AnalisesGateway.concluirAnalise(analiseId): Promise<AnaliseDetalhe>` — `POST` sem corpo;
   erros tipados: `422` → `AnaliseRequisitosPendentesError` (carrega `pendentes`), `409` →
   `AnaliseConflitoError`, `404` → `AnaliseNaoEncontradaError`. `Http` + `Fixtures` (não persiste)
-  + contrato.
+  - contrato.
 - `RequisitoPendente = { requisitoId; codigo; titulo; area }` (formato do `requisitosPendentes`
   do backend, TSD-010).
 - `ConcluirAnalise` (client) — botão + `createPortal` modal; gate por `obrigatoriosPendentes`.
@@ -174,12 +177,12 @@ Ver §7.1.
 
 ### 7.1 Estratégia de testes
 
-| Tipo | Aplica-se? | Justificativa |
-|---|---|---|
-| Unitário | Sim | `FixturesAnalisesGateway.concluirAnalise` (`CONCLUIDA` → idempotente; `≠ PRONTA` → `409`; obrigatórios pendentes → `AnaliseRequisitosPendentesError` com a lista; sem pendentes → detalhe `CONCLUIDA` + `concluidaEm`, não persiste). Componentes: `ConcluirAnalise` (botão desabilitado + motivo quando `obrigatoriosPendentes > 0`; habilitado quando `0`; clicar abre o modal; "Concluir" chama o gateway; sucesso → `onConcluida(detalhe)`; `422` → lista `codigo — titulo` e mantém aberto; `409`/`404` → mensagem). `TelaAnalise` (verificar o último obrigatório via `PainelRevisao` habilita o botão; após concluir com sucesso o badge vira "Concluída", some o botão e "Alterar parecer"/checkbox/editor de página ficam read-only). `PainelRevisao` (`onResumoChange` dispara no mount e após um toggle de "verificado", com o `resumo` novo). |
-| Contrato (formato entre serviços) | Sim | `HttpAnalisesGateway.concluirAnalise` com `fetch` dublê: `POST` em `${base}/analises/${id}/concluir` sem corpo; sucesso → `validarAnaliseDetalhe`; `422` com `{ message, requisitosPendentes:[{requisitoId,codigo,titulo,area}] }` → `AnaliseRequisitosPendentesError` cujo `.pendentes` é essa lista; `409` → `AnaliseConflitoError`; `404` → `AnaliseNaoEncontradaError`; malformado/rede → `AnalisesGatewayError`. Espelha `POST /analises/:id/concluir` (TSD-010). |
-| Integração (módulos/camadas reais) | Não nesta slice | Sem backend nos testes automáticos; costuras testadas isoladas. |
-| Smoke/validação manual contra dependência externa real | **Sim** (o backend real roda nesta máquina — Postgres 17) | Subir NestJS + frontend com `NEXT_PUBLIC_API_BASE_URL`; abrir uma análise `PRONTA_PARA_REVISAO`: (a) com obrigatório pendente → botão desabilitado; verificar todos → habilita; (b) concluir → `200`, tela vira `CONCLUIDA`, tudo read-only, `concluidaEm` no header; (c) tentar `POST` de novo → `200` idempotente. Registrar no ciclo. |
+| Tipo                                                   | Aplica-se?                                                | Justificativa                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------------------ | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unitário                                               | Sim                                                       | `FixturesAnalisesGateway.concluirAnalise` (`CONCLUIDA` → idempotente; `≠ PRONTA` → `409`; obrigatórios pendentes → `AnaliseRequisitosPendentesError` com a lista; sem pendentes → detalhe `CONCLUIDA` + `concluidaEm`, não persiste). Componentes: `ConcluirAnalise` (botão desabilitado + motivo quando `obrigatoriosPendentes > 0`; habilitado quando `0`; clicar abre o modal; "Concluir" chama o gateway; sucesso → `onConcluida(detalhe)`; `422` → lista `codigo — titulo` e mantém aberto; `409`/`404` → mensagem). `TelaAnalise` (verificar o último obrigatório via `PainelRevisao` habilita o botão; após concluir com sucesso o badge vira "Concluída", some o botão e "Alterar parecer"/checkbox/editor de página ficam read-only). `PainelRevisao` (`onResumoChange` dispara no mount e após um toggle de "verificado", com o `resumo` novo). |
+| Contrato (formato entre serviços)                      | Sim                                                       | `HttpAnalisesGateway.concluirAnalise` com `fetch` dublê: `POST` em `${base}/analises/${id}/concluir` sem corpo; sucesso → `validarAnaliseDetalhe`; `422` com `{ message, requisitosPendentes:[{requisitoId,codigo,titulo,area}] }` → `AnaliseRequisitosPendentesError` cujo `.pendentes` é essa lista; `409` → `AnaliseConflitoError`; `404` → `AnaliseNaoEncontradaError`; malformado/rede → `AnalisesGatewayError`. Espelha `POST /analises/:id/concluir` (TSD-010).                                                                                                                                                                                                                                                                                                                                                                                    |
+| Integração (módulos/camadas reais)                     | Não nesta slice                                           | Sem backend nos testes automáticos; costuras testadas isoladas.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Smoke/validação manual contra dependência externa real | **Sim** (o backend real roda nesta máquina — Postgres 17) | Subir NestJS + frontend com `NEXT_PUBLIC_API_BASE_URL`; abrir uma análise `PRONTA_PARA_REVISAO`: (a) com obrigatório pendente → botão desabilitado; verificar todos → habilita; (b) concluir → `200`, tela vira `CONCLUIDA`, tudo read-only, `concluidaEm` no header; (c) tentar `POST` de novo → `200` idempotente. Registrar no ciclo.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 Slice de interface: **screenshots** do botão bloqueado (com o motivo), do modal de
 confirmação, da tela após concluir (badge "Concluída" + read-only), e do `422` com a lista de
@@ -250,8 +253,8 @@ npm run ci
 
 Referência: `Prototipo Licia Analisadora/src/routes/AnalysisPage/components/CompletionModal.{tsx,module.css}`.
 
-| ID | Papel na aplicação | Link/localização | Nome na origem | Estados representados | Status de inspeção |
-|---|---|---|---|---|---|
+| ID     | Papel na aplicação            | Link/localização                                  | Nome na origem    | Estados representados                                              | Status de inspeção                                                                    |
+| ------ | ----------------------------- | ------------------------------------------------- | ----------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
 | REF-10 | Modal de conclusão da análise | `.../components/CompletionModal.{tsx,module.css}` | `CompletionModal` | aberto (círculo+check, título, texto, ações); erro `422` com lista | Inspecionado 02/09/2026 — enquadramento OK (`frontend/docs/visual-reference/rf-012/`) |
 
 Do protótipo: `CompletionModal` é um card central com ícone, título, um parágrafo e um botão

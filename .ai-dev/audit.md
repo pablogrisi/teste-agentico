@@ -20,11 +20,43 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 02/09/2026 — RF-012 / TSD-020: botão "Concluir análise" + modal de confirmação (frontend)
+
+Contexto: 10º ciclo de RF do frontend, na branch `frontend/rf-012-conclusao` (a partir da `main`, off `c02aa88` que já tinha o PM+Engenheiro). Ciclo completo dos 6 papéis, incluindo o subagente `critico`. O usuário validou a User Story + TSD-020 com "Siga o protótipo de alta fidelidade, pode seguir" — o modal segue o enquadramento do `CompletionModal` do protótipo (card central, círculo `--color-brand-muted` + ícone de check, `<h2>`, `<p>`), com 2 ações (Cancelar / Concluir) por ser confirmação irreversível. É o penúltimo RF do MVP frontend; resta só RF-016.
+
+Papéis:
+
+- **PM + Engenheiro** (já em `c02aa88`): User Story do recorte frontend no `roadmap.md` + `docs/engineering/specs/020-conclusao-analise-frontend.tsd.md`.
+- **Dev** (`5dc1fca`):
+  - `types.ts`: `RequisitoPendente { requisitoId, codigo, titulo, area }`.
+  - `analises-gateway.ts`: `AnaliseRequisitosPendentesError extends AnalisesGatewayError` (`readonly pendentes`) + `concluirAnalise(analiseId): Promise<AnaliseDetalhe>` na interface.
+  - `http-analises-gateway.ts`: `concluirAnalise` → `POST {base}/analises/{id}/concluir` sem corpo; `422` → `extrairPendentes` (valida item a item, degrada p/ `[]`) → `AnaliseRequisitosPendentesError`; `409` → `AnaliseConflitoError`; `404` → `AnaliseNaoEncontradaError`; `!ok` → `AnalisesGatewayError`; sucesso → `validarAnaliseDetalhe`.
+  - `fixtures-analises-gateway.ts`: `concluirAnalise` → `abrirAnalise`; `CONCLUIDA` → idempotente; `!== PRONTA_PARA_REVISAO` → `409`; `obrigatorio && !verificado` → `AnaliseRequisitosPendentesError` com a lista; senão `clonarDetalhe` + `status: CONCLUIDA` + `concluidaEm`. **Não persiste** (andaime).
+  - `index.ts`: exporta `AnaliseRequisitosPendentesError` + tipo `RequisitoPendente`.
+  - `ConcluirAnalise.tsx` + `.module.css` (novo, client): botão (disabled quando `obrigatoriosPendentes > 0` + `<span role="note">` com o motivo, ligado por `aria-describedby`); modal `createPortal` seguindo o `CompletionModal` (círculo + `CircleCheckIcon` + `<h2>` + `<p>` + Cancelar/Concluir); estados `montado`/`enviando`/`erro`/`pendentes`; A11y `role="dialog"` `aria-modal` `aria-labelledby`, foco no "Concluir" (`useEffect([montado])`), Escape fecha (exceto `enviando`), `overflow:hidden` no body; `422` → `<ul>` `codigo — titulo` e mantém aberto; `409`/`404`/genérico → `role="alert"`.
+  - `AnaliseHeader.tsx`: nova prop `acao?: ReactNode` (div `.acoes` com `acao` + `StatusBadge`).
+  - `TelaAnalise.tsx`: passa a renderizar o `AnaliseHeader` (movido do `page.tsx`); `detalheEfetivo` (reset por identidade de `detalhe.id`) + `resumoAtual`; `acao = <ConcluirAnalise>` só quando `detalheEfetivo.status === "PRONTA_PARA_REVISAO"`; `AnaliseVisor`/`PainelRevisao` recebem `detalheEfetivo`; `PainelRevisao` recebe `onResumoChange={setResumoAtual}`.
+  - `page.tsx`: removido `<AnaliseHeader>` (foi pro `TelaAnalise`).
+  - `PainelRevisao.tsx`: nova prop `onResumoChange?: (r: ResumoAnalise) => void` — dispara em `useEffect(…, [])` no mount e dentro de `aplicarRevisao` após `setResumo`.
+- **Testes (mecânico)** (`a7f3380`): `npm run ci` ✅ — `eslint .` + prettier, `tsc --noEmit`, **vitest 214 → 240/240 (26 arquivos)**, `next build` (rota `/analise/[id]` ƒ dynamic, 8.54 kB). Novos/ampliados: `http-analises-gateway` (contrato de `concluirAnalise`: POST sem corpo; `422` com/sem lista; `409`/`404`/`500`/rede), `fixtures-analises-gateway` (idempotente / `409` / pendentes com a lista / sucesso não persiste / `404`), `concluir-analise.test.tsx` (novo — bloqueado+motivo+`aria-describedby` / habilitado / abre modal / sucesso → `onConcluida` / `422` lista e mantém aberto / `409` / `404` / Cancelar), `tela-analise` (verificar o último obrigatório habilita e concluir deixa read-only; `CONCLUIDA` sem botão), `painel-revisao` (`onResumoChange` no mount e após toggle), `analise-header` (prop `acao`).
+- **Smoke conjunto contra o backend real** — NestJS + PostgreSQL 17 (`:3000`) + frontend buildado com `NEXT_PUBLIC_API_BASE_URL` (`:3201`). Análise real de 12 requisitos / 11 obrigatórios: botão **desabilitado** (11 pendentes) → `PATCH …/requisitos/:id {verificado:true}` em 10/11 + reload → ainda desabilitado (falta 1) → marcar o 11º **pela UI** (checkbox RF-011) → `onResumoChange` → botão **habilita sem reload** → corrida real (`PATCH {verificado:false}` num obrigatório, tela não recarregada) → "Concluir" → **`422`** com `{ requisitosPendentes: [{requisitoId,codigo,titulo,area}] }` → modal lista "TEC-003 — Habilitação técnica proporcional" e segue aberto, análise `PRONTA_PARA_REVISAO` → re-verificar → "Concluir" → **`200`** com o `AnaliseDetalhe` `CONCLUIDA` → tela vira `CONCLUIDA` **sem reload** (badge, "Concluída em 10:34", checkboxes read-only), backend confirmado (`status = CONCLUIDA`, `concluidaEm` gravado). Preflight CORS `OPTIONS` → `204`.
+- **Crítico** (subagente `critico`): **APROVADO**, sem bloqueadores. Ajustes após o Crítico (`9d476e4`): foco no "Concluir" num `useEffect([montado])` (o portal não existe no efeito de mount — `focus()` rodava com ref `null`); motivo do bloqueio ligado ao `<button>` por `aria-describedby` + teste `toHaveAccessibleDescription`; plural do motivo simplificado (um sufixo `s`); `ConcluirAnalise` recebe `detalheEfetivo.id`. Não-bloqueadores registrados: `focus()` com ref-null também no `AlterarParecerModal` (follow-up para os dois); em modo fixtures o caminho feliz "verificar → concluir" não fecha (`marcarVerificado` não persiste; só a fixture `"7"` conclui limpo — andaime da §9, caminho real no smoke); `aria-describedby` em `<button disabled>` não é anunciado por todo leitor.
+- **Documentador**: TSD-020 (§9 modal de alta fidelidade por instrução do usuário; §10 REF-10 inspecionado 02/09/2026), `roadmap.md` (RF-012 frontend → `implementada — Crítico ✅`; tabela de sequência linha 11; seção RF-012 → Status + "Notas do ciclo (frontend — 02/09/2026)"), checkpoint §1/§2/§3.1/§5/§7, este arquivo, `frontend/README.md`.
+
+Evidência visual: `frontend/docs/visual-reference/rf-012/` — `rf012-botao-bloqueado.png`, `rf012-botao-habilitado.png`, `rf012-modal-confirmacao.png`, `rf012-422-pendentes.png`, `rf012-concluida-readonly.png` + `README.md` (REF-10 / `CompletionModal`; divergências: conclusão única, botão explícito no cabeçalho, 2 ações vs botão único, lista de `requisitosPendentes` no `422`).
+
+Estado: ciclo fechado com Crítico ✅, `npm run ci` verde (240 testes), smoke conjunto contra o NestJS real feito. **Aguardando push da branch `frontend/rf-012-conclusao` + merge na `main`.** Próximo e último frontend: RF-016 (baixar o relatório PDF).
+
+Decisões: modal de alta fidelidade ao `CompletionModal` (instrução do usuário) com 2 ações por ser irreversível; conclusão aplicada em estado de client (`detalheEfetivo`), sem `router.refresh()` (consistente com RF-008/011/014); gate pelo `resumo` corrente da sessão (`onResumoChange`), o backend revalida via `422`.
+
+Pendências: push + merge da branch; RF-016 (último RF do MVP frontend); alinhar o `focus()` do `AlterarParecerModal` com o padrão novo do `ConcluirAnalise`.
+
 ## 02/09/2026 — RF-014 / TSD-019: visor de PDF + referência de página + editor (frontend)
 
 Contexto: 9º ciclo de RF do frontend, na branch `frontend/rf-014-visor` (a partir da `main` `bbbf7b8`). Ciclo completo dos 6 papéis, incluindo o subagente `critico`. O usuário aprovou a User Story + TSD e, ao ser questionado sobre as decisões da §9, respondeu: (1) `<iframe>` nativo + `#page=N` "do jeito que melhor encaixar com o backend"; (2) editor inline no requisito — aprovado; (3) wrapper `TelaAnalise` — aprovado; (4) sem PDF nas fixtures (só o aviso) — aprovado, "vou querer testar na hora"; (5) ciclo inteiro (visor + navegação + correção de página) numa slice só — aprovado. Restam RF-012 e RF-016 para o MVP frontend.
 
 Papéis:
+
 - **PM**: User Story do recorte frontend de RF-014 no `roadmap.md` — visor `<iframe>` do PDF real (`GET /analises/:id/pdf`) navegado por `#page=N`; referência de página clicável no requisito; editor inline para corrigir/definir `paginaReferencia` (`PATCH { paginaReferencia }`, sem R-06). **Apresentada e parada.**
 - **Engenheiro**: `docs/engineering/specs/019-visor-pdf-frontend.tsd.md` — `AnalisesGateway.urlPdf` + `corrigirPaginaReferencia`; `pagina-referencia.ts`; `AnaliseVisor` + `TelaAnalise` (estado `pagina` compartilhado); props em `PainelRevisao`/`RequisitoItem`. Decisões da slice na §9. **Apresentada e parada.**
 - **Dev**: `pagina-referencia.ts` (`validarPaginaReferencia` puro); `analises-gateway.ts` (assinaturas); `http-analises-gateway.ts` (`urlPdf` → `${base}/analises/${id}/pdf`; `corrigirPaginaReferencia` via `patchRevisao` com `{ paginaReferencia }`); `fixtures-analises-gateway.ts` (`urlPdf` → `null`; `corrigirPaginaReferencia` aplica, não persiste); `AnaliseVisor.tsx` + CSS (novo — toolbar + `<iframe key={pagina}>` ou aviso); `TelaAnalise.tsx` + CSS (novo — `useState(1)`, monta visor + `<Suspense><PainelRevisao onIrParaPagina/></Suspense>`); `page.tsx` → `<AnaliseHeader/>` + `<TelaAnalise/>`; `AnaliseVisorPlaceholder` **removido**; `PainelRevisao` (prop `onIrParaPagina`, handler `corrigirPagina`, tipo `AcoesRequisito`); `RequisitoItem` (`LinhaPagina` — "Página N" clicável + editor inline `Editar`/`Definir`).
@@ -37,18 +69,20 @@ Evidência visual: `frontend/docs/visual-reference/rf-014/` — `rf014-visor-sem
 Estado: ciclo fechado com Crítico ✅, `npm run ci` verde, mergeado na `main` (`d9fc9b4`). Próximo frontend: RF-012 (modal de conclusão).
 
 **Smoke conjunto contra o backend real — feito em 02/09/2026 (pós-merge).** Descobri que a máquina tem um serviço **PostgreSQL 17** rodando (o `@embedded-postgres` do `test:e2e` é que recusa sob usuário admin; o Postgres do sistema roda normal). Criada a base `licia` (`CREATE ROLE licia` + `CREATE DATABASE licia`), `prisma migrate deploy`, `seed` (12 requisitos), `npm run start` do NestJS em `:3000` (`IA_ADAPTER=stub`, `PROCESSAMENTO_AUTO=true`), frontend buildado com `NEXT_PUBLIC_API_BASE_URL=http://localhost:3000` em `:3201`. Verificado ponta a ponta:
+
 - `POST /analises` (multipart, PDF de 4 páginas) → `PENDENTE` → worker processa → `PRONTA_PARA_REVISAO` com `totalPaginasPdf = 4` (contagem `pdf-lib` do PDF real) e 12 avaliações (Checklist 8 + Técnica 4).
 - `GET /analises/:id/pdf` → `200 application/pdf`, `Content-Disposition: inline`, **sem** `X-Frame-Options`/CSP → o `<iframe>` do visor renderiza o PDF; a toolbar navega e o `#page=N` abre a folha no visor nativo do browser.
 - Editor inline de página → `PATCH /analises/:id/requisitos/:requisitoId` `{ paginaReferencia: 3 }` → `{ item, resumo }`, **gravado no banco** (`CHK-001.paginaReferencia = 3`), **sem** disparar a R-06; o requisito re-renderizou com "Página 3" sem reload.
 - Clicar em "Página 3" no requisito → `<iframe>` para `…/analises/:id/pdf#page=3&view=FitH`.
 - Preflight `OPTIONS` em `/analises/:id/requisitos/:id` → `204` com `Access-Control-Allow-Origin` da origem do frontend (CORS `35ee46d`).
-Evidência: `frontend/docs/visual-reference/rf-014/rf014-real-{visor,editou-pagina,page-nav}.png`. O `stub-backend.mjs` do 1º smoke foi andaime, não entrou no repo. **RF-014 validado contra o backend real** — não precisa mais do Pablo para essa parte.
+  Evidência: `frontend/docs/visual-reference/rf-014/rf014-real-{visor,editou-pagina,page-nav}.png`. O `stub-backend.mjs` do 1º smoke foi andaime, não entrou no repo. **RF-014 validado contra o backend real** — não precisa mais do Pablo para essa parte.
 
 ## 01/09/2026 — RF-017 / TSD-018: justificativa visível + erro de revisão fiel (frontend) + CORS no backend
 
 Contexto: 8º ciclo de RF do frontend, na branch `frontend/rf-017-comentario` (a partir da `main` `35ee46d`). Ciclo completo dos 6 papéis, incluindo o subagente `critico`. O usuário aprovou a User Story + TSD e, na mesma mensagem, pediu para **habilitar CORS no backend** para destravar o smoke frontend↔backend.
 
 **Mudança no backend (antes do ciclo do RF-017), autorizada pelo responsável do frontend:**
+
 - Branch `backend/cors` (a partir da `main` `5fc5730`) → `35ee46d`, mergeada na `main`.
 - `backend/src/main.ts`: `app.enableCors({ origin: corsOrigins.length ? corsOrigins : true, methods: ['GET','POST','PATCH','DELETE','OPTIONS'] })`.
 - `backend/src/config/configuration.ts`: campo `corsOrigins` + função pura `parseCorsOrigins` (lista de `CORS_ORIGINS` separada por vírgula). Vazio = reflete a origem — ok no MVP sem autenticação (SDD §2/§9).
@@ -57,7 +91,8 @@ Contexto: 8º ciclo de RF do frontend, na branch `frontend/rf-017-comentario` (a
 - Validação: `npm install` no `backend/` (deps estavam ausentes) + `npx prisma generate`; `npm run ci` do backend **verde** (lint, typecheck, `prisma:validate` com `.env` local gitignored, **110 unit**, build). `npm run test:e2e` **não roda nesta máquina** — o Postgres embutido recusa iniciar sob usuário administrador ("Execution of PostgreSQL by a user with administrative permissions is not permitted"); sem relação com a mudança, e o gate `ci` do backend não inclui e2e. Pablo pode querer re-rodar o `test:e2e`.
 
 **Ciclo RF-017 (frontend):**
-- **PM**: User Story no `roadmap.md` — a *exigência* de comentário nas ações de revisão do frontend **já vem do RF-008** (modal sempre pede) + backend (R-06 no `PATCH`); RF-017 frontend fecha **visibilidade** da justificativa + **mensageria** do erro. **Apresentada e parada.**
+
+- **PM**: User Story no `roadmap.md` — a _exigência_ de comentário nas ações de revisão do frontend **já vem do RF-008** (modal sempre pede) + backend (R-06 no `PATCH`); RF-017 frontend fecha **visibilidade** da justificativa + **mensageria** do erro. **Apresentada e parada.**
 - **Engenheiro**: `docs/engineering/specs/018-comentario-revisao-frontend.tsd.md` — slice pequena de acabamento; sem componente novo, sem mudança de contrato. **Apresentada e parada** (o usuário perguntou por que a §9 "decisões a validar" existe; expliquei que são as escolhas de forma não fixadas em nenhum doc, o ponto de aprovação PM→Engenheiro→Dev).
 - **Dev**: `StatusIaResumo.tsx` (+ CSS) — linha "Justificativa da alteração: {comentario}" quando `diverge && item.comentario?.trim()`; `RequisitoItem.tsx` — a linha "Comentário:" passa a `!diverge && item.comentario?.trim()`; `catch (erro)` do toggle usa `erro instanceof AnaliseValidacaoError ? erro.motivos[0] : GENÉRICA`.
 - **Testes (mecânico)**: `npm run ci` ✅ — `eslint .` + prettier, `tsc --noEmit`, **vitest 185 → 186/186 (21 arquivos)**, `next build`. Novos: `status-ia-resumo.test.tsx` (justificativa só quando diverge + comentário, com `trim`); `requisito-item.test.tsx` (+ "Comentário:" vs "Justificativa"; + 422 mostra a mensagem do backend; + 404/409 caem na genérica).
@@ -73,6 +108,7 @@ Estado: ciclo fechado com Crítico ✅, `npm run ci` verde, **branch aguardando 
 Contexto: 7º ciclo de RF do frontend, na branch `frontend/rf-011-verificado` (a partir da `main` `e3e19a8`). Ciclo completo dos 6 papéis, incluindo o subagente `critico`. O usuário validou a User Story + TSD ("aprovar"). Antes deste ciclo, o usuário pediu para conferir o GitHub: o backend do MVP está completo (Pablo mergeou RF-016 / relatório PDF), e os 4 contratos que o frontend consome foram **conferidos campo a campo** contra `backend/src/analises` do `main` e batem — commit `chore(frontend): notas de integração` (`.env.example`/README com o passo de rodar os dois juntos; gap conhecido: backend sem `app.enableCors()`). Colisão de numeração anotada: Pablo criou `docs/engineering/specs/011-relatorio-pdf.tsd.md` (há dois "TSD-011").
 
 Papéis:
+
 - **PM**: User Story do recorte frontend de RF-011 no `roadmap.md` — o checkbox de "verificado" (desabilitado desde o RF-010) fica operável; `PATCH { verificado }` (mesmo endpoint da TSD-008); painel aplica `{ item, resumo }` na hora (mecanismo do RF-008). **Apresentada e parada.**
 - **Engenheiro**: `docs/engineering/specs/017-verificado-interativo-frontend.tsd.md` — `AnalisesGateway.marcarVerificado`; `RequisitoItem` com estado local `salvando`/`erroToggle`; `PainelRevisao` só passa o fio. Decisões da slice na §9. **Apresentada e parada.**
 - **Dev**: `analises-gateway.ts` (`marcarVerificado`); `http-analises-gateway.ts` (extraído `patchRevisao(analiseId, requisitoId, body)` comum a `revisarRequisito` e `marcarVerificado`); `fixtures-analises-gateway.ts` (`marcarVerificado` aplica só o `verificado`, recalcula `resumo`, **não persiste**; helpers `localizarAvaliacao`/`resultadoComItem` compartilhados); `RequisitoItem.tsx` (+ CSS — prop `onToggleVerificado?`, checkbox perde `disabled`/`readOnly`, `onChange`, `salvando` trava, `erroToggle` `role="alert"` que reverte o valor); `PainelRevisao.tsx` (`alternarVerificado` + `aplicarRevisao` extraído/compartilhado com o `onAlterado` do modal; fio só quando `podeEditar`).
@@ -89,7 +125,8 @@ Estado: ciclo fechado com Crítico ✅, `npm run ci` verde, **branch aguardando 
 Contexto: usuário mandou "vamos continuar o desenvolvimento pra fechar o backend do mvp" — RF-016 é o último ciclo de feature do backend (depois só a integração da IA real). Branch `backend/rf-016-relatorio`, dois pontos de aprovação humana explícitos.
 
 Papéis:
-- **PM**: 4 perguntas. Decisões: (1) lib `pdfkit` (+ `@types/pdfkit`); (2) conteúdo além do mínimo do PRD → resumo de contagens + referência de página + norma estruturada; **sem** comentário do analista; (3) ordenação → *"você decide"* → agrupar por área, ordem natural do requisito (documento formal, não a visão "não conformes primeiro" da tela); (4) entrega → `Content-Disposition: inline`. User Story validada.
+
+- **PM**: 4 perguntas. Decisões: (1) lib `pdfkit` (+ `@types/pdfkit`); (2) conteúdo além do mínimo do PRD → resumo de contagens + referência de página + norma estruturada; **sem** comentário do analista; (3) ordenação → _"você decide"_ → agrupar por área, ordem natural do requisito (documento formal, não a visão "não conformes primeiro" da tela); (4) entrega → `Content-Disposition: inline`. User Story validada.
 - **Engenheiro**: `docs/engineering/specs/011-relatorio-pdf.tsd.md` — apresentada e **aprovada** ("Sim, implemente"). Sem migration; sem mudança de contrato existente.
 - **Dev**: `src/relatorio/` — `relatorio-modelo.ts` (`montarModeloRelatorio` puro + `formatarNorma`; itens de cada área reordenados por `ordem`), `relatorio.builder.ts` (`renderRelatorioPdf` com `pdfkit`, coleta chunks do stream → `Buffer`; `ROTULO_STATUS` pt-BR; datas `America/Sao_Paulo`), `relatorio.service.ts` (`gerar(id)` → `abrir` (404) → `409` se `!= CONCLUIDA` → `{ bytes, nomeArquivo }`), `relatorio.controller.ts` (`GET /analises/:id/relatorio` → `StreamableFile` `application/pdf` inline), `relatorio.module.ts` (`imports: [AnalisesModule]`). Deps: `pdfkit` ^0.20 + `@types/pdfkit`. +11 unit (`relatorio-modelo` — campos, ordenação por `ordem`, `formatarNorma`, página condicional; `relatorio-builder` — smoke `%PDF-` + páginas via `pdf-lib`) + 1 suite de integração (`relatorio-pdf`: `200 application/pdf inline` com assinatura `%PDF-` / `409` antes de concluir / `404`).
 - **Testes**: `npm run ci` ✅ — lint, typecheck, `prisma:validate`, **106 unit**, build. `npm run test:e2e` ✅ **39/39** (9 suites).
@@ -103,6 +140,7 @@ Estado: ciclo fechado, **branch aguardando merge + push**. Backend do MVP: só f
 Contexto: 6º ciclo de RF do frontend, na branch `frontend/rf-008-parecer` (a partir da `main` `2e8f6d5` — RF-009 já mergeada). Ciclo completo dos 6 papéis, incluindo o subagente `critico`. TSD-016 é a próxima livre na numeração compartilhada. É a **primeira escrita** da tela de análise (até aqui só leitura). O usuário validou a User Story + TSD com "pode seguir como achar melhor" — as decisões da §9 ficaram por conta do agente.
 
 Papéis:
+
 - **PM**: User Story do recorte frontend de RF-008 no `roadmap.md` — botão "Alterar parecer" em cada `RequisitoItem`; modal com parecer atual (read-only) + select de novo parecer + comentário; `PATCH /analises/:id/requisitos/:requisitoId` (contrato TSD-008, já na `main` `ad2e8cd`); painel aplica `{ item, resumo }` na hora. **Apresentada e parada** para validação.
 - **Engenheiro**: `docs/engineering/specs/016-alterar-parecer-frontend.tsd.md` — `AnalisesGateway.revisarRequisito`; `alterar-parecer.ts` puro; `AlterarParecerModal`; `PainelRevisao` stateful (overrides). Decisões da slice na §9. **Apresentada e parada.**
 - **Dev**: `types.ts` (`AlteracaoParecerInput`, `RevisaoRequisitoResultado`); `analises-gateway.ts` (método + `AnaliseConflitoError` 409); `alterar-parecer.ts` novo (`PARECER_OPCOES`, `validarAlteracaoParecer`, `resolverAlteracaoParecer` — puros); `http-analises-gateway.ts` (`revisarRequisito` PATCH JSON + `validarRevisaoResultado`, reusa `lerItem`/`lerResumo`); `fixtures-analises-gateway.ts` (`revisarRequisito` aplica as regras, recalcula `resumo`, **não persiste**); `AlterarParecerModal.tsx` + CSS (portal, padrão do `NovaAnaliseModal`); `RequisitoItem.tsx` (prop `onAlterarParecer?` + botão no bloco expandido; checkbox de verificado segue desabilitado); `PainelRevisao.tsx` (`overrides: Map<idAvaliacao, item>` + `resumo` de estado, aplicados antes de `separarPorAba`/`filtrarPorStatus`, zerados só quando `detalhe.id` muda; `podeEditar` gateia botão+modal por `PRONTA_PARA_REVISAO`).
@@ -119,6 +157,7 @@ Estado: ciclo fechado com Crítico ✅, `npm run ci` verde, **branch aguardando 
 Contexto: 5º ciclo de RF do frontend, na branch `frontend/rf-009-filtros` (a partir da `main` — RF-007 já mergeada em `cbe9f5b`). Ciclo completo dos 6 papéis, incluindo o subagente `critico`. TSD-015 é a próxima livre na numeração compartilhada. O usuário validou a User Story + TSD e respondeu às 6 decisões abertas da §9: **(1)** filtro persistido na URL ("caso eu marque não conforme, não tire"); **(2)** filtro compartilhado entre as abas (recomendação aceita); **(3)** filtrar por `statusFinal` — "o humano sempre tem a decisão final, a IA só sugere"; **(4)** 3 chips de status + "Todos" (backend do colega tem 3 status); **(5)** grupos sem itens no filtro **continuam aparecendo** com placeholder (mudou vs. proposta original, que ocultava); **(6)** atalho "Ver todos" só no caso "nenhum não conforme" (como no documento).
 
 Papéis:
+
 - **PM**: User Story do recorte frontend de RF-009 no `roadmap.md` — tela abre priorizando não conformes + chips de filtro por status no `PainelRevisao` (adiados do RF-010). **Apresentada e parada** para validação.
 - **Engenheiro**: `docs/engineering/specs/015-filtros-status-frontend.tsd.md` — slice de apresentação; `filtrarPorStatus` puro; filtro na URL; estado "nenhum não conforme" (PRD §9). **Apresentada e parada.** Após as respostas do usuário às decisões §9, a TSD foi ajustada (URL + grupos visíveis) e um commit "decisões validadas" registrou a mudança.
 - **Dev**: `src/lib/data/filtro-requisito.ts` novo (`FiltroRequisito`, `FILTRO_REQUISITO_PADRAO/OPCOES/LABEL`, `parseFiltroRequisito`/`filtroParaSlug`, `filtrarPorStatus` — puro, preserva todos os grupos, não muta); `src/components/analise/FiltroStatus.tsx` + `.module.css` novo (chips `role="group"` / `aria-pressed`, cor de ativo por status portada de `.chipActive*` do protótipo); `PainelRevisao.tsx` → filtro em `useState` lido de `useSearchParams` e escrito com `router.replace(..., { scroll: false })` (param omitido no padrão), compartilhado entre abas, grupos vazios com linha de placeholder, estado "nenhum não conforme" + botão "Ver todos os requisitos", legenda RF-007 só quando há itens visíveis; `app/analise/[id]/page.tsx` → `<PainelRevisao>` sob `<Suspense>`; `fixtures-analise-detalhe.ts` → id "7" ganha `AVALIACOES_SEM_NAO_CONFORME` (andaime) para exercitar o §9.
@@ -135,6 +174,7 @@ Estado: ciclo fechado com Crítico ✅, `npm run ci` verde, **branch aguardando 
 Contexto: 4º ciclo de RF do frontend, na branch `frontend/rf-007-status-ia` (a partir da `main` — RF-010 já mergeada em `28c9e8c`). O usuário reforçou: seguir o **fluxo completo dos 6 papéis, incluindo o Crítico**, em toda implementação (os ciclos anteriores de frontend pularam o Crítico). A partir daqui o subagente `critico` roda antes de fechar cada RF. TSD-014 é a próxima livre na numeração compartilhada (backend 009/010; frontend 011/012/013/014).
 
 Papéis:
+
 - **PM**: User Story do recorte frontend de RF-007 no `roadmap.md` — exibir `statusSugeridoIa` no `RequisitoItem` do RF-010, distinguir sugestão da IA do parecer atual, realçar divergência. Sem mudança de contrato (o payload já traz os dois campos). **Apresentada e parada.**
 - **Engenheiro**: `docs/engineering/specs/014-status-ia-frontend.tsd.md` — slice puramente de apresentação; `divergeDaIa`; caminho "diverge" implementado agora (só ocorre com RF-008) e testado via fixture; §10 (REF-07 — protótipo não distingue os dois status: divergência registrada). **Apresentada e parada.** Usuário validou: "faça igual ao protótipo, melhore onde achar melhor" + "siga o fluxo dos meus agentes".
 - **Dev**: `analise-detalhe.ts` → `divergeDaIa(item)` (puro, `Pick<AvaliacaoItem,...>`); `StatusIaResumo.tsx` novo (bloco "Sugestão da IA / Parecer atual — alterado na revisão"); `RequisitoItem.tsx` → marca "IA" (parecer = sugestão) ou chip âmbar "IA: <sugestão>" + classe `divergente` (realce âmbar do card) quando diverge, e `StatusIaResumo` no topo do expandido; `PainelRevisao.tsx` → legenda "os status abaixo são sugestões da IA…" acima da lista (some no estado processando/erro/sem itens); `fixtures-analise-detalhe.ts` → item `av-6` passou a divergir (`statusSugeridoIa=NAO_CONFORME`, `statusFinal=CONFORME`, `verificado=true`, comentário) para o caso ser exercitável e realista.
@@ -151,6 +191,7 @@ Estado: ciclo fechado com Crítico ✅, `npm run ci` verde, **branch aguardando 
 Contexto: 3º ciclo de RF do frontend, na branch `frontend/rf-010-tela-analise` (a partir da `main` `9887dca`). Numeração: backend tinha tomado TSD-009 (RF-014) e TSD-010 (RF-012/013/015); frontend seguiu com 011 (RF-002), 012 (RF-001/004) e agora **013** (RF-010).
 
 Papéis (em sequência, mesma sessão):
+
 - **PM**: User Story do recorte frontend de RF-010 em `docs/product/roadmap.md` — tela de análise carrega `GET /analises/:id`, abas Checklist/Técnica com navegação livre, lista de requisitos por área em acordeão **somente leitura**, estados carregando/erro/404. Fora do escopo: filtros (RF-009), IA sugerida (RF-007), verificado interativo (RF-011), modal de parecer (RF-008), comentário (RF-017), visor de PDF (RF-014), conclusão (RF-012). **Apresentada e parada para validação.**
 - **Engenheiro**: `docs/engineering/specs/013-tela-analise-frontend.tsd.md`. **Apresentada e parada.** Usuário validou com 3 decisões: (1) corte inclui a lista read-only; (2) aba Técnica **fiel ao backend** (badge de `statusFinal`, não neutra como o protótipo — P-04); (3) **ligar polling** enquanto processa; checkbox desabilitado (interativo no RF-011). TSD-013 §9/§10 atualizadas com as decisões e a inspeção do `AnalysisPanel`.
 - **Dev**:
@@ -169,6 +210,7 @@ Estado: ciclo implementado e validado, `npm run ci` verde, **branch aguardando p
 Contexto: usuário pediu "Continue" após aprovar RF-002. Aberto o 2º ciclo de RF do frontend na branch `frontend/rf-001-nova-analise` (a partir de `frontend/rf-002-listagem`), agrupando RF-001 (criar análise: NUP, objeto) + RF-004 (upload de PDF) — mesmo agrupamento do backend (TSD-004). Sem merge na `main`.
 
 Papéis (em sequência, mesma sessão):
+
 - **PM**: User Story do recorte frontend em `docs/product/roadmap.md` (RF-001), com escopo, fora do escopo e divergências protótipo × PRD (limite 25 MB vs 50 MB; `objeto`/`arquivo`; sem "Processando documento…").
 - **Engenheiro**: `docs/engineering/specs/012-nova-analise-frontend.tsd.md` — escopo, estratégia de testes (inclui **contrato** de `POST /analises`), decisões (validação client-side = obrigatórios + tipo PDF + 25 MB; magic bytes/`/Encrypt` ficam no backend), §10 (REF-05).
 - **Dev**:
@@ -192,6 +234,7 @@ Estado: ciclo implementado, `npm run ci` verde, **branch aguardando revisão (Cr
 Contexto: usuário (Vinicius) pediu para abrir o 1º ciclo de RF do frontend a partir da fundação (TSD-002 não mergeada), sem merge na `main`, e incluir o follow-up de migração do `next lint`. Branch `frontend/rf-002-listagem` a partir de `frontend/tsd-002-fundacao`.
 
 Papéis (executados em sequência pela mesma sessão — feature pequena, sem subagentes):
+
 - **PM**: User Story do recorte frontend de RF-002 escrita em `docs/product/roadmap.md` (RF-002), com escopo, fora do escopo e divergências protótipo × PRD.
 - **Engenheiro**: `docs/engineering/specs/011-listagem-analises-frontend.tsd.md` — escopo, estratégia de testes (inclui **contrato** do `HttpAnalisesGateway`), decisões (URL como estado, chips de status, coluna Status, "Nova análise" desabilitado), §10 (REF-03 inspecionada) e divergências.
 - **Dev**:
@@ -212,10 +255,12 @@ Estado: ciclo implementado, `npm run ci` verde, **branch aguardando revisão (Cr
 Contexto: usuário (Vinicius) pediu para trabalhar no frontend seguindo o método. TSD-002 estava `aprovada — não implementada`; §10 (Referências visuais) com inspeção `Pendente` (gate do `visual-reference-workflow`). Ciclo na branch `frontend/tsd-002-fundacao` (a partir do `main` `fb4cd8e`). Não é ciclo de 6 papéis — é fundação (§0 do workflow): implementar a TSD, rodar gates, atualizar checkpoint + audit.
 
 Etapas:
+
 - **Inspeção visual + §10**: lidos `Prototipo Licia Analisadora/src/theme/*`, `Topbar`, `HomePage`, `AnalysisPage` (+ `PdfPanel`/`AnalysisPanel` CSS). Preenchida a §10 da TSD-002 (§10.1 observações por REF-01..04; §10.2 chrome/divergências a não implementar). 4 `Status de inspeção` → `Inspecionado`. **Parada para revisão humana → aprovada pelo usuário.**
 - **Decisões** (registradas na TSD §9): Next.js 15 App Router + React 19 + TS estrito; Node 20 + npm; **CSS Modules + CSS custom properties** (tokens portados por valor para `src/app/theme/`); **Vitest + RTL + jsdom**; Kanit via `next/font/google`; brasão = placeholder SVG local (`CearaLogo.tsx`), não a URL do Figma MCP; sem trava `min-width: 1440px`.
 
 Alterações:
+
 - **`frontend/`** (novo): projeto Next.js. `package.json` (scripts `dev/build/start/lint/typecheck/test/test:watch/ci`), `tsconfig.json` (strict, alias `@/*`), `next.config.mjs`, `.eslintrc.json` (`next/core-web-vitals` + `prettier`), `.prettierrc.json`, `vitest.config.ts` (alias via `resolve.alias` — sem `vite-tsconfig-paths`, ESM-only quebrava o config `.ts`), `vitest.setup.ts` (mock de `next/font/google`), `.env.example` (`NEXT_PUBLIC_API_BASE_URL`), `.nvmrc` (20), `.gitignore`, `README.md`.
 - `src/app/`: `layout.tsx` (Kanit + `globals.css`), `globals.css` (importa tokens + reset), `theme/*.css` (6 arquivos de token portados do protótipo), `page.tsx` (rota `/` — casca lista; server component que exercita o seam), `analise/[id]/page.tsx` (rota dinâmica — casca: visor à esquerda, painel de revisão 596px à direita).
 - `src/components/`: `topbar/Topbar.tsx` (+ `.module.css`), `layout/PageShell.tsx` (frame base Topbar + conteúdo; prop `fill`), `brand/CearaLogo.tsx` (placeholder), `icons/index.tsx` (`ChevronDownIcon`).
@@ -225,6 +270,7 @@ Alterações:
 - Raiz: `README.md` — seção "Frontend" com instruções de execução. `docs/engineering/checkpoint.md` — slice ativada e fechada. `docs/engineering/specs/002-fundacao-frontend.tsd.md` — §8 (critérios marcados), §9 (decisões), §10, frontmatter.
 
 Validações (rodadas de `frontend/`, 01/09/2026):
+
 - `npm run lint` ✅ (ESLint `next/core-web-vitals` sem erros + Prettier `--check` limpo)
 - `npm run typecheck` ✅ (`tsc --noEmit`)
 - `npm run test` ✅ **4/4** (2 arquivos — `page-shell`, `fixtures-analises-gateway`)
@@ -243,7 +289,8 @@ Pendências: revisão (Crítico) + merge da branch na `main`. Follow-up: migrar 
 Contexto: usuário mandou "faz o merge e o push, e abre o ciclo de RF-012+RF-013+RF-015" logo após o fechamento de RF-014. Ciclo agrupado ("concluir a análise") na branch `backend/rf-012-conclusao`, com as duas paradas de aprovação humana explícitas.
 
 Papéis:
-- **PM**: 4 perguntas. Decisões do usuário: (1) reconclusão de análise já `CONCLUIDA` → `200` idempotente; (2) resposta de sucesso = payload completo (`GET /analises/:id`); (3) responsável → *"você decide"* → expor `analistaId` **e** `analistaNome` (relatório RF-016 vai precisar do nome); (4) trava fiel ao PRD — só `verificado` (não exige `statusFinal` editado). User Story validada; roadmap RF-012/013/015 → `user story aprovada`.
+
+- **PM**: 4 perguntas. Decisões do usuário: (1) reconclusão de análise já `CONCLUIDA` → `200` idempotente; (2) resposta de sucesso = payload completo (`GET /analises/:id`); (3) responsável → _"você decide"_ → expor `analistaId` **e** `analistaNome` (relatório RF-016 vai precisar do nome); (4) trava fiel ao PRD — só `verificado` (não exige `statusFinal` editado). User Story validada; roadmap RF-012/013/015 → `user story aprovada`.
 - **Engenheiro**: `docs/engineering/specs/010-conclusao-analise.tsd.md` — apresentada e **aprovada** ("Aprova, pode implementar"). Sem migration (`concluida_em`/`CONCLUIDA` já existiam).
 - **Dev**: `src/analises/conclusao-analise.ts` (`requisitosObrigatoriosPendentes` — obrigatórios com `verificado=false`, ordenado por área/ordem); `AnalisesService.concluir(id)` (`404`; `CONCLUIDA` → `200` via `abrir`; fora de `PRONTA_PARA_REVISAO` → `409`; pendentes → `422 { requisitosPendentes }`; senão `updateMany where status=PRONTA_PARA_REVISAO set CONCLUIDA + concluidaEm` e devolve `abrir(id)`); `AnaliseDetalhe`/`montarAnaliseDetalhe` ganham `analistaId` + `analistaNome` (3º parâmetro, default `''`); `abrir` resolve o nome via `AnalistaAtualProvider`; `POST /analises/:id/concluir` `@HttpCode(200)`. +11 unit (`conclusao-analise.spec` + `analise-detalhe` responsável) + 1 suite de integração (`conclusao-analise.integration-spec`: `422`+lista / `200`+`CONCLUIDA`+`concluidaEm`+responsável / idempotente / não-obrigatório não bloqueia / `409` / `404`).
 - **Testes**: `npm run ci` ✅ — lint, typecheck, `prisma:validate`, **97 unit**, build. `npm run test:e2e` ✅ **36/36** (8 suites).
@@ -259,6 +306,7 @@ Contexto: usuário mandou "faz o merge e o push pro github; depois começa o cic
 Ajuste de processo: registrado em `docs/perguntas-e-respostas.md` e no checkpoint §7 — a partir deste ciclo o PM apresenta a User Story e **para**; o Engenheiro apresenta a TSD e **para**; só então o Dev implementa.
 
 Papéis:
+
 - **PM**: 4 perguntas. Decisões do usuário: (1) visor do frontend navega para a página via `#page=N` contra o PDF inteiro — **sem extração de página no servidor**; `lerPagina` fica como seam; (2) validação de página fora do intervalo passa a ser da `paginaReferencia` no PATCH; (3) correção da página pelo analista **incluída no PATCH de revisão** agora; (4) lib `pdf-lib`, só para contar páginas. User Story validada; recorte backend reduzido no roadmap.
 - **Engenheiro**: `docs/engineering/specs/009-pdf-por-pagina.tsd.md` — apresentada e **aprovada pelo usuário** ("Aprova, pode implementar").
 - **Dev**: `Analise.totalPaginasPdf Int?` + migration `20260901020000_analise_total_paginas` (só `ALTER TABLE ADD COLUMN`, gerada por `prisma migrate diff`); `src/analises/contar-paginas-pdf.ts` (`contarPaginasPdf` best-effort com `pdf-lib`, `null` quando não parseável, nunca lança); `AnalisesService.criar` calcula e persiste `totalPaginasPdf` (não bloqueia a criação); `AnaliseDetalhe`/`montarAnaliseDetalhe` expõem `totalPaginasPdf` no `GET /analises/:id`; `validarEResolverPatch` ganha 3º parâmetro `totalPaginasPdf` e valida `paginaReferencia` (`1..total` | `≥1` | `null` → senão `422`), **sem** disparar a regra R-06; `lerPagina` seam com comentário atualizado (porta + adapter). Dep nova: `pdf-lib` ^1.17.1. +16 unit (contagem + validação de página) + 4 integração (criar→payload; PATCH ok/fora do intervalo/limpar/total desconhecido).
@@ -273,6 +321,7 @@ Estado: ciclo fechado, **branch aguardando merge + push**. Próximo backend: RF-
 Contexto: usuário mandou "faz o merge e abre o ciclo de RF-008+RF-011+RF-017". TSD-007 mergeada na `main` (`b648908` fecha; `96ff8fb` traz o código). Ciclo na branch `backend/rf-008-revisao-requisito`.
 
 Papéis:
+
 - **PM**: 4 perguntas — P-03 e "desmarcar verificado" respondidas pelo usuário; rota e resposta "você decide". Decisões: comentário obrigatório **só quando `statusFinal ≠ statusSugeridoIa`** (invariante — R-06); `verificado` alterna livre; rota `/requisitos/:requisitoId`; resposta `{ item, resumo }`. **P-03 fechado** (`questoes-abertas.md` R-06).
 - **Engenheiro**: `docs/engineering/specs/008-revisao-requisito.tsd.md`.
 - **Dev**: refactor `analise-detalhe.ts` (exporta `toItem`, extrai `calcularResumo`); `status-requisito.ts` (+ `isStatusRequisito`); `revisao-requisito.ts` (`validarEResolverPatch` puro); `AnalisesService.revisarRequisito` (404/409/422 + update + resumo recalculado); `PATCH /analises/:id/requisitos/:requisitoId`. +10 unit + 1 integração.
@@ -287,6 +336,7 @@ Estado: ciclo fechado, **branch aguardando sign-off + merge**. Próximo backend:
 Contexto: usuário mandou "faz o merge e abre o ciclo de RF-009". TSD-006 mergeada na `main` (`64b2909` fecha; `67ff89f` traz o código). Ciclo na branch `backend/rf-009-abrir-analise`.
 
 Papéis:
+
 - **PM**: 4 perguntas — statusFinal e resumo escolhidos pelo usuário; formato do endpoint e agrupamento "você decide" → IA: enriquecer `GET /analises/:id`, agrupado por área no backend. Registrado em `perguntas-e-respostas.md`.
 - **Engenheiro**: `docs/engineering/specs/007-abrir-analise.tsd.md`.
 - **Dev**: `src/analises/analise-detalhe.ts` (`montarAnaliseDetalhe` pura — agrupa por área alfabética, `NAO_CONFORME` por `statusFinal` primeiro depois `ordem`, `norma` estruturada, `resumo`); `AnalisesService.abrir` (buscarPorId + `findMany` com `include: requisito`); `GET /analises/:id` passa a devolver o `AnaliseDetalhe`. Contrato anterior preservado. +4 unit + 1 integração.
@@ -301,6 +351,7 @@ Estado: ciclo fechado, **branch aguardando sign-off + merge**. Próximo backend:
 Contexto: usuário mandou "faz o merge e abre o ciclo de RF-005+RF-007". RF-002/TSD-005 mergeada na `main` (`ce30442` fecha; `57b170f` traz o código). Ciclo na branch `backend/rf-005-processamento`.
 
 Papéis:
+
 - **PM**: agrupou RF-005+RF-007. 4 perguntas, todas "você decide" → decisões da IA: disparo imediato + varredura 5s + recuperação no boot (sob `PROCESSAMENTO_AUTO`); `POST /analises/:id/reprocessar`; `IA_TIMEOUT_MS=120000`; base vazia → `ERRO_PROCESSAMENTO`. Registrado em `perguntas-e-respostas.md`.
 - **Engenheiro**: `docs/engineering/specs/006-processamento-analise.tsd.md`.
 - **Dev**: model `AvaliacaoRequisito` + migration `20260901010000` (FK cascade/restrict, `@@unique`); `ProcessamentoService` (claim atômico via `updateMany` count, `comTimeout`, gravação transacional de 1 avaliação/requisito com default `NAO_SE_APLICA`, `PRONTA_PARA_REVISAO`/`ERRO_PROCESSAMENTO`, `processarPendentes` single-flight, `recuperarPresas`, `disparar`); `AnalisesService.criar` dispara; `reprocessar` + `POST /analises/:id/reprocessar`. Config `IA_TIMEOUT_MS`/`PROCESSAMENTO_INTERVALO_MS`/`PROCESSAMENTO_AUTO`. **`@nestjs/schedule` descartado** (ESM-only, quebra o ts-jest CJS) → `setInterval` próprio + `onModuleDestroy`.
@@ -315,6 +366,7 @@ Estado: ciclo fechado, **branch aguardando sign-off + merge**. Próximo backend:
 Contexto: usuário mandou "segue pro próximo passo". Antes de abrir RF-002, a branch `backend/rf-001-criar-analise` (TSD-004) foi empurrada e mergeada na `main` por fast-forward (`6c7e983..9dd6792`). Ciclo de RF-002 na branch `backend/rf-002-listagem` (a partir do `main`).
 
 Papéis:
+
 - **PM**: User Story + critérios no roadmap; P-06 (contrato da listagem) fechado — usuário respondeu "você decide" nas 3 perguntas; a IA decidiu: contrato completo (`q` em nup+objeto insensitive, `status` multi, `ordenarPor` iniciadaEm|nup, `ordem`, `pagina`/`tamanho` 20/máx 100), resposta `{ itens, total, pagina, tamanho }`, itens com 6 campos, sem contagens.
 - **Engenheiro**: `docs/engineering/specs/005-listagem-analises.tsd.md`.
 - **Dev**: `src/analises/listar-analises.query.ts` (parser + 422), `AnalisesService.listar` (where + orderBy dinâmico + skip/take + `$transaction([findMany, count])`), rota `GET /analises` no controller. `test:e2e` passou a rodar `--runInBand` (dois integration specs mutam a mesma tabela `analise` no Postgres compartilhado). +11 unit + 1 integração (7 casos).
@@ -329,6 +381,7 @@ Estado: ciclo fechado, **branch aguardando sign-off + merge**. Próximo backend:
 Contexto: usuário pediu "abre o ciclo do PM e siga com o desenvolvimento das próximas partes". Ciclo completo na branch `backend/rf-001-criar-analise` (a partir do `main` `13b111e`).
 
 Papéis:
+
 - **PM**: agrupou RF-001+RF-004+RF-018 num ciclo backend. User Story + critérios no roadmap; 4 perguntas ao usuário. Respostas: PDF válido = mimetype `application/pdf` + magic bytes `%PDF-` + limite 25 MB (`ANALISE_PDF_TAMANHO_MAX_MB`) + recusa `/Encrypt`; NUP string livre (≤60); `status` todos os valores do SDD como string+allowlist; NUP repetido permitido (sem unique).
 - **Engenheiro**: `docs/engineering/specs/004-criar-analise.tsd.md`.
 - **Dev**: model `Analise` + migration `20260901000000_criar_analise`; `src/analises/` (`status-analise.ts`, `ValidacaoAnaliseService`, `AnalisesService`, `AnalisesController`); `POST /analises` (multipart via `FileInterceptor`), `GET /analises/:id`, `GET /analises/:id/pdf` (`StreamableFile`); config `ANALISE_PDF_TAMANHO_MAX_MB`; dep `@types/multer`. +15 unit + 1 integração (`analises.integration-spec`).
@@ -343,6 +396,7 @@ Estado: ciclo fechado, **branch aguardando sign-off + merge na `main`**. Próxim
 Contexto: usuário questionou se valia fazer merge na `main` ou manter uma branch longa por pessoa até o fim. Decidido: **merge frequente na `main`**, porque os documentos vivos do método (`checkpoint.md`, `roadmap.md`, `audit.md`, `questoes-abertas.md`) são fonte de verdade única e branches longas divergentes os inviabilizam.
 
 Ações:
+
 - `git push -u origin backend/tsd-001-fundacao-tecnica` (backup/visibilidade).
 - `git checkout main && git merge --ff-only backend/tsd-001-fundacao-tecnica` → fast-forward `0b90f8a..13b111e` (76 arquivos, sem commit de merge, sem conflito).
 - `git push origin main`.
@@ -358,6 +412,7 @@ Próximo: backend abre ciclo de RF-001+RF-004+RF-018 em `backend/rf-001-criar-an
 Contexto: usuário perguntou se dava pra instalar Docker nesta máquina. Não dá — sem WSL2, sem privilégio de admin, e Docker Desktop mexe em config de sistema/virtualização (fora do que a IA deve fazer). Alternativa implementada para destravar `test:e2e` sem Docker.
 
 Alterações (`backend/`):
+
 - dep dev `embedded-postgres` (só publica betas — `18.4.0-beta.17`; aceito por ser infra de teste, com teardown blindado).
 - `test/embedded-postgres.globalSetup.ts`: sobe um PostgreSQL self-contained numa porta dedicada (54329), aplica `prisma migrate deploy`, grava um handle em `os.tmpdir()`. `E2E_EXTERNAL_DB=true` + `DATABASE_URL` pula o embutido (CI com serviço de Postgres).
 - `test/embedded-postgres.globalTeardown.ts`: mata o processo pelo `postmaster.pid` (hard kill cross-platform — `taskkill /F /T` no Windows, `SIGKILL` no resto), com `pg.stop()` como fallback; limpa o tmp dir com retries. Nunca trava, nunca falha a run.
@@ -367,6 +422,7 @@ Alterações (`backend/`):
 - `prisma/migrations/20260831010000_base_fixa_requisitos/migration.sql`: removida uma linha `warn ...` do Prisma que tinha vazado no arquivo pelo `>` de stdout na autoria (causava `syntax error at or near "warn"` no `migrate deploy`).
 
 Validação (Windows, sem Docker):
+
 - `npm run ci` ✅ (lint, typecheck, prisma validate, `test` 23/23, build)
 - `npm run test:e2e` ✅ 5/5 (`health.e2e-spec` + `requisitos-importador.integration-spec`), rodado 2× seguidas (idempotência de porta/dir), sem processos ou tmp dirs órfãos.
 
@@ -379,6 +435,7 @@ Follow-up aberto: migrar `package.json#prisma` para `prisma.config.ts` antes do 
 Contexto: pós-TSD-001, usuário pediu "siga com o processo" e commits na branch de backend. Ciclo completo de RF-006 (recorte backend) na branch `backend/tsd-001-fundacao-tecnica`.
 
 Papéis:
+
 - **PM**: confirmou RF-006 como início; rascunhou User Story + critérios no roadmap; 5 perguntas ao usuário. Respostas aplicadas: seed via importador de arquivo externo (não lista em código); `norma_referencia` estruturada; sem coluna de versão (imutabilidade + `ativo=false`); `area` como campo flexível, não enum; sem endpoint HTTP neste slice. `obrigatorio` decidido imutável (efeito normativo).
 - **Engenheiro**: `docs/engineering/specs/003-base-fixa-requisitos.tsd.md` (aprovada pelo usuário).
 - **Dev**: modelo Prisma `Requisito` + migration `20260831010000_base_fixa_requisitos`; `src/requisitos/` (areas allowlist, importador `parse`/`validar`/`importarRequisitos` transacional, `ImportadorRequisitosService`, `RequisitosService.listarAtivos()`); `prisma/seed.ts` + `seed-data/requisitos.csv` (placeholder 12 itens); dep `csv-parse`; `test:e2e` passou a cobrir `test/integration/`. 4 specs unit novas.
@@ -397,6 +454,7 @@ Contexto: TSD-001 aprovada. Usuário pediu para implementar o backend numa branc
 Branch: `backend/tsd-001-fundacao-tecnica` (a partir da `main`).
 
 Alterações:
+
 - Raiz: `.gitignore`, `.gitattributes` (LF), `.nvmrc` (20), `README.md` reescrito para o projeto (duas frentes); README do método movido para `.ai-dev/README.md` (via `git mv`).
 - `backend/`: projeto NestJS 11 + TypeScript (strict). `package.json` com scripts `lint`/`typecheck`/`test`/`test:e2e`/`test:contract`/`build`/`ci` e `prisma:*`. ESLint flat (`eslint.config.mjs`) + Prettier. `tsconfig(.build).json`, `nest-cli.json`.
 - Prisma: `schema.prisma` (datasource postgres, generator client, **sem tabelas de domínio**), migration inicial vazia + `migration_lock.toml`. `docker-compose.yml` com Postgres 16.
@@ -404,6 +462,7 @@ Alterações:
 - `test/`: `test/unit/` com 4 specs (health service, stub adapter, filesystem adapter, analista atual provider — 8 testes); `test/e2e/health.e2e-spec.ts` (Supertest); `test/integration/` e `test/contract/` vazios (`.gitkeep`); configs `jest-e2e.json` e `jest-contract.json`.
 
 Validações (rodadas de `backend/`):
+
 - `npm run lint` ✅ (após `--fix` de formatação Prettier)
 - `npm run typecheck` ✅
 - `npx prisma validate` ✅ · `npx prisma generate` ✅ (client v6.19.3)
@@ -421,6 +480,7 @@ Pendências: e2e com Postgres; revisão do Crítico; merge da branch na `main` a
 Contexto: repositório continha o Método Agentico v2 + um exemplo preenchido (PRD LicIA + protótipo visual) e nenhum `docs/engineering/checkpoint.md`. Usuário pediu para começar o projeto; confirmado que o projeto é a própria LicIA Analisadora. Seguido o roteiro de `.ai-dev/bootstrap.md`.
 
 Alterações:
+
 - Etapa 0: `{{NOME_DO_PROJETO}}` → "LicIA Analisadora" em `START_HERE.md`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.ai-dev/workflow.md`, `.ai-dev/quality-gates.md`, `.ai-dev/audit.md`, `.ai-dev/context-map.md`.
 - Etapa 1: `docs/product/prd.md` aprovado como baseline; RF-016 e RF-018 promovidos a Must/MVP; RF-003 e estado "sem permissão" marcados pós-MVP; regras de negócio de identidade reescritas (analista único fixo). Criado `docs/product/questoes-abertas.md` (P-01..P-10, A-01..A-06, R-01..R-04).
 - Etapa 2: criado `docs/architecture/sdd.md` (aprovado); `.ai-dev/quality-gates.md` preenchido com comandos NestJS/Prisma reais; criado `docs/engineering/decisions/001-framework-backend-nestjs.md` (NestJS; Fastify descartado).

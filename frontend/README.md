@@ -9,15 +9,18 @@ vivem na raiz.
 > sugerido pela IA, TSD-014) + **RF-009** (filtros por status, TSD-015) + **RF-008** (modal
 > "Alterar parecer", TSD-016) + **RF-011** (checkbox de "verificado" interativo, TSD-017) +
 > **RF-017** (justificativa da alteração visível, TSD-018) + **RF-014** (visor de PDF +
-> referência de página, TSD-019). `/` lista as análises e abre o modal de criação;
-> `/analise/[id]` mostra cabeçalho, o **visor do PDF** à esquerda (`<iframe>` de
-> `GET /analises/:id/pdf` navegado por `#page=N` — ou um aviso sem backend) e, à direita, as
-> abas Checklist/Técnica com os requisitos em acordeão: status **sugerido pela IA** + a
-> **justificativa** quando o parecer difere; lista filtrada por **não conformes** com chips de
-> status (na URL); cada requisito tem **"Alterar parecer"**, **checkbox de "verificado"** e a
-> **referência de página clicável** (leva o visor à folha) + editor de página inline — tudo
-> via `PATCH /analises/:id/requisitos/:requisitoId`, aplicando `{ item, resumo }` sem
-> recarregar. O modal de conclusão e o download do relatório entram em RF-012/016.
+> referência de página, TSD-019) + **RF-012** (concluir análise + modal de confirmação,
+> TSD-020). `/` lista as análises e abre o modal de criação; `/analise/[id]` mostra cabeçalho
+> (com o botão **"Concluir análise"** ao lado do status), o **visor do PDF** à esquerda
+> (`<iframe>` de `GET /analises/:id/pdf` navegado por `#page=N` — ou um aviso sem backend) e, à
+> direita, as abas Checklist/Técnica com os requisitos em acordeão: status **sugerido pela
+> IA** + a **justificativa** quando o parecer difere; lista filtrada por **não conformes** com
+> chips de status (na URL); cada requisito tem **"Alterar parecer"**, **checkbox de
+> "verificado"** e a **referência de página clicável** (leva o visor à folha) + editor de
+> página inline — tudo via `PATCH /analises/:id/requisitos/:requisitoId`, aplicando
+> `{ item, resumo }` sem recarregar. **"Concluir análise"** só habilita quando não há
+> obrigatório pendente; confirmar chama `POST /analises/:id/concluir` e a tela vira `CONCLUIDA`
+> (read-only) na hora. O download do relatório entra em RF-016.
 
 ## Pré-requisitos
 
@@ -119,7 +122,8 @@ Tokens portados de `Prototipo Licia Analisadora/src/theme/` para CSS custom prop
 Ver `.env.example`. `NEXT_PUBLIC_API_BASE_URL` — base do backend LicIA. Vazia → fixtures.
 Definida → `getAnalisesGateway()` usa o `HttpAnalisesGateway`, que fala os contratos já
 implementados no `backend/`: `GET /analises`, `POST /analises`, `GET /analises/:id`,
-`PATCH /analises/:id/requisitos/:requisitoId`.
+`GET /analises/:id/pdf`, `PATCH /analises/:id/requisitos/:requisitoId`,
+`POST /analises/:id/concluir`.
 
 ## Rodar contra o backend real
 
@@ -143,13 +147,19 @@ Estado atual da integração:
 
 - **Smoke conjunto rodado contra o backend real** (NestJS + PostgreSQL 17) em 02/09/2026:
   criar análise → processar → visor carregando `GET /analises/:id/pdf` no `<iframe>` →
-  editor de página gravando `PATCH { paginaReferencia }` no banco → navegação por `#page=N`.
-  Evidência em `docs/visual-reference/rf-014/rf014-real-*.png`.
-- Os 4 contratos consumidos batem campo a campo com `backend/src/analises`.
+  editor de página gravando `PATCH { paginaReferencia }` no banco → navegação por `#page=N`
+  (RF-014). E, no mesmo dia (RF-012): botão "Concluir análise" bloqueado por obrigatórios →
+  verificar o último pela UI destrava sem reload → corrida real `POST /analises/:id/concluir`
+  `422` com a lista de `requisitosPendentes` → re-verificar → `200` → tela `CONCLUIDA`
+  read-only, `concluidaEm` gravado. Evidência em `docs/visual-reference/rf-014/rf014-real-*.png`
+  e `docs/visual-reference/rf-012/`.
+- **5 contratos consumidos** batem campo a campo com `backend/src/analises`:
+  `GET /analises`, `POST /analises`, `GET /analises/:id`, `PATCH /analises/:id/requisitos/:requisitoId`,
+  `POST /analises/:id/concluir`.
 - **CORS:** habilitado no backend (`app.enableCors`, commit `35ee46d`) — os modais (fetch no
   navegador) passam; sem `CORS_ORIGINS` o backend reflete a origem.
-- `POST /analises/:id/concluir` e `GET /analises/:id/relatorio` existem no backend mas ainda
-  não têm consumidor no frontend (RF-012 / RF-016).
+- `GET /analises/:id/relatorio` existe no backend mas ainda não tem consumidor no frontend
+  (RF-016 — último RF do MVP frontend).
 
 ## Notas / follow-ups
 

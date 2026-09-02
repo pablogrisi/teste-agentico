@@ -1,14 +1,17 @@
 # Roadmap - LicIA Analisadora
 
 ---
+
 title: Roadmap - LicIA Analisadora
 type: roadmap
 status: living
 created: 31/08/2026 // Pablo Grisi
 updated: 31/08/2026 // Pablo Grisi
 related (internal files):
+
 - docs/product/prd.md
 - docs/engineering/checkpoint.md
+
 ---
 
 Este arquivo combina duas coisas de propósito:
@@ -31,42 +34,42 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 
 ## Tabela de sequenciamento — Frente Backend (`backend/`)
 
-| Sequência | ID | Feature (recorte backend) | Prioridade | Status |
-|---|---|---|---|---|
-| 1 | RF-006 | Base fixa de requisitos: modelo + seed persistido | Must | implementada |
-| 2 | RF-001 | Endpoint de criação de análise (NUP, objeto, PDF) | Must | implementada |
-| 3 | RF-004 | Recebimento de upload manual de PDF (multipart) | Must | implementada com RF-001 |
-| 4 | RF-018 | Persistência do PDF de entrada associada à análise | Must | implementada com RF-001 |
-| 5 | RF-002 | Endpoint de listagem das análises do analista | Must | implementada |
-| 6 | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort` | Must | implementada |
-| 7 | RF-007 | Gravação da sugestão de status por requisito (3 valores) | Must | implementada com RF-005 |
-| 8 | RF-009 | Ordenação da resposta priorizando não conformes | Must | implementada |
-| 9 | RF-008 | Endpoint de definição do status final do requisito | Must | implementada |
-| 10 | RF-011 | Endpoint de marcação de "verificado" | Must | implementada com RF-008 |
-| 11 | RF-017 | Validação de comentário obrigatório nas ações de revisão | Must | implementada com RF-008 |
-| 12 | RF-014 | Referência de página + entrega do PDF por página | Must | implementada |
-| 13 | RF-012 | Endpoint de conclusão global com trava por obrigatórios | Must | implementada |
-| 14 | RF-013 | Registro de responsável, datas e status final | Must | implementada (com RF-012) |
-| 15 | RF-015 | Conclusão interna sem aprovação/assinatura/dupla revisão | Must | implementada (com RF-012) |
-| 16 | RF-016 | Geração sob demanda do relatório PDF final | Must | implementada |
-| 17 | RF-003 | Escopo de acesso por analista | Must (fase com identidade) | não iniciada — pós-MVP (P-10) |
+| Sequência | ID     | Feature (recorte backend)                                | Prioridade                 | Status                        |
+| --------- | ------ | -------------------------------------------------------- | -------------------------- | ----------------------------- |
+| 1         | RF-006 | Base fixa de requisitos: modelo + seed persistido        | Must                       | implementada                  |
+| 2         | RF-001 | Endpoint de criação de análise (NUP, objeto, PDF)        | Must                       | implementada                  |
+| 3         | RF-004 | Recebimento de upload manual de PDF (multipart)          | Must                       | implementada com RF-001       |
+| 4         | RF-018 | Persistência do PDF de entrada associada à análise       | Must                       | implementada com RF-001       |
+| 5         | RF-002 | Endpoint de listagem das análises do analista            | Must                       | implementada                  |
+| 6         | RF-005 | Worker de processamento do PDF pela `AnaliseIaPort`      | Must                       | implementada                  |
+| 7         | RF-007 | Gravação da sugestão de status por requisito (3 valores) | Must                       | implementada com RF-005       |
+| 8         | RF-009 | Ordenação da resposta priorizando não conformes          | Must                       | implementada                  |
+| 9         | RF-008 | Endpoint de definição do status final do requisito       | Must                       | implementada                  |
+| 10        | RF-011 | Endpoint de marcação de "verificado"                     | Must                       | implementada com RF-008       |
+| 11        | RF-017 | Validação de comentário obrigatório nas ações de revisão | Must                       | implementada com RF-008       |
+| 12        | RF-014 | Referência de página + entrega do PDF por página         | Must                       | implementada                  |
+| 13        | RF-012 | Endpoint de conclusão global com trava por obrigatórios  | Must                       | implementada                  |
+| 14        | RF-013 | Registro de responsável, datas e status final            | Must                       | implementada (com RF-012)     |
+| 15        | RF-015 | Conclusão interna sem aprovação/assinatura/dupla revisão | Must                       | implementada (com RF-012)     |
+| 16        | RF-016 | Geração sob demanda do relatório PDF final               | Must                       | implementada                  |
+| 17        | RF-003 | Escopo de acesso por analista                            | Must (fase com identidade) | não iniciada — pós-MVP (P-10) |
 
 ## Tabela de sequenciamento — Frente Frontend (`frontend/`)
 
-| Sequência | ID | Feature (recorte frontend) | Prioridade | Status |
-|---|---|---|---|---|
-| 1 | RF-002 | Tela de listagem de análises + estado vazio | Must | implementada (branch `frontend/rf-002-listagem`) |
-| 2 | RF-001 | Modal "Nova análise" (NUP, objeto) + validação | Must | implementada (branch `frontend/rf-001-nova-analise`) |
-| 3 | RF-004 | Campo de upload de PDF no modal + estados de erro | Must | implementada com RF-001 (branch `frontend/rf-001-nova-analise`) |
-| 4 | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre | Must | implementada (branch `frontend/rf-010-tela-analise`) |
-| 5 | RF-007 | Exibição dos requisitos com status sugerido pela IA | Must | implementada (branch `frontend/rf-007-status-ia`) |
-| 6 | RF-009 | Visão inicial priorizando não conformes + filtros por status | Must | implementada — Crítico ✅ (branch `frontend/rf-009-filtros`) |
-| 7 | RF-008 | Modal de alteração de status final ("parecer") | Must | implementada — Crítico ✅ (branch `frontend/rf-008-parecer`) |
-| 8 | RF-011 | Controle de "marcar como verificado" | Must | implementada — Crítico ✅ (branch `frontend/rf-011-verificado`) |
-| 9 | RF-017 | Campo de comentário obrigatório nas ações de revisão | Must | implementada — Crítico ✅ (branch `frontend/rf-017-comentario`) |
-| 10 | RF-014 | Visor de PDF + referência de página clicável / ausência explícita | Must | implementada — Crítico ✅ (branch `frontend/rf-014-visor`) |
-| 11 | RF-012 | Modal de conclusão + botão global bloqueado até tudo verificado | Must | user story + TSD-020 em aprovação (branch `frontend/rf-012-conclusao`) |
-| 12 | RF-016 | Ação de baixar o relatório PDF da análise concluída | Must | não iniciada |
+| Sequência | ID     | Feature (recorte frontend)                                        | Prioridade | Status                                                          |
+| --------- | ------ | ----------------------------------------------------------------- | ---------- | --------------------------------------------------------------- |
+| 1         | RF-002 | Tela de listagem de análises + estado vazio                       | Must       | implementada (branch `frontend/rf-002-listagem`)                |
+| 2         | RF-001 | Modal "Nova análise" (NUP, objeto) + validação                    | Must       | implementada (branch `frontend/rf-001-nova-analise`)            |
+| 3         | RF-004 | Campo de upload de PDF no modal + estados de erro                 | Must       | implementada com RF-001 (branch `frontend/rf-001-nova-analise`) |
+| 4         | RF-010 | Tela de análise: abas Checklist/Técnica + navegação livre         | Must       | implementada (branch `frontend/rf-010-tela-analise`)            |
+| 5         | RF-007 | Exibição dos requisitos com status sugerido pela IA               | Must       | implementada (branch `frontend/rf-007-status-ia`)               |
+| 6         | RF-009 | Visão inicial priorizando não conformes + filtros por status      | Must       | implementada — Crítico ✅ (branch `frontend/rf-009-filtros`)    |
+| 7         | RF-008 | Modal de alteração de status final ("parecer")                    | Must       | implementada — Crítico ✅ (branch `frontend/rf-008-parecer`)    |
+| 8         | RF-011 | Controle de "marcar como verificado"                              | Must       | implementada — Crítico ✅ (branch `frontend/rf-011-verificado`) |
+| 9         | RF-017 | Campo de comentário obrigatório nas ações de revisão              | Must       | implementada — Crítico ✅ (branch `frontend/rf-017-comentario`) |
+| 10        | RF-014 | Visor de PDF + referência de página clicável / ausência explícita | Must       | implementada — Crítico ✅ (branch `frontend/rf-014-visor`)      |
+| 11        | RF-012 | Modal de conclusão + botão global bloqueado até tudo verificado   | Must       | implementada — Crítico ✅ (branch `frontend/rf-012-conclusao`)  |
+| 12        | RF-016 | Ação de baixar o relatório PDF da análise concluída               | Must       | não iniciada — **último RF do frontend**                        |
 
 Status possíveis, nessa ordem de progresso dentro de um ciclo: `não iniciada` → `user story em aprovação` → `user story aprovada` → `TSD em aprovação` → `TSD aprovada` → `em construção` → `em validação` → `implementada`.
 
@@ -121,6 +124,7 @@ Recorte deste ciclo (backend): modelar e persistir a base de requisitos e popul�
 Como analista técnico, quero criar uma análise informando o NUP, o objeto/descrição da contratação e enviando o PDF do processo, para que o sistema registre a análise e guarde o documento para a verificação de conformidade.
 
 Recorte backend deste ciclo:
+
 - `POST /analises` (multipart) — valida a entrada, persiste o PDF e cria o registro da análise sob o analista fixo, em estado inicial `PENDENTE`.
 - `GET /analises/:id` — devolve os dados e o status de uma análise.
 - `GET /analises/:id/pdf` — devolve o PDF de entrada persistido.
@@ -223,6 +227,7 @@ Como analista técnico, quero abrir a tela inicial e ver, numa tabela, as análi
 Como analista técnico, quero que, ao criar uma análise, o sistema processe o PDF contra a base de requisitos e gere um parecer sugerido para cada requisito, para eu começar a revisão já com um ponto de partida.
 
 Recorte backend deste ciclo:
+
 - Worker **em processo** que pega análises `PENDENTE`, chama a `AnaliseIaPort` (hoje o `StubAdapter`), e grava uma `avaliacao_requisito` por requisito ativo, com `status_sugerido_ia` ∈ {`CONFORME`, `NAO_CONFORME`, `NAO_SE_APLICA`}, `pagina_referencia` (ou nulo), `status_final = status_sugerido_ia`, `verificado = false`.
 - Máquina de status: `PENDENTE → PROCESSANDO → PRONTA_PARA_REVISAO`; falha/timeout → `ERRO_PROCESSAMENTO` + `motivo_erro`.
 - Recuperação no boot: reprocessa o que ficou preso em `PENDENTE`/`PROCESSANDO`.
@@ -447,7 +452,7 @@ Recorte deste ciclo (frontend), em cima do painel do RF-010/007/009/008:
 
 Como analista técnico, quero que **a justificativa da minha alteração de parecer fique visível no requisito** e que, se o sistema recusar uma ação de revisão por falta de comentário, **a mensagem diga exatamente isso** — para que a exigência de comentário (R-06) seja clara na tela, não só uma regra escondida no backend.
 
-**O que já está pronto (RF-008):** o modal "Alterar parecer" **sempre exige** um comentário e mostra a dica "A IA sugeriu X; explique a mudança" quando o novo parecer diverge da sugestão; um `422` do backend já aparece no modal. Ou seja, a *exigência* de comentário nas ações de revisão do frontend já é cumprida. RF-017 fecha as pontas de **visibilidade** e **mensageria**.
+**O que já está pronto (RF-008):** o modal "Alterar parecer" **sempre exige** um comentário e mostra a dica "A IA sugeriu X; explique a mudança" quando o novo parecer diverge da sugestão; um `422` do backend já aparece no modal. Ou seja, a _exigência_ de comentário nas ações de revisão do frontend já é cumprida. RF-017 fecha as pontas de **visibilidade** e **mensageria**.
 
 Recorte deste ciclo (frontend), em cima do RF-007/008/011:
 
@@ -470,7 +475,7 @@ Recorte deste ciclo (frontend), em cima do RF-007/008/011:
 **Status (backend):** implementada (mergeada no `main` `19f308b`)
 **Status (frontend):** implementada — Crítico ✅ (02/09/2026), branch `frontend/rf-014-visor`; `npm run ci` verde (214 testes). Aguardando push + merge.
 
-**User Story** — *validada em 31/08/2026*
+**User Story** — _validada em 31/08/2026_
 
 Como analista técnico, quero, a partir de um requisito, abrir a página do PDF que sustenta o parecer — e ver claramente quando não há página associada — para conferir a evidência sem folhear o documento inteiro.
 
@@ -497,6 +502,7 @@ Recorte deste ciclo (frontend), em cima da tela do RF-010/007/008/009/011/017:
 **TSD associada (frontend):** `docs/engineering/specs/019-visor-pdf-frontend.tsd.md`.
 
 Recorte backend deste ciclo (reduzido após as decisões — o visor do frontend navega para a página via `#page=N` contra o PDF inteiro que já existe; **não há extração de página no servidor**):
+
 - Persistir o **total de páginas** do PDF de entrada (nova coluna `Analise.totalPaginasPdf`, calculada no `criar` com `pdf-lib`, best-effort).
 - Expor `totalPaginasPdf` no `GET /analises/:id`.
 - `PATCH /analises/:id/requisitos/:requisitoId` passa a aceitar `paginaReferencia` (corrigir/limpar a página sugerida).
@@ -531,7 +537,7 @@ Recorte backend deste ciclo (reduzido após as decisões — o visor do frontend
 
 **Frentes:** Backend · Frontend
 **Status (backend):** implementada (mergeada no `main` `56f83bd`)
-**Status (frontend):** user story + TSD-020 em aprovação — branch `frontend/rf-012-conclusao`
+**Status (frontend):** implementada — Crítico ✅ (02/09/2026), branch `frontend/rf-012-conclusao`; `npm run ci` verde (240 testes); smoke conjunto contra o NestJS real feito. Aguardando push + merge.
 
 > Ciclo backend agrupado: **RF-012 + RF-013 + RF-015** = "concluir a análise" (um endpoint de conclusão). User Story e critérios abaixo cobrem os três.
 
@@ -561,11 +567,20 @@ Recorte deste ciclo (frontend), em cima da tela do RF-010/…/RF-014:
 
 **TSD associada (frontend):** `docs/engineering/specs/020-conclusao-analise-frontend.tsd.md`.
 
-**User Story** — *validada em 01/09/2026*
+**Notas do ciclo (frontend — 02/09/2026)**
+
+- **User Story + TSD-020 validadas** pelo usuário ("Siga o protótipo de alta fidelidade, pode seguir") — o modal segue o enquadramento do `CompletionModal` do protótipo (card central, círculo `--color-brand-muted` + ícone de check, `<h2>`, `<p>`), com 2 ações (Cancelar / Concluir) por ser confirmação irreversível.
+- **Implementação:** `AnalisesGateway.concluirAnalise(id)` (Http + Fixtures + contrato) + `AnaliseRequisitosPendentesError` (422, com `.pendentes`); `ConcluirAnalise` (botão no `AnaliseHeader` via prop `acao`, trava por `obrigatoriosPendentes` com `aria-describedby` no motivo; modal portal com A11y do `AlterarParecerModal`); `TelaAnalise` orquestra `detalheEfetivo` (trocado na conclusão, sem `router.refresh()`) + `resumoAtual` (de `onResumoChange` do `PainelRevisao`), e o `AnaliseHeader` migrou do `page.tsx` para dentro dela.
+- **Testes:** `npm run ci` verde (lint + typecheck + **240 testes** + `next build`). Contrato de `concluirAnalise` (POST sem corpo; 422 → `AnaliseRequisitosPendentesError`, degrada p/ `[]`; 409/404/500/rede) + fixtures + `ConcluirAnalise` + `TelaAnalise` + `PainelRevisao` (`onResumoChange`).
+- **Smoke conjunto contra o backend real** (NestJS + PostgreSQL 17, `:3000` / frontend `:3201`): botão bloqueado com o motivo (11 pendentes) → verificar o último obrigatório pela UI destrava sem reload → corrida real `422` com a lista (`TEC-003 — Habilitação técnica proporcional`) e modal aberto → re-verificar → `200` → tela `CONCLUIDA` read-only, `status`/`concluidaEm` confirmados no banco. Evidência: `frontend/docs/visual-reference/rf-012/`.
+- **Crítico:** APROVADO, sem bloqueadores. Ajustes aplicados: foco no "Concluir" num efeito condicionado a `montado` (o portal não existe no efeito de mount); motivo do bloqueio ligado ao `<button>` por `aria-describedby`; plural do motivo simplificado; `ConcluirAnalise` recebe `detalheEfetivo.id`. Não-bloqueadores registrados: `focus()` com ref-null é padrão pré-existente também no `AlterarParecerModal` (follow-up para os dois); em modo fixtures o caminho feliz "verificar → concluir" não é alcançável (`marcarVerificado` não persiste — andaime; caminho real coberto pelo smoke).
+
+**User Story** — _validada em 01/09/2026_
 
 Como analista técnico, quero, quando terminar de verificar todos os requisitos obrigatórios de uma análise, concluí-la numa única confirmação — sem depender de aprovação, assinatura ou segunda pessoa — para registrar o parecer final e deixar a análise pronta para consulta e para o relatório.
 
 Recorte backend deste ciclo:
+
 - `POST /analises/:id/concluir` — muda a análise de `PRONTA_PARA_REVISAO` para `CONCLUIDA` e grava `concluidaEm`, **somente** se não houver nenhum requisito **obrigatório** com `verificado = false` (RF-012). Requisito obrigatório com status final `NAO_SE_APLICA` também precisa estar `verificado`.
 - Bloqueio → `422` com a lista dos requisitos obrigatórios ainda pendentes (`codigo`, `titulo`, `area`); a análise continua aberta (`PRONTA_PARA_REVISAO`).
 - `409` se a análise não está `PRONTA_PARA_REVISAO` (ex.: `PENDENTE`, `PROCESSANDO`, `ERRO_PROCESSAMENTO`).
@@ -588,7 +603,7 @@ Recorte backend deste ciclo:
 
 1. **Re-conclusão:** idempotente — `POST /concluir` numa análise já `CONCLUIDA` retorna `200` com o payload da análise, sem mexer em `concluidaEm`.
 2. **Resposta de sucesso:** payload completo (mesmo corpo de `GET /analises/:id`).
-3. **Responsável (RF-013):** *"você decide"* → expor `analistaId` **e** `analistaNome` (resolvidos pelo `AnalistaAtualProvider`, que já tem os dois na config). Motivo: o relatório PDF (RF-016, próximo ciclo) precisa de um nome legível; custo baixo agora.
+3. **Responsável (RF-013):** _"você decide"_ → expor `analistaId` **e** `analistaNome` (resolvidos pelo `AnalistaAtualProvider`, que já tem os dois na config). Motivo: o relatório PDF (RF-016, próximo ciclo) precisa de um nome legível; custo baixo agora.
 4. **Trava (RF-012):** fiel ao PRD — basta que **todo requisito obrigatório esteja `verificado`**. Não se exige que o `statusFinal` tenha sido editado (o analista pode verificar aceitando a sugestão da IA).
 
 **TSD associada:** `docs/engineering/specs/010-conclusao-analise.tsd.md` (aprovada e implementada).
@@ -616,11 +631,12 @@ Recorte backend deste ciclo:
 **Status (backend):** implementada (mergeada na `main`)
 **Status (frontend):** não iniciada
 
-**User Story** — *validada em 01/09/2026*
+**User Story** — _validada em 01/09/2026_
 
 Como analista técnico, quero gerar, para uma análise concluída, um relatório PDF com a identificação da análise, o responsável, as datas e o parecer final de cada requisito, para arquivar e compartilhar o resultado da verificação fora do sistema.
 
 Recorte backend deste ciclo:
+
 - `GET /analises/:id/relatorio` → `application/pdf` (`Content-Disposition: inline`), gerado **sob demanda** com `pdfkit` (não persiste — A-04).
 - `409` se a análise não está `CONCLUIDA`; `404` se não existe para o analista atual.
 - Conteúdo: NUP, objeto, responsável (`analistaId` + `analistaNome`), data/hora de início e de conclusão, **resumo de contagens**, e por requisito o `codigo`/`titulo`, a **norma estruturada** (lei/artigo/inciso/parágrafo/alínea), a **referência de página** (quando houver) e o `statusFinal`. Comentário do analista **fora** deste ciclo.
@@ -641,7 +657,7 @@ Recorte backend deste ciclo:
 
 1. **Lib:** `pdfkit` (+ `@types/pdfkit`), como sugerido no SDD §6. Sem headless browser.
 2. **Conteúdo além do mínimo do PRD:** incluir o **resumo de contagens**, a **referência de página** por requisito (quando houver) e a **norma estruturada** de cada requisito. **Não** incluir o comentário do analista neste ciclo.
-3. **Ordenação:** *"você decide"* → agrupar por área e listar na ordem natural do requisito (`ordem`), não a visão "não conformes primeiro". Motivo: é um documento de arquivo/compartilhamento, previsível; a priorização é afordância de tela (RF-009).
+3. **Ordenação:** _"você decide"_ → agrupar por área e listar na ordem natural do requisito (`ordem`), não a visão "não conformes primeiro". Motivo: é um documento de arquivo/compartilhamento, previsível; a priorização é afordância de tela (RF-009).
 4. **Entrega:** `Content-Disposition: inline` (abre no visor; usuário salva se quiser), consistente com `GET /analises/:id/pdf`.
 
 **TSD associada:** `docs/engineering/specs/011-relatorio-pdf.tsd.md` (aprovada e implementada).
