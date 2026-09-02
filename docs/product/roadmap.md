@@ -63,7 +63,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 6 | RF-009 | Visão inicial priorizando não conformes + filtros por status | Must | implementada — Crítico ✅ (branch `frontend/rf-009-filtros`) |
 | 7 | RF-008 | Modal de alteração de status final ("parecer") | Must | implementada — Crítico ✅ (branch `frontend/rf-008-parecer`) |
 | 8 | RF-011 | Controle de "marcar como verificado" | Must | implementada — Crítico ✅ (branch `frontend/rf-011-verificado`) |
-| 9 | RF-017 | Campo de comentário obrigatório nas ações de revisão | Must | não iniciada |
+| 9 | RF-017 | Campo de comentário obrigatório nas ações de revisão | Must | user story + TSD-018 em aprovação (branch `frontend/rf-017-comentario`) |
 | 10 | RF-014 | Visor de PDF + referência de página clicável / ausência explícita | Must | não iniciada |
 | 11 | RF-012 | Modal de conclusão + botão global bloqueado até tudo verificado | Must | não iniciada |
 | 12 | RF-016 | Ação de baixar o relatório PDF da análise concluída | Must | não iniciada |
@@ -441,7 +441,28 @@ Recorte deste ciclo (frontend), em cima do painel do RF-010/007/009/008:
 
 **Frentes:** Backend · Frontend
 **Status (backend):** coberto no ciclo de RF-008 (ver seção RF-008); regra exata em P-03
-**Status (frontend):** não iniciada
+**Status (frontend):** user story + TSD-018 em aprovação — branch `frontend/rf-017-comentario`
+
+**User Story (frontend — RF-017)**
+
+Como analista técnico, quero que **a justificativa da minha alteração de parecer fique visível no requisito** e que, se o sistema recusar uma ação de revisão por falta de comentário, **a mensagem diga exatamente isso** — para que a exigência de comentário (R-06) seja clara na tela, não só uma regra escondida no backend.
+
+**O que já está pronto (RF-008):** o modal "Alterar parecer" **sempre exige** um comentário e mostra a dica "A IA sugeriu X; explique a mudança" quando o novo parecer diverge da sugestão; um `422` do backend já aparece no modal. Ou seja, a *exigência* de comentário nas ações de revisão do frontend já é cumprida. RF-017 fecha as pontas de **visibilidade** e **mensageria**.
+
+Recorte deste ciclo (frontend), em cima do RF-007/008/011:
+
+- **Justificativa da alteração visível no requisito.** Quando `statusFinal ≠ statusSugeridoIa` (o caso que a R-06 governa), o `StatusIaResumo` do bloco expandido passa a mostrar **"Justificativa da alteração: …"** com o texto do `comentario`, logo abaixo de "Parecer atual — alterado na revisão". O `comentario` de itens **não divergentes** continua na linha "Comentário:" de hoje.
+- **Erro de revisão fiel à regra.** Quando uma ação de revisão fora do modal (marcar "verificado", RF-011) é recusada com `422`/`AnaliseValidacaoError`, o item mostra **a mensagem do backend** (ex.: "comentário obrigatório quando o parecer difere da sugestão da IA") em vez do genérico "Não foi possível salvar". `409`/`404`/rede continuam com as mensagens de hoje.
+- **Sem novo campo de comentário solto na lista** e **sem relaxar** a exigência do modal (o RF-008 decidiu "comentário sempre obrigatório" e o usuário validou — não se mexe nisso aqui).
+- **Fora do escopo:** editar só o comentário sem mudar o parecer; histórico de comentários; conclusão (RF-012); visor de PDF (RF-014).
+
+**Critério de aceite (frontend)**
+
+- Num requisito com `statusFinal ≠ statusSugeridoIa` e `comentario` preenchido, o bloco expandido mostra "Justificativa da alteração:" com o texto; num requisito não divergente com `comentario`, continua aparecendo a linha "Comentário:".
+- Uma ação de "marcar verificado" recusada com `422` mostra a mensagem do backend no item (`role="alert"`); com `409`/`404`/rede, as mensagens atuais.
+- Nenhuma mudança de contrato; nenhuma regressão nos testes do RF-008/RF-011.
+
+**TSD associada (frontend):** `docs/engineering/specs/018-comentario-revisao-frontend.tsd.md`.
 
 ### RF-014 — Rastreabilidade documental por referência de página do PDF
 
