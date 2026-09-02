@@ -4,3 +4,5 @@ coverage/
 *.tsbuildinfo
 .env
 var/
+# PostgreSQL embutido para desenvolvimento local (scripts/dev-db.mjs)
+.dev-pgdata/

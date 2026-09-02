@@ -20,7 +20,16 @@ export interface AppConfig {
     nome: string;
   };
   ia: {
-    adapter: 'stub' | 'http';
+    /** `stub` (padrão) ou `openai` (adapter real — TSD-022). */
+    adapter: 'stub' | 'openai';
+    /** Modelo GPT usado pelo adapter OpenAI. */
+    modelo: string;
+    /** Chave da API OpenAI (obrigatória quando `adapter === 'openai'`). */
+    openaiApiKey: string;
+    /** Base URL alternativa do SDK `openai` (proxy). Vazia = api.openai.com. */
+    baseUrl: string;
+    /** Corte de requisitos por chamada ao modelo (o adapter divide em lotes). */
+    maxRequisitosPorChamada: number;
   };
   armazenamentoPdf: {
     dir: string;
@@ -54,7 +63,13 @@ export default (): AppConfig => ({
     nome: process.env.ANALISTA_ATUAL_NOME ?? '',
   },
   ia: {
-    adapter: (process.env.IA_ADAPTER as 'stub' | 'http') ?? 'stub',
+    adapter: (process.env.IA_ADAPTER as 'stub' | 'openai') ?? 'stub',
+    modelo: process.env.IA_MODELO ?? 'gpt-4o',
+    openaiApiKey: process.env.OPENAI_API_KEY ?? '',
+    baseUrl: process.env.IA_BASE_URL ?? '',
+    maxRequisitosPorChamada: Number(
+      process.env.IA_MAX_REQUISITOS_POR_CHAMADA ?? '200',
+    ),
   },
   armazenamentoPdf: {
     dir: process.env.ARMAZENAMENTO_PDF_DIR ?? './var/pdfs',

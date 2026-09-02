@@ -6,7 +6,7 @@
  * quebrar mais tarde num ponto distante.
  */
 
-export type IaAdapter = 'stub' | 'http';
+export type IaAdapter = 'stub' | 'openai';
 
 export interface ValidatedEnv {
   NODE_ENV: string;
@@ -15,6 +15,10 @@ export interface ValidatedEnv {
   ANALISTA_ATUAL_ID: string;
   ANALISTA_ATUAL_NOME: string;
   IA_ADAPTER: IaAdapter;
+  OPENAI_API_KEY: string;
+  IA_MODELO: string;
+  IA_BASE_URL: string;
+  IA_MAX_REQUISITOS_POR_CHAMADA: number;
   ARMAZENAMENTO_PDF_DIR: string;
   ANALISE_PDF_TAMANHO_MAX_MB: number;
   IA_TIMEOUT_MS: number;
@@ -55,11 +59,19 @@ export function validateEnv(config: Record<string, unknown>): ValidatedEnv {
   });
 
   const iaAdapterRaw = asString('IA_ADAPTER', { required: false }) || 'stub';
-  if (iaAdapterRaw !== 'stub' && iaAdapterRaw !== 'http') {
+  if (iaAdapterRaw === 'http') {
+    errors.push('IA_ADAPTER "http" foi substituído por "openai" (TSD-022)');
+  } else if (iaAdapterRaw !== 'stub' && iaAdapterRaw !== 'openai') {
     errors.push(
-      `IA_ADAPTER deve ser "stub" ou "http" (recebido: "${iaAdapterRaw}")`,
+      `IA_ADAPTER deve ser "stub" ou "openai" (recebido: "${iaAdapterRaw}")`,
     );
   }
+
+  const OPENAI_API_KEY = asString('OPENAI_API_KEY', {
+    required: iaAdapterRaw === 'openai',
+  });
+  const IA_MODELO = asString('IA_MODELO', { required: false }) || 'gpt-4o';
+  const IA_BASE_URL = asString('IA_BASE_URL', { required: false });
 
   const ARMAZENAMENTO_PDF_DIR =
     asString('ARMAZENAMENTO_PDF_DIR', { required: false }) || './var/pdfs';
@@ -85,6 +97,10 @@ export function validateEnv(config: Record<string, unknown>): ValidatedEnv {
     return n;
   };
   const IA_TIMEOUT_MS = inteiroPositivo('IA_TIMEOUT_MS', 120000);
+  const IA_MAX_REQUISITOS_POR_CHAMADA = inteiroPositivo(
+    'IA_MAX_REQUISITOS_POR_CHAMADA',
+    200,
+  );
   const PROCESSAMENTO_INTERVALO_MS = inteiroPositivo(
     'PROCESSAMENTO_INTERVALO_MS',
     5000,
@@ -113,6 +129,10 @@ export function validateEnv(config: Record<string, unknown>): ValidatedEnv {
     ANALISTA_ATUAL_ID,
     ANALISTA_ATUAL_NOME,
     IA_ADAPTER: iaAdapterRaw as IaAdapter,
+    OPENAI_API_KEY,
+    IA_MODELO,
+    IA_BASE_URL,
+    IA_MAX_REQUISITOS_POR_CHAMADA,
     ARMAZENAMENTO_PDF_DIR,
     ANALISE_PDF_TAMANHO_MAX_MB,
     IA_TIMEOUT_MS,

@@ -1,5 +1,6 @@
 import { Global, Module, Provider } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AnaliseIaOpenAiAdapter } from './adapters/analise-ia.openai-adapter';
 import { AnaliseIaStubAdapter } from './adapters/analise-ia.stub-adapter';
 import { ArmazenamentoPdfFilesystemAdapter } from './adapters/armazenamento-pdf.filesystem-adapter';
 import { AnalistaAtualProvider } from './analista-atual/analista-atual.provider';
@@ -7,11 +8,12 @@ import { ANALISE_IA_PORT, AnaliseIaPort } from './ports/analise-ia.port';
 import { ARMAZENAMENTO_PDF_PORT } from './ports/armazenamento-pdf.port';
 
 /**
- * Escolhe a implementação da `AnaliseIaPort` por configuração.
+ * Escolhe a implementação da `AnaliseIaPort` por configuração (`IA_ADAPTER`).
  *
  * `stub` (padrão) → adapter determinístico.
- * `http` → adapter real contra a capacidade de IA — ainda não existe
- * (questoes-abertas.md A-02); falha explicitamente até a TSD que o criar.
+ * `openai` → adapter real contra a API da OpenAI (TSD-022 / A-02). Instanciado
+ * só aqui, quando escolhido, para o construtor poder exigir `OPENAI_API_KEY`
+ * sem quebrar o boot no modo `stub`.
  */
 const analiseIaProvider: Provider = {
   provide: ANALISE_IA_PORT,
@@ -21,10 +23,8 @@ const analiseIaProvider: Provider = {
     stub: AnaliseIaStubAdapter,
   ): AnaliseIaPort => {
     const adapter = config.get<string>('ia.adapter', 'stub');
-    if (adapter === 'http') {
-      throw new Error(
-        'IA_ADAPTER=http ainda não implementado — ver questoes-abertas.md A-02',
-      );
+    if (adapter === 'openai') {
+      return new AnaliseIaOpenAiAdapter(config);
     }
     return stub;
   },
