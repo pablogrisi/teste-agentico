@@ -39,4 +39,11 @@ describe("AnaliseHeader", () => {
     render(<AnaliseHeader detalhe={DETALHE} />);
     expect(screen.queryByText("Concluída em")).not.toBeInTheDocument();
   });
+
+  it("renderiza a ação passada em `acao` ao lado do status (RF-012)", () => {
+    render(
+      <AnaliseHeader detalhe={DETALHE} acao={<button type="button">Concluir análise</button>} />,
+    );
+    expect(screen.getByRole("button", { name: "Concluir análise" })).toBeInTheDocument();
+  });
 });

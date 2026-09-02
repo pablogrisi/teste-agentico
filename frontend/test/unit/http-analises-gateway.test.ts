@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AnaliseConflitoError,
   AnaliseNaoEncontradaError,
+  AnaliseRequisitosPendentesError,
   AnaliseValidacaoError,
   AnalisesGatewayError,
   HttpAnalisesGateway,
@@ -679,5 +680,166 @@ describe("HttpAnalisesGateway.urlPdf / corrigirPaginaReferencia (RF-014 / TSD-00
     await expect(
       new HttpAnalisesGateway(BASE).corrigirPaginaReferencia("a1", "req-1", 3),
     ).rejects.toBeInstanceOf(AnaliseNaoEncontradaError);
+  });
+});
+
+describe("HttpAnalisesGateway.concluirAnalise (contrato POST /analises/:id/concluir — TSD-010)", () => {
+  const DETALHE_CONCLUIDA = {
+    id: "a1",
+    nup: "74037.000634/2024-22",
+    objeto: "Aquisição",
+    status: "CONCLUIDA",
+    motivoErro: null,
+    analistaId: "u1",
+    analistaNome: "Usuário Analista",
+    iniciadaEm: "2024-03-20T14:30:00.000Z",
+    concluidaEm: "2024-03-22T10:00:00.000Z",
+    totalPaginasPdf: 24,
+    resumo: {
+      total: 1,
+      conforme: 1,
+      naoConforme: 0,
+      naoSeAplica: 0,
+      verificados: 1,
+      obrigatoriosPendentes: 0,
+    },
+    avaliacoesPorArea: [
+      {
+        area: "CHECKLIST_DADOS_GERAIS",
+        itens: [
+          {
+            id: "av-1",
+            requisitoId: "req-1",
+            codigo: "CHK-001",
+            area: "CHECKLIST_DADOS_GERAIS",
+            titulo: "Contém a CI do setor?",
+            descricao: "…",
+            obrigatorio: true,
+            ordem: 1,
+            norma: { lei: null, artigo: null, inciso: null, paragrafo: null, alinea: null },
+            statusSugeridoIa: "CONFORME",
+            statusFinal: "CONFORME",
+            verificado: true,
+            comentario: null,
+            paginaReferencia: 3,
+          },
+        ],
+      },
+    ],
+  };
+
+  function stubFetch(resposta: { ok?: boolean; status?: number; jsonData?: unknown }) {
+    const fn = vi.fn(async (_url: string, _init?: RequestInit) => ({
+      ok: resposta.ok ?? true,
+      status: resposta.status ?? 200,
+      json: async () => resposta.jsonData,
+    }));
+    vi.stubGlobal("fetch", fn);
+    return fn;
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("faz POST em {base}/analises/{id}/concluir sem corpo (id encodado)", async () => {
+    const fetchSpy = stubFetch({ jsonData: DETALHE_CONCLUIDA });
+    await new HttpAnalisesGateway(`${BASE}/`).concluirAnalise("a 1");
+    const [url, init] = fetchSpy.mock.calls[0];
+    expect(url).toBe(`${BASE}/analises/a%201/concluir`);
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBeUndefined();
+  });
+
+  it("sucesso → valida e mapeia para AnaliseDetalhe (CONCLUIDA + concluidaEm)", async () => {
+    stubFetch({ jsonData: DETALHE_CONCLUIDA });
+    const detalhe = await new HttpAnalisesGateway(BASE).concluirAnalise("a1");
+    expect(detalhe).toEqual(DETALHE_CONCLUIDA);
+    expect(detalhe.status).toBe("CONCLUIDA");
+    expect(detalhe.concluidaEm).toBe("2024-03-22T10:00:00.000Z");
+  });
+
+  it("422 vira AnaliseRequisitosPendentesError com a lista de requisitosPendentes", async () => {
+    stubFetch({
+      ok: false,
+      status: 422,
+      jsonData: {
+        message: "Há requisitos obrigatórios não verificados",
+        requisitosPendentes: [
+          {
+            requisitoId: "req-3",
+            codigo: "CHK-010",
+            titulo: "Pesquisa de preços",
+            area: "CHECKLIST_ORCAMENTO",
+          },
+          {
+            requisitoId: "req-5",
+            codigo: "TEC-004",
+            titulo: "Quantitativos justificados",
+            area: "TECNICA",
+          },
+        ],
+      },
+    });
+    const erro = await new HttpAnalisesGateway(BASE).concluirAnalise("a1").catch((e) => e);
+    expect(erro).toBeInstanceOf(AnaliseRequisitosPendentesError);
+    expect((erro as AnaliseRequisitosPendentesError).pendentes).toEqual([
+      {
+        requisitoId: "req-3",
+        codigo: "CHK-010",
+        titulo: "Pesquisa de preços",
+        area: "CHECKLIST_ORCAMENTO",
+      },
+      {
+        requisitoId: "req-5",
+        codigo: "TEC-004",
+        titulo: "Quantitativos justificados",
+        area: "TECNICA",
+      },
+    ]);
+  });
+
+  it("422 sem requisitosPendentes no corpo → pendentes: [] (degrada com elegância)", async () => {
+    stubFetch({ ok: false, status: 422, jsonData: { message: "conclua a revisão" } });
+    const erro = await new HttpAnalisesGateway(BASE).concluirAnalise("a1").catch((e) => e);
+    expect(erro).toBeInstanceOf(AnaliseRequisitosPendentesError);
+    expect((erro as AnaliseRequisitosPendentesError).pendentes).toEqual([]);
+  });
+
+  it("409 vira AnaliseConflitoError; 404 vira AnaliseNaoEncontradaError", async () => {
+    stubFetch({ ok: false, status: 409, jsonData: {} });
+    await expect(new HttpAnalisesGateway(BASE).concluirAnalise("a1")).rejects.toBeInstanceOf(
+      AnaliseConflitoError,
+    );
+
+    stubFetch({ ok: false, status: 404, jsonData: {} });
+    await expect(new HttpAnalisesGateway(BASE).concluirAnalise("a1")).rejects.toBeInstanceOf(
+      AnaliseNaoEncontradaError,
+    );
+  });
+
+  it("500 vira AnalisesGatewayError; payload fora do formato também", async () => {
+    stubFetch({ ok: false, status: 500, jsonData: {} });
+    const erro = await new HttpAnalisesGateway(BASE).concluirAnalise("a1").catch((e) => e);
+    expect(erro).toBeInstanceOf(AnalisesGatewayError);
+    expect(erro).not.toBeInstanceOf(AnaliseConflitoError);
+
+    stubFetch({ jsonData: { ...DETALHE_CONCLUIDA, status: "COM_RESSALVA" } });
+    await expect(new HttpAnalisesGateway(BASE).concluirAnalise("a1")).rejects.toBeInstanceOf(
+      AnalisesGatewayError,
+    );
+  });
+
+  it("falha de rede vira AnalisesGatewayError", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new TypeError("network down");
+      }),
+    );
+    await expect(new HttpAnalisesGateway(BASE).concluirAnalise("a1")).rejects.toBeInstanceOf(
+      AnalisesGatewayError,
+    );
   });
 });

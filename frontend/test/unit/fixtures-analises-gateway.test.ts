@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   AnaliseConflitoError,
   AnaliseNaoEncontradaError,
+  AnaliseRequisitosPendentesError,
   AnaliseValidacaoError,
   calcularResumo,
   FixturesAnalisesGateway,
@@ -300,6 +301,61 @@ describe("FixturesAnalisesGateway", () => {
       await expect(
         new FixturesAnalisesGateway().corrigirPaginaReferencia("1", "req-zzz", 3),
       ).rejects.toBeInstanceOf(AnaliseNaoEncontradaError);
+    });
+  });
+
+  describe("concluirAnalise (RF-012 / TSD-010)", () => {
+    it("análise CONCLUIDA → idempotente (devolve o detalhe como está)", async () => {
+      const gw = new FixturesAnalisesGateway();
+      const detalhe = await gw.concluirAnalise("4"); // CONCLUIDA na listagem
+      expect(detalhe.status).toBe("CONCLUIDA");
+    });
+
+    it("análise fora de PRONTA_PARA_REVISAO → AnaliseConflitoError", async () => {
+      await expect(new FixturesAnalisesGateway().concluirAnalise("2")).rejects.toBeInstanceOf(
+        AnaliseConflitoError,
+      );
+    });
+
+    it("com obrigatórios não verificados → AnaliseRequisitosPendentesError com a lista", async () => {
+      const gw = new FixturesAnalisesGateway();
+      const antes = await gw.abrirAnalise("1");
+      const esperados = antes.avaliacoesPorArea
+        .flatMap((g) => g.itens)
+        .filter((i) => i.obrigatorio && !i.verificado);
+      expect(esperados.length).toBeGreaterThan(0);
+
+      const erro = await gw.concluirAnalise("1").catch((e) => e);
+      expect(erro).toBeInstanceOf(AnaliseRequisitosPendentesError);
+      expect(
+        (erro as AnaliseRequisitosPendentesError).pendentes.map((p) => p.requisitoId).sort(),
+      ).toEqual(esperados.map((i) => i.requisitoId).sort());
+      expect((erro as AnaliseRequisitosPendentesError).pendentes[0]).toEqual({
+        requisitoId: esperados[0].requisitoId,
+        codigo: esperados[0].codigo,
+        titulo: esperados[0].titulo,
+        area: esperados[0].area,
+      });
+    });
+
+    it("sem pendentes → detalhe CONCLUIDA com concluidaEm, e não persiste", async () => {
+      const gw = new FixturesAnalisesGateway();
+      const antes = await gw.abrirAnalise("7"); // PRONTA, todos os obrigatórios verificados
+      expect(antes.resumo.obrigatoriosPendentes).toBe(0);
+
+      const concluida = await gw.concluirAnalise("7");
+      expect(concluida.status).toBe("CONCLUIDA");
+      expect(concluida.concluidaEm).toBeTruthy();
+      expect(Date.parse(concluida.concluidaEm as string)).not.toBeNaN();
+
+      const depois = await gw.abrirAnalise("7");
+      expect(depois.status).toBe("PRONTA_PARA_REVISAO"); // andaime — não persiste
+    });
+
+    it("id inexistente → AnaliseNaoEncontradaError", async () => {
+      await expect(new FixturesAnalisesGateway().concluirAnalise("zzz")).rejects.toBeInstanceOf(
+        AnaliseNaoEncontradaError,
+      );
     });
   });
 });

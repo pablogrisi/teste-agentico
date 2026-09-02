@@ -360,4 +360,54 @@ describe("PainelRevisao", () => {
       expect(screen.queryByRole("button", { name: "Definir" })).not.toBeInTheDocument();
     });
   });
+
+  describe("onResumoChange (RF-012)", () => {
+    const OBRIGATORIO_PENDENTE: AreaComItens[] = [
+      {
+        area: "CHECKLIST_A",
+        itens: [item("o1", { statusFinal: "NAO_CONFORME", obrigatorio: true, verificado: false })],
+      },
+    ];
+
+    it("dispara no mount com o resumo inicial", () => {
+      const onResumoChange = vi.fn();
+      render(
+        <PainelRevisao
+          detalhe={detalhe("PRONTA_PARA_REVISAO", OBRIGATORIO_PENDENTE)}
+          onResumoChange={onResumoChange}
+        />,
+      );
+      expect(onResumoChange).toHaveBeenCalledWith(
+        expect.objectContaining({ obrigatoriosPendentes: 1 }),
+      );
+    });
+
+    it("dispara de novo com o resumo novo após marcar 'verificado'", async () => {
+      const user = userEvent.setup();
+      const verificado = item("o1", {
+        statusFinal: "NAO_CONFORME",
+        obrigatorio: true,
+        verificado: true,
+      });
+      vi.spyOn(FixturesAnalisesGateway.prototype, "marcarVerificado").mockResolvedValue({
+        item: verificado,
+        resumo: calcularResumo([{ area: "CHECKLIST_A", itens: [verificado] }]),
+      });
+      const onResumoChange = vi.fn();
+      render(
+        <PainelRevisao
+          detalhe={detalhe("PRONTA_PARA_REVISAO", OBRIGATORIO_PENDENTE)}
+          onResumoChange={onResumoChange}
+        />,
+      );
+
+      await user.click(screen.getByRole("checkbox", { name: /Marcar como verificado/ }));
+
+      await waitFor(() =>
+        expect(onResumoChange).toHaveBeenLastCalledWith(
+          expect.objectContaining({ obrigatoriosPendentes: 0, verificados: 1 }),
+        ),
+      );
+    });
+  });
 });
