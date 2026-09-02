@@ -3,7 +3,7 @@
 ---
 title: TSD - Visor de PDF e referência de página (RF-014, frontend)
 type: tsd
-status: aprovada — em implementação
+status: implementada
 created: 01/09/2026 // Vinicius
 updated: 01/09/2026 // Vinicius
 related:
@@ -202,14 +202,14 @@ npm run ci
 
 ## 8. Critérios de aceite
 
-- [ ] A tela de análise mostra o visor à esquerda: com `NEXT_PUBLIC_API_BASE_URL`, um `<iframe>` cujo `src` é `…/analises/:id/pdf#page=<n>`; sem ela, um aviso + "{totalPaginasPdf} páginas no documento".
-- [ ] A toolbar do visor navega: ‹ / campo de página / › atualizam a página; ‹ desabilita em 1, › desabilita no total (quando conhecido); o `<iframe>` recarrega no `#page=` novo.
-- [ ] Na linha "Referência de página" de um requisito: `paginaReferencia !== null` → botão "Página N" que manda o visor para N; `null` → "não informada", não clicável.
-- [ ] O editor inline de página envia `PATCH /analises/:id/requisitos/:requisitoId` com `{ paginaReferencia }` via `AnalisesGateway.corrigirPaginaReferencia` (nenhum componente fala HTTP direto); no sucesso o requisito reflete a nova página e o `resumo` é aplicado sem reload; `422` mostra a mensagem do backend, `409`/`404`/rede mensagens claras.
-- [ ] `validarPaginaReferencia` barra client-side: vazio → limpar (`null`); não-inteiro/`< 1` → erro; `> totalPaginasPdf` (quando conhecido) → erro; senão envia o número.
-- [ ] Página só é editável quando a análise está `PRONTA_PARA_REVISAO`.
-- [ ] Nenhuma mudança de contrato; `npm run ci` verde; sem regressão em RF-008/011/017.
-- [ ] §10 revisada; screenshots em `frontend/docs/visual-reference/rf-014/`; smoke conjunto (frontend+backend) registrado ou justificado.
+- [x] A tela de análise mostra o visor à esquerda: com `NEXT_PUBLIC_API_BASE_URL`, um `<iframe>` cujo `src` é `…/analises/:id/pdf#page=<n>`; sem ela, um aviso + "{totalPaginasPdf} páginas no documento".
+- [x] A toolbar do visor navega: ‹ / campo de página / › atualizam a página; ‹ desabilita em 1, › desabilita no total (quando conhecido); o `<iframe>` recarrega no `#page=` novo.
+- [x] Na linha "Referência de página" de um requisito: `paginaReferencia !== null` → botão "Página N" que manda o visor para N; `null` → "não informada", não clicável.
+- [x] O editor inline de página envia `PATCH /analises/:id/requisitos/:requisitoId` com `{ paginaReferencia }` via `AnalisesGateway.corrigirPaginaReferencia` (nenhum componente fala HTTP direto); no sucesso o requisito reflete a nova página e o `resumo` é aplicado sem reload; `422` mostra a mensagem do backend, `409`/`404`/rede mensagens claras.
+- [x] `validarPaginaReferencia` barra client-side: vazio → limpar (`null`); não-inteiro/`< 1` → erro; `> totalPaginasPdf` (quando conhecido) → erro; senão envia o número.
+- [x] Página só é editável quando a análise está `PRONTA_PARA_REVISAO`.
+- [x] Nenhuma mudança de contrato; `npm run ci` verde; sem regressão em RF-008/011/017.
+- [x] §10 revisada; screenshots em `frontend/docs/visual-reference/rf-014/`; smoke conjunto (frontend+backend) registrado ou justificado.
 
 ## 9. Riscos e decisões abertas
 
