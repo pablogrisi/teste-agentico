@@ -179,7 +179,7 @@ npm run ci
 - [x] Alterar o parecer pelo modal (RF-008) continua marcando `verificado = true` (sem regressão nos testes existentes).
 - [x] `HttpAnalisesGateway` e `FixturesAnalisesGateway` implementam `marcarVerificado`; a fixture **não persiste** (andaime — §9).
 - [x] `npm run ci` verde: `eslint .` + prettier, `tsc --noEmit`, testes, `next build`.
-- [x] §10 revisada; screenshots (operável / progresso após marcar / erro) — `frontend/docs/visual-reference/rf-011/`.
+- [x] §10 revisada; screenshots (operável / progresso após marcar / `CONCLUIDA` desabilitado) — `frontend/docs/visual-reference/rf-011/`. O estado de erro do toggle **não é fotografável com fixtures** (não falham num requisito válido) → coberto por teste de unidade do `RequisitoItem`, não por screenshot.
 
 ## 9. Riscos e decisões abertas
 
@@ -192,8 +192,8 @@ npm run ci
 - **Estado de toggle local ao `RequisitoItem`** (`salvando`/`erroToggle`), não no `PainelRevisao`.
   Cada linha cuida do seu clique; o painel só expõe a função. Menos estado central.
 - **Erro inline no item** (`role="alert"`), não toast. Mesma linha do RF-008 (sem toasts nesta
-  fase). A mensagem some no próximo clique bem-sucedido (o `item` muda e o `RequisitoItem`
-  limpa `erroToggle` no início do próximo `onChange`).
+  fase). A mensagem é limpa no **início da próxima tentativa de clique** (`setErroToggle(null)`
+  no começo do `onChange`).
 - **Método dedicado `marcarVerificado`** em vez de generalizar `revisarRequisito` para um
   `Partial<...>`. Intenção explícita, corpo mínimo, sem risco de mandar `statusFinal` por engano.
 - **Sem "verificar tudo"** — o protótipo não tem; e um clique em massa mereceria sua própria
@@ -233,7 +233,9 @@ sutil durante o `salvando`.
 A mensagem de erro no item é acréscimo (o protótipo nunca falha). Sem "verificar tudo".
 
 Screenshots obrigatórios: lista com um item verificado e outro não (checkbox operável);
-progresso logo depois de marcar; item com a mensagem de erro. Evidência em
+progresso logo depois de marcar; análise `CONCLUIDA` com os checkboxes desabilitados. O
+estado de erro do toggle não sai com fixtures (elas não falham num requisito válido) — fica
+coberto pelo teste de unidade do `RequisitoItem`. Evidência em
 `frontend/docs/visual-reference/rf-011/`.
 
 ## 11. Rollback

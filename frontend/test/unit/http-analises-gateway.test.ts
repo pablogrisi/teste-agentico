@@ -578,4 +578,25 @@ describe("HttpAnalisesGateway.marcarVerificado (contrato PATCH { verificado } �
       new HttpAnalisesGateway(BASE).marcarVerificado("a1", "req-1", true),
     ).rejects.toBeInstanceOf(AnalisesGatewayError);
   });
+
+  it("422 vira AnaliseValidacaoError com os motivos", async () => {
+    stubFetch({ ok: false, status: 422, jsonData: { message: ["estado inválido"] } });
+    const erro = await new HttpAnalisesGateway(BASE)
+      .marcarVerificado("a1", "req-1", true)
+      .catch((e) => e);
+    expect(erro).toBeInstanceOf(AnaliseValidacaoError);
+    expect(erro.motivos).toEqual(["estado inválido"]);
+  });
+
+  it("falha de rede vira AnalisesGatewayError", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new TypeError("network down");
+      }),
+    );
+    await expect(
+      new HttpAnalisesGateway(BASE).marcarVerificado("a1", "req-1", true),
+    ).rejects.toBeInstanceOf(AnalisesGatewayError);
+  });
 });

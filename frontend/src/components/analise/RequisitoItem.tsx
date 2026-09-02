@@ -67,9 +67,7 @@ export function RequisitoItem({
             tabIndex={editavel ? undefined : -1}
             onChange={editavel ? aoAlternarVerificado : undefined}
             aria-label={
-              editavel
-                ? `Marcar como verificado — ${item.titulo}`
-                : `Verificado — disponível no RF-011 (${item.titulo})`
+              editavel ? `Marcar como verificado — ${item.titulo}` : `Verificado — ${item.titulo}`
             }
           />
           <button
