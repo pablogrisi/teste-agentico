@@ -54,6 +54,38 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 | 16        | RF-016 | Geração sob demanda do relatório PDF final               | Must                       | implementada                  |
 | 17        | RF-003 | Escopo de acesso por analista                            | Must (fase com identidade) | não iniciada — pós-MVP (P-10) |
 
+### Fora da tabela — Integração da IA real (A-02)
+
+Não é um RF: é a fundação adiada desde 31/08 (o `AnaliseIaStubAdapter` sustentou os ciclos). É o **último ciclo de backend do MVP**.
+
+**Status (backend):** user story em aprovação — branch `backend/ia-openai`
+
+**User Story**
+
+Como analista técnico, quero que o processamento de uma análise use um **serviço de IA de verdade** para gerar a sugestão de conformidade (Conforme / Não conforme / Não se aplica) e, quando possível, a página do PDF que a sustenta — em vez do stub que responde "Não se aplica" para tudo — para que a tela de revisão abra com um parecer inicial útil.
+
+Recorte deste ciclo (backend):
+
+- Novo adaptador `AnaliseIaOpenAiAdapter` que **implementa a `AnaliseIaPort` já existente** (`analisar({ pdf, requisitos[] }) → SugestaoRequisito[]`). **Nenhuma mudança no worker, na porta, nem no schema** — o `ProcessamentoService` já chama `analisar(...)` com timeout, grava uma avaliação por requisito e cai em `ERRO_PROCESSAMENTO` no erro.
+- O adaptador manda o **PDF** e a **lista de requisitos** (código, título, descrição) para o modelo GPT via SDK `openai`, pede **saída estruturada** (JSON por requisito: `statusSugerido` ∈ 3 valores + `paginaReferencia?` inteiro), e mapeia de volta por `requisitoId`.
+- Seleção por configuração: `IA_ADAPTER=openai` (o `stub` continua o **padrão**; o `openai` é opt-in). `OPENAI_API_KEY` obrigatória quando `IA_ADAPTER=openai`; `IA_MODELO` (modelo GPT) e `IA_BASE_URL` (opcional, p/ Azure/proxy) configuráveis.
+- Robustez: timeout (o worker já envolve em `comTimeout`), erros do SDK viram falha de análise (→ `ERRO_PROCESSAMENTO`, reprocessável); resposta fora do schema → erro tratado.
+- Fecha **A-02** (contrato da capacidade de IA): forma de entrada/saída, auth, timeout, e a decisão "o projeto **aciona** um serviço externo" (não consome um resultado pronto).
+
+**Critérios de aceite**
+
+- Com `IA_ADAPTER=stub` (padrão) nada muda; a bateria de testes atual segue verde.
+- Com `IA_ADAPTER=openai` + `OPENAI_API_KEY`, o `CoreModule` injeta o adaptador OpenAI; sem a chave, o boot falha com mensagem clara.
+- Dado um PDF + N requisitos, o adaptador devolve `SugestaoRequisito[]` com um item por requisito reconhecido, `statusSugerido` sempre um dos 3 valores, `paginaReferencia` inteiro ou ausente.
+- Erro/timeout do serviço → exceção propagada (o worker marca `ERRO_PROCESSAMENTO`).
+- Testes: unit do adaptador com o SDK `openai` **mockado** (monta o request certo; parseia a resposta estruturada; erro de rede/schema → exceção); teste de contrato da `AnaliseIaPort` (a forma de saída que o worker espera). **Validação ponta a ponta com a chave real fica como smoke manual** (depende da chave do responsável).
+
+**Decisões do ciclo (respostas do usuário)**
+
+*(a preencher após a validação da User Story)*
+
+**TSD associada:** `docs/engineering/specs/022-integracao-ia-openai.tsd.md` (a redigir pelo Engenheiro após a validação).
+
 ## Tabela de sequenciamento — Frente Frontend (`frontend/`)
 
 | Sequência | ID     | Feature (recorte frontend)                                        | Prioridade | Status                                                                                    |
