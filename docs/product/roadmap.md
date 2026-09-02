@@ -58,7 +58,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 
 Não é um RF: é a fundação adiada desde 31/08 (o `AnaliseIaStubAdapter` sustentou os ciclos). É o **último ciclo de backend do MVP**.
 
-**Status (backend):** user story em aprovação — branch `backend/ia-openai`
+**Status (backend):** user story aprovada — branch `backend/ia-openai`
 
 **User Story**
 
@@ -80,11 +80,17 @@ Recorte deste ciclo (backend):
 - Erro/timeout do serviço → exceção propagada (o worker marca `ERRO_PROCESSAMENTO`).
 - Testes: unit do adaptador com o SDK `openai` **mockado** (monta o request certo; parseia a resposta estruturada; erro de rede/schema → exceção); teste de contrato da `AnaliseIaPort` (a forma de saída que o worker espera). **Validação ponta a ponta com a chave real fica como smoke manual** (depende da chave do responsável).
 
-**Decisões do ciclo (respostas do usuário)**
+**Decisões do ciclo (respostas do usuário — 02/09/2026)**
 
-*(a preencher após a validação da User Story)*
+1. **Provedor:** OpenAI / GPT (não Claude — o usuário confirmou). SDK `openai`.
+2. **Modelo padrão:** `gpt-4o`, em `IA_MODELO` (configurável).
+3. **PDF:** vai como **arquivo nativo** via Files API do OpenAI — upload por análise (`purpose: "user_data"`), referência no request, e **delete logo após** (não fica retido do lado deles). Melhor fidelidade e ajuda a `paginaReferencia`.
+4. **Chamadas:** *"você decide"* → **uma chamada** com o PDF + todos os requisitos, mas com corte por `IA_MAX_REQUISITOS_POR_CHAMADA` (default folgado, ~200): se a lista passar disso, o adaptador divide em lotes contra o **mesmo** arquivo e junta os resultados. Cobre os 12 placeholder hoje e a base real (P-07) depois sem retrabalho.
+5. **Endpoint:** *"você decide"* → **OpenAI direto** (`api.openai.com` + `OPENAI_API_KEY`). `IA_BASE_URL` opcional (o SDK aceita `baseURL`) para apontar a um proxy; **Azure OpenAI completo** (deployment/api-version na URL, auth própria) fica como follow-up se o órgão exigir.
+6. **Saída estruturada:** `response_format` json_schema (`strict`) — array `[{ codigo, statusSugerido, paginaReferencia? }]`; o adaptador casa `codigo → requisitoId`.
+7. **`stub` continua o padrão**; `IA_ADAPTER=openai` é opt-in. Merge com o stub ativo — ninguém liga o OpenAI sem querer.
 
-**TSD associada:** `docs/engineering/specs/022-integracao-ia-openai.tsd.md` (a redigir pelo Engenheiro após a validação).
+**TSD associada:** `docs/engineering/specs/022-integracao-ia-openai.tsd.md` (a redigir pelo Engenheiro).
 
 ## Tabela de sequenciamento — Frente Frontend (`frontend/`)
 
