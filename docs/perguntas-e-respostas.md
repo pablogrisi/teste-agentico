@@ -386,3 +386,38 @@ Opções: download forçado (attachment) / inline.
 **Apresentação da TSD-011** (`docs/engineering/specs/011-relatorio-pdf.tsd.md`): `GET /analises/:id/relatorio` → `application/pdf` inline, sob demanda com `pdfkit`, sem persistir; `RelatorioModule` novo consumindo `AnalisesService`; modelo puro `montarModeloRelatorio` + `renderRelatorioPdf`; `409` se `!= CONCLUIDA`; sem migration.
 **Resposta do usuário:** "Sim, implemente."
 **Decisão:** TSD-011 aprovada; Dev implementou; ciclo fechado (106 unit, 39 e2e, Crítico ✅) na branch `backend/rf-016-relatorio`, aguardando merge. Fecha o backend de features do MVP — resta só a integração da IA real (A-02).
+
+---
+
+## 02/09/2026 — Ciclo A-02 (integração da IA real — adaptador OpenAI), Agente PM
+
+**Contexto:** com o backend de features do MVP fechado, o usuário pediu para conectar uma IA real e testar localmente com PDFs de exemplo. Primeira menção foi a "usar o mesmo modelo daqui" (Claude); o usuário depois corrigiu para **OpenAI**, e confirmou em pergunta direta.
+
+**P1 — provedor:** Claude/Anthropic / OpenAI / outro. **R1:** **OpenAI / GPT.**
+**P2 — modelo:** `gpt-4o` / `gpt-4o-mini` / `gpt-4.1`. **R2:** **`gpt-4o`** (configurável por `IA_MODELO`).
+**P3 — como mandar o PDF:** arquivo nativo (Files API) / texto extraído / base64 inline. **R3:** **Arquivo nativo (Files API)**, apagado após a análise.
+**P4 — lotes de requisitos:** "você decide." **Decisão da IA:** dividir por `IA_MAX_REQUISITOS_POR_CHAMADA` (default 50 após pedido do Crítico), lotes sequenciais contra o mesmo arquivo.
+**P5 — endpoint:** "você decide." **Decisão da IA:** OpenAI direto pelo SDK `openai`, com `IA_BASE_URL` opcional para proxy; `IA_ADAPTER=openai` opt-in, `stub` continua padrão.
+
+**Decisão:** vai para a TSD-022. `AnaliseIaOpenAiAdapter` implementa a `AnaliseIaPort` sem mudar o contrato; entrada = PDF + requisitos, saída = `SugestaoRequisito` por requisito. Ciclo fechado (6 papéis, `npm run ci` 126 unit / `test:contract` 2 / `test:e2e` 39, Crítico ✅ condicional) na branch `backend/ia-openai`, aguardando merge + smoke real com a chave. Fecha a questão A-02 (`questoes-abertas.md` R-07).
+
+---
+
+## 02/09/2026 — Follow-up A-02 (entrada por texto extraído), Agente PM
+
+**Contexto:** no smoke real com a `OPENAI_API_KEY`, o usuário subiu um edital digital de **142 páginas / 13,8 MB** (texto real, não escaneado). A OpenAI aceitou a forma do request mas devolveu `400 Your input exceeds the context window of this model` — a análise foi a `ERRO_PROCESSAMENTO`. Editais grandes são a norma; mandar o PDF inteiro por chamada também multiplica o custo em tokens. Já previsto como risco na TSD-022 §9.
+
+**P1 — fallback quando a extração render pouco/nenhum texto (PDF puro escaneado):** cair no Files API atual / erro claro / você decide. **R1:** **Cair no Files API atual** — texto é o caminho primário, Files API vira fallback.
+**P2 — modelo padrão depois que a entrada virar texto:** voltar para `gpt-4o` / manter `gpt-4.1` / você decide. **R2:** **Voltar para `gpt-4o`** (o texto de ~142 páginas cabe folgado em 128k); `IA_MODELO` segue configurável.
+**P3 — ritmo do ciclo:** gates rápidos / só aprovo a TSD. **R3:** **Só aprovo a TSD** — PM e Engenheiro rodam em sequência, o usuário aprova só a TSD final.
+**P4 — smoke real no edital grande é gate de fechamento ou pendência pós-fechamento?** **R4:** **Pendência pós-fechamento** (mesmo tratamento da TSD-022): o ciclo fecha com `ci` / `test:contract` / `test:e2e` verdes; o smoke fica registrado em checkpoint/audit.
+
+**Decisão:** User Story aprovada. Vai para a TSD-023 (`023-integracao-ia-openai-texto.tsd.md`): o `AnaliseIaOpenAiAdapter` passa a extrair texto do PDF por página e mandar texto ao modelo, com fallback automático para o Files API quando não houver texto aproveitável. Sem mudança de contrato da `AnaliseIaPort` nem da API HTTP. Trabalho empilhado na branch `backend/ia-openai` (TSD-022 + TSD-023 entram juntas na `main`).
+
+---
+
+## 02/09/2026 — Follow-up A-02 (entrada por texto extraído), Agente Engenheiro
+
+**Apresentação da TSD-023** (`docs/engineering/specs/023-integracao-ia-openai-texto.tsd.md`): mudança contida em `analise-ia.openai-adapter.ts` — `analisar()` vira despachante e decide **uma vez por análise** (fallback global): caminho texto (extração por página via **`unpdf`**, blocos `=== Página N ===` como `input_text`, sem Files API) ou caminho arquivo (o código da TSD-022, intacto, como fallback com `warn`). Critério de fallback = valor fixo sem env var (≥ 1 página com ≥ 20 chars não-espaço **e** média ≥ 100 chars não-espaço/página). Dois `PROMPT_SISTEMA`. Modelo padrão `gpt-4o` (já é o default — nada muda). Sem mudança de contrato/porta/HTTP/Prisma/`.env.example`. Plano B na §9: `pdfjs-dist@^3` build legacy se `unpdf` der atrito ESM sob ts-jest.
+**Resposta do usuário:** "Sim, chama o Dev pra desenvolver."
+**Decisão:** TSD-023 aprovada; Dev liberado. Implementação empilhada na branch `backend/ia-openai`.

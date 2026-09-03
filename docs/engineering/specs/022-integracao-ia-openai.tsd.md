@@ -219,6 +219,17 @@ npm run build
 
 ## 9. Riscos e decisões abertas
 
+> **Follow-up implementado — TSD-023 (02/09/2026).** O smoke real de 02/09
+> recusou um edital de 142 páginas / 13,8 MB com `400 input exceeds the context
+> window`. A **TSD-023** mudou o interior do `AnaliseIaOpenAiAdapter`: o caminho
+> **primário** passou a mandar o **texto do PDF por página** (marcadores
+> `=== Página N ===`, `input_text`) ao modelo, sem subir o binário; o caminho da
+> Files API descrito nesta TSD-022 (`files.create` `purpose: 'user_data'` →
+> `input_file` → `files.delete`) virou o **fallback automático**, disparado
+> quando a extração de texto é insuficiente (PDF escaneado). O contrato da
+> `AnaliseIaPort`, o worker, o schema e o REST seguem intocados. Ver
+> `docs/engineering/specs/023-integracao-ia-openai-texto.tsd.md`.
+
 - **Qualidade da sugestão** é do modelo, não do código. `gpt-4o` erra; a base de
   requisitos ainda é o placeholder de 12 (P-07). O produto trata a saída como
   sugestão (o humano revisa, R-06). Sem meta de acurácia no MVP.

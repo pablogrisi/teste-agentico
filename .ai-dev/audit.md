@@ -20,6 +20,59 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 02/09/2026 — TSD-023: integração da IA real — entrada por texto extraído do PDF (follow-up da TSD-022, A-02, backend)
+
+Contexto: follow-up da TSD-022, empilhado na mesma branch `backend/ia-openai`. O smoke real de 02/09/2026 (TSD-022) recusou um edital digital de **142 páginas / 13,8 MB** (texto nativo, não escaneado) com `400 Your input exceeds the context window of this model` — a análise terminou em `ERRO_PROCESSAMENTO`. Editais grandes são a norma; além disso, subir o binário do PDF a cada lote multiplica o custo em tokens. A User Story do follow-up foi aprovada pelo usuário em 02/09; a TSD-023 foi aprovada e o Dev liberado. Ciclo completo dos 6 papéis. Commit `c781067`, empilhado sobre a TSD-022 (que **ainda não foi mergeada** — as duas entram juntas na `main`).
+
+Papéis / commits:
+
+- **PM (abre ciclo)** + **PM (User Story)** — "Follow-up: entrada por texto extraído (backend)" no `roadmap.md`, seção "Fora da tabela — Integração da IA real (A-02)"; decisões do usuário 1–4 (02/09) + resposta "smoke real fica como pendência pós-fechamento".
+- **Engenheiro** — `docs/engineering/specs/023-integracao-ia-openai-texto.tsd.md` (TSD-023).
+- **Dev (implementação)** — commit `c781067`.
+- **Executor de Testes** — gates reais (abaixo).
+- **Crítico** — APROVADO (condicional): aceitar formalmente a CVE-2024-4367; sem bloqueadores de Dev.
+- **Documentador** — esta entrada + docs.
+
+Alterações (produção):
+
+- `backend/src/core/adapters/analise-ia.openai-adapter.ts` — `analisar()` vira **despachante** e decide **1×/análise** (fallback global, não por lote):
+  - **Caminho texto (primário):** `extrairTextoPorPagina(pdf): Promise<string[]>` via `pdfjs-dist@3.11.174` (`pdfjs-dist/legacy/build/pdf.js`, CJS), best-effort (nunca lança; erro/vazio → `[]`). Monta blocos `=== Página N ===` e envia como `input_text`. **Sem `files.create`.** `PROMPT_SISTEMA_TEXTO` novo (marcadores de página).
+  - **Caminho arquivo (fallback):** corpo da TSD-022 extraído para `analisarPorArquivo()` / `analisarLotePorArquivo()`, **inalterado** (`files.create` `purpose: 'user_data'` → `input_file` → `files.delete` no `finally`). Disparado quando o texto é insuficiente, com `logger.warn`. `PROMPT_SISTEMA_ARQUIVO` = `PROMPT_SISTEMA` da TSD-022, verbatim.
+  - **Critério de fallback** em constantes fixas (**sem env var**): usa texto se `≥ 1` página com `≥ 20` chars não-espaço **e** média `≥ 100` chars não-espaço/página (`MIN_CHARS_PAGINA_COM_TEXTO=20`, `MIN_PAGINAS_COM_TEXTO=1`, `MIN_MEDIA_CHARS_POR_PAGINA=100`).
+  - `mapearResposta()` helper compartilhado (parse, Map `codigo→requisitoId`, descarte de código/status inválido, `paginaReferencia` inteiro `≥ 1`, `status: 'incomplete'`). `SCHEMA_SAIDA` e `max_output_tokens` **inalterados**.
+  - Mitigação da CVE no `getDocument`: `isEvalSupported: false`, `disableFontFace: true`, `useSystemFonts: false`, `verbosity: 0`.
+- `backend/test/unit/analise-ia.openai-adapter.spec.ts` — 10 → 21 casos; `pdfjs-dist/legacy/build/pdf.js` mockado.
+- `backend/package.json` + lock — `pdfjs-dist: "3.11.174"` (runtime dep, versão exata, sem `^`).
+- **Não tocados:** contrato `AnaliseIaPort`, `processamento.service.ts`, `core.module.ts`, `configuration.ts`, `env.validation.ts`, schema Prisma, controllers, `.env.example`.
+
+Validações (gates reais executados — Executor de Testes):
+
+- `npm run ci` → **exit 0**: lint limpo, `tsc` limpo, `prisma validate` ok, **jest unit 138 passed / 21 suites / 0 skipped**, `nest build` ok.
+- `npm run test:contract` → **2/2** (stub, inalterado).
+- `npm run test:e2e` → **39/39** (não-regressão, `IA_ADAPTER` ausente → stub).
+- `npm audit` (**não é gate**): 6 vulnerabilidades. Introduzida e instalada por esta TSD: **`pdfjs-dist <=4.1.392` high — CVE-2024-4367**. Transitivas `tar` (critical) / `@mapbox/node-pre-gyp` (high) são deps **opcionais de `canvas`, NÃO instaladas** (só no lockfile). `deepmerge-ts` / `prisma` high já existiam.
+- Warning novo só no `test:e2e` (via `console.log` no load do pdfjs legacy): `Cannot polyfill DOMMatrix/Path2D ... Cannot find module 'canvas'` — inócuo (canvas rasteriza; o adapter só extrai texto). Não afeta resultado.
+- **Smoke ponta-a-ponta com a OpenAI real: NÃO executado** — depende da `OPENAI_API_KEY` (decisão do usuário: pendência pós-fechamento, igual à TSD-022).
+
+Desvios / não-bloqueadores registrados (TSD-023 §13):
+
+1. **Lib = plano B `pdfjs-dist` `3.11.174`** (build `legacy/build/pdf.js`, CJS) em vez da `unpdf` recomendada na §9 — `unpdf` / pdfjs v4 são ESM-only e o `ts-jest` CJS aborta o `import()` dinâmico (mesmo atrito de `openai@7` na TSD-022 e `@nestjs/schedule` na TSD-006). **Pré-autorizado pela §9.**
+2. **CVE-2024-4367** (`pdfjs-dist` v3, high) — execução de código via campo de fonte malicioso quando o PDF é renderizado com `isEvalSupported` habilitado. Mitigação aplicada (`isEvalSupported: false` + `disableFontFace`/`useSystemFonts: false` + o adapter só extrai texto, nunca rasteriza). Threat model aceito: uso server-side, PDF vem do upload do próprio analista (MVP single-analyst), sem rendering, `/Encrypt` recusado no upload (TSD-004). **Decisão do usuário (02/09/2026): aceitar como dívida de segurança rastreada.** **Follow-up obrigatório:** migrar para `pdfjs-dist` v4+ / `unpdf` quando a config de testes do backend for para ESM; ao fechar, re-rodar `npm audit`. Registrada em `questoes-abertas.md` A-09.
+3. Transitivas opcionais de `canvas` (`tar` critical / `@mapbox/node-pre-gyp` high) aparecem no `npm audit` mas **não estão instaladas** (só no lockfile). Somem com a migração do desvio 2.
+4. Ruído `Cannot polyfill DOMMatrix/Path2D ... Cannot find module 'canvas'` no `test:e2e` — inócuo, não altera nenhum resultado.
+5. O texto do PDF **repete por lote de requisitos** (`input_text` em cada `responses.create`). Com os 12 placeholder é 1 chamada; com a base real (P-07, ~300) serão ~6 lotes → o texto do edital vai ~6×. É **custo, não estouro de contexto** (a falha que este ciclo corrige). Otimização fora do escopo da User Story; follow-up = revisar a estratégia de lote quando a base real entrar.
+6. Duplicação deliberada `estatisticasTexto()` (média arredondada, para o log do `warn`) vs. `textoAproveitavel()` (média crua, para o limiar) — num caso de fronteira o `warn` pode dizer "média 100" e ainda assim ter caído para o fallback. Só afeta a mensagem de log.
+
+Decisões: texto extraído do PDF **por página** é o caminho primário (preserva `paginaReferencia` via marcador `=== Página N ===`); Files API da TSD-022 vira **fallback automático** para PDF sem texto aproveitável; modelo padrão segue `gpt-4o`; sem mudança de contrato / API HTTP / worker; limiar de fallback em constante fixa (sem env var); CVE-2024-4367 aceita como dívida rastreada com mitigação + follow-up de migração.
+
+Docs atualizados pelo Documentador: TSD-023 (`status: implementada`, §8 marcado item a item com evidência — smoke real **explicitamente desmarcado** e anotado "implementada, aguardando smoke real"; "SDD/TSD-022 §9" feitos —, §13 nova: nota de fechamento + desvios 1–6, frontmatter `updated`); `docs/architecture/sdd.md` (§2 integrações; §4 estratégia; §6 tabela de componentes — linha `AnaliseIaPort`; §8 `AnaliseIaPort` interno; §9 nova linha na tabela de decisões; §12 checklist A-02 — "manda o PDF" → "texto por página + fallback Files API", sem reescrever a arquitetura); `docs/engineering/specs/022-integracao-ia-openai.tsd.md` §9 (ponteiro para a TSD-023 — o caminho Files API virou o fallback); `docs/product/questoes-abertas.md` (**P-05** atualizada — a origem da página mudou para o marcador do texto extraído, segue parcial, confirma no smoke; **R-07** anotada — entrada agora é texto por página, Files API é fallback; **nova A-08** — valor definitivo de `MIN_MEDIA_CHARS_POR_PAGINA` + editais > 128k tokens mesmo como texto; **nova A-09** — dívida de segurança CVE-2024-4367, mitigada, aceita, follow-up de migração); `docs/engineering/checkpoint.md` (frontmatter `updated`; §1 marco + `main` + bullet novo do ciclo TSD-023 + bullet "IA real" ajustado; §2 spec ativa backend; §3.1 Crítico + Documentador TSD-023; §5 pendências — TSD-022+023 juntas, CVE como dívida, A-08, versionamento `backend/scripts/*`; §6 risco residual; §7 próximo passo); `docs/product/roadmap.md` (subseção "Follow-up: entrada por texto extraído (backend)" → Status `implementada na branch backend/ia-openai — aguardando merge + smoke real`, TSD associada `implementada`, "Notas do ciclo (backend — 02/09/2026)"; "Status (backend)" do topo da seção A-02 → TSD-022 + TSD-023 entram juntas).
+
+Estado: ciclo TSD-023 **fechado** — Crítico ✅ (condicional), sem bloqueadores de Dev, gates verdes. **Aguardando aprovação de merge do usuário para `backend/ia-openai` → `main` (TSD-022 + TSD-023 juntas) + smoke ponta-a-ponta com a `OPENAI_API_KEY` real.** Até lá: "implementada, aguardando smoke real".
+
+Pendências: (1) merge de `backend/ia-openai` na `main` (as duas TSDs juntas); (2) **smoke ponta-a-ponta com a `OPENAI_API_KEY` real** — (a) o edital de 142 páginas / 13,8 MB do smoke de 02/09 deve chegar a `PRONTA_PARA_REVISAO` sem `input exceeds the context window`, pelo caminho **texto** (sem `warn` de fallback), sugestões não todas `NAO_SE_APLICA`, algumas com `paginaReferencia`; (b) um PDF puramente escaneado deve emitir o `warn` de fallback e ainda produzir resultado; registrar ambos em checkpoint/audit; (3) **migração `pdfjs-dist` v4+ / `unpdf`** após o `ts-jest` do backend ir para ESM, + re-rodar `npm audit` (fecha a CVE-2024-4367); (4) decisão de versionar `backend/scripts/dev-db.mjs`, `backend/scripts/seed-demo.mjs` e `.claude/launch.json` (untracked — **ainda aberta do ciclo anterior**). Com o merge + os dois smokes, o **MVP backend fica completo**.
+
+Próximo passo recomendado: o usuário aprova o merge de `backend/ia-openai` (TSD-022 + TSD-023) e fornece a `OPENAI_API_KEY`; o Agente de Testes roda os dois smokes reais (edital de 142 páginas pelo caminho texto; PDF escaneado pelo fallback) e registra o resultado; em paralelo, agenda o follow-up da CVE-2024-4367 (migração pdfjs/ESM) e decide o versionamento de `backend/scripts/*` + `.claude/launch.json`. Não há próximo RF — o MVP backend fecha nesses smokes.
+
 ## 02/09/2026 — A-02 / TSD-022: integração da IA real — adapter OpenAI da `AnaliseIaPort` (backend)
 
 Contexto: último ciclo de backend do MVP — a integração da IA real, adiada desde 31/08 (o `AnaliseIaStubAdapter` sustentou todos os ciclos). O usuário decidiu, em 02/09, o provedor (OpenAI/GPT, não Claude), o modelo padrão (`gpt-4o`), o transporte do PDF (arquivo nativo via Files API, apagado após), o corte por lote e o endpoint (OpenAI direto, `IA_BASE_URL` opcional para proxy). Ciclo completo dos 6 papéis na branch `backend/ia-openai`.

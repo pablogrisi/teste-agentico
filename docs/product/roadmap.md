@@ -58,7 +58,7 @@ Fundação técnica: **TSD-001** (backend) e **TSD-002** (frontend) são indepen
 
 Não é um RF: é a fundação adiada desde 31/08 (o `AnaliseIaStubAdapter` sustentou os ciclos). É o **último ciclo de backend do MVP**.
 
-**Status (backend):** implementada na branch `backend/ia-openai` — aguardando aprovação de merge e smoke ponta-a-ponta com `OPENAI_API_KEY` real
+**Status (backend):** **TSD-022 + TSD-023 implementadas na branch `backend/ia-openai` (commits até `c781067`) — entram juntas na `main`**, aguardando aprovação de merge e smoke ponta-a-ponta com `OPENAI_API_KEY` real. A **TSD-023** ("entrada por texto extraído", subseção abaixo) fechou o follow-up aberto pela TSD-022 §9: o smoke real de 02/09 expôs falha por limite de contexto num edital de 142 páginas, e o adapter passou a mandar ao modelo o **texto do PDF por página**, com fallback automático para a Files API em PDF escaneado.
 
 **User Story**
 
@@ -105,6 +105,71 @@ O que se aprendeu / o que muda para os próximos ciclos:
 - **Não altera a sequência do roadmap.** Não há próximo RF de backend. O MVP backend fica completo quando o merge + o smoke real com a chave forem feitos.
 
 **Pendências:** aprovação de merge do usuário; **smoke ponta-a-ponta com a `OPENAI_API_KEY` real** (`IA_ADAPTER=openai` + `PROCESSAMENTO_AUTO=true` + PDF de licitação real — conferir que as sugestões vêm do GPT e que algumas trazem `paginaReferencia`; registrar em checkpoint/audit); plano B `chat.completions` + `response_format` se a OpenAI recusar a forma do `responses.create` (TSD-022 §9); decidir o versionamento de `backend/scripts/dev-db.mjs`, `backend/scripts/seed-demo.mjs` e `.claude/launch.json`.
+
+#### Follow-up: entrada por texto extraído (backend)
+
+**Frentes:** Backend
+**Status:** implementada na branch `backend/ia-openai` — aguardando aprovação de merge e smoke ponta-a-ponta com `OPENAI_API_KEY` real
+**Detalha a pendência registrada na TSD-022 §9** (custo em tokens do PDF inteiro por chamada; `IA_TIMEOUT_MS`/limite de contexto para PDFs grandes; plano B se a forma do request não couber).
+**Spec:** próxima livre = `docs/engineering/specs/023-*.tsd.md` — a redigir pelo Engenheiro depois da aprovação desta User Story.
+**Branch:** empilhado em `backend/ia-openai` (a TSD-022 ainda não foi mergeada — as duas entram juntas na `main`).
+**Sequência:** não é um RF novo e não altera as tabelas de sequenciamento — é a continuação do mesmo item A-02, tornada necessária pelo resultado do smoke real de 02/09/2026.
+
+**Objetivo (por quê)**
+
+O smoke real de 02/09/2026 mostrou que o adapter da TSD-022 — que sobe o PDF **inteiro** via Files API em toda chamada — não serve para editais grandes: um edital digital de **142 páginas / 13,8 MB** (texto real, não escaneado) foi recusado pela OpenAI com `400 Your input exceeds the context window of this model`, e a análise terminou em `ERRO_PROCESSAMENTO`. A forma da requisição foi aceita (o plano B `chat.completions` não é necessário); o problema é volume. Editais reais grandes são a norma, não a exceção. Somado a isso, enviar o binário do PDF inteiro a cada chamada multiplica o custo em tokens.
+
+**Valor para o analista**
+
+A análise de editais reais grandes (100+ páginas) passa a **funcionar** — a tela de revisão abre com parecer inicial de verdade em vez de `ERRO_PROCESSAMENTO` — e a um custo por análise muito menor, porque o modelo passa a receber o **texto** do edital, não o arquivo inteiro.
+
+**User Story**
+
+Como analista técnico, quero que a análise por IA funcione mesmo em editais grandes (mais de cem páginas), com o sistema extraindo o texto do documento e enviando esse texto ao modelo em vez do arquivo inteiro, para que eu receba o parecer sugerido por requisito sem que o processamento falhe por tamanho e sem custo desproporcional — e, quando o documento não tiver texto aproveitável, que o sistema recorra ao envio do arquivo e ainda assim produza a análise.
+
+**Critérios de aceite**
+
+- Um edital digital grande (100+ páginas, com texto real) é processado até `PRONTA_PARA_REVISAO` sem estourar o limite de contexto do modelo; o erro `input exceeds the context window` observado no smoke de 02/09 não volta a ocorrer para o mesmo documento.
+- As sugestões continuam vindo **uma por requisito**, com `statusSugerido` sempre entre os três valores permitidos, e com `paginaReferencia` preenchida quando o texto da página correspondente evidencia a conclusão (a referência de página segue aproximada e corrigível pelo analista — RF-014).
+- Um PDF **sem texto aproveitável** (ex.: puramente escaneado) cai automaticamente no comportamento atual — envio do arquivo via Files API — e ainda assim produz uma análise (resultado do modelo ou `ERRO_PROCESSAMENTO` legítimo; nunca falha apenas por causa da troca de caminho).
+- O modelo padrão volta a ser `gpt-4o`; `IA_MODELO` continua configurável (ex.: `gpt-4.1`).
+- Sem mudança no contrato da `AnaliseIaPort` (`analisar({ pdf, requisitos }) → SugestaoRequisito[]`) nem na API HTTP; o worker `ProcessamentoService` não muda.
+- Sem regressão: `npm run ci`, `npm run test:contract` e `npm run test:e2e` seguem verdes; com `IA_ADAPTER=stub` (padrão) nada muda.
+- Novo smoke real com a `OPENAI_API_KEY`: o mesmo edital de 142 páginas / 13,8 MB do smoke de 02/09 é analisado com sucesso, as sugestões vêm do modelo (não todas `NAO_SE_APLICA`) e ao menos algumas trazem `paginaReferencia`; resultado registrado em checkpoint/audit.
+
+**Decisões já tomadas (usuário — 02/09/2026)** — a TSD-023 detalha o "como":
+
+1. Texto extraído do PDF no servidor, **por página** (para preservar `paginaReferencia`), é o caminho **primário** — vai texto ao modelo, não o binário.
+2. **Fallback:** quando a extração render pouco ou nenhum texto (PDF puro escaneado), o adapter volta ao comportamento da TSD-022 (upload do PDF via Files API). Texto é o caminho primário; Files API vira fallback.
+3. Modelo padrão volta a `gpt-4o` (o texto de ~142 páginas cabe folgado em 128k); `IA_MODELO` configurável.
+4. Sem mudança de contrato da `AnaliseIaPort` nem da API HTTP — a mudança é interna ao adapter.
+
+**Fora de escopo**
+
+- OCR de PDF escaneado — o fallback envia o arquivo à OpenAI; não há OCR no servidor.
+- Qualquer mudança no contrato da `AnaliseIaPort` ou na API HTTP.
+- Paralelizar as chamadas ao modelo — os lotes de requisitos seguem sequenciais, como na TSD-022.
+- Medição/orçamento de custo de tokens, cache, batch API — segue como na TSD-022.
+
+**Perguntas em aberto** — respondidas na aprovação (usuário — 02/09/2026)
+
+- Este ciclo deve **só fechar** quando o novo smoke real no edital grande passar, ou o smoke real pode ficar como pendência pós-fechamento (como ficou na TSD-022)? → **Smoke real fica como pendência pós-fechamento** (mesmo tratamento da TSD-022): o ciclo pode fechar com `npm run ci` / `test:contract` / `test:e2e` verdes; o smoke no edital de 142 páginas fica registrado como pendência em checkpoint/audit.
+
+**TSD associada:** `docs/engineering/specs/023-integracao-ia-openai-texto.tsd.md` — **implementada**.
+
+**Notas do ciclo (backend — 02/09/2026)**
+
+Ciclo completo dos 6 papéis na branch `backend/ia-openai`, commit `c781067` **empilhado sobre a TSD-022 — as duas mergeiam juntas na `main`**. Crítico **aprovou (condicional)**, sem bloqueadores de Dev. Gates reais: `npm run ci` **exit 0** (lint/`tsc`/`prisma validate` ok, **jest unit 138 passed / 21 suites / 0 skipped**, `nest build` ok), `npm run test:contract` 2/2, `npm run test:e2e` 39/39 (não-regressão, `IA_ADAPTER` ausente → stub). Só o interior do `AnaliseIaOpenAiAdapter` mudou — contrato da `AnaliseIaPort`, worker, `configuration.ts`, `env.validation.ts`, schema, controllers e `.env.example` intocados.
+
+O que se aprendeu / o que muda para os próximos ciclos:
+
+- **`analisar()` vira despachante** e decide 1×/análise: caminho **texto por página** (`pdfjs-dist`, marcadores `=== Página N ===`, `input_text`, sem `files.create`) como primário; **Files API da TSD-022 como fallback automático** para PDF sem texto aproveitável. Limiar do fallback em **constantes fixas, sem env var** (`MIN_MEDIA_CHARS_POR_PAGINA=100`).
+- **Lib = plano B `pdfjs-dist@3.11.174`** (build `legacy/build/pdf.js`, CJS), não a `unpdf` recomendada na TSD §9 — `unpdf`/pdfjs v4 são ESM-only e o `ts-jest` CJS do backend aborta o `import()` dinâmico (mesmo atrito de `openai@7` e `@nestjs/schedule`). Desvio pré-autorizado pela §9.
+- **CVE-2024-4367** (`pdfjs-dist@3`, high) entrou junto com a dep. Mitigada (`isEvalSupported: false` + hardening de fonte + o adapter só extrai texto, nunca rasteriza; PDF vem do upload do próprio analista; `/Encrypt` recusado no upload). **Usuário aceitou como dívida de segurança rastreada (02/09/2026)**; follow-up obrigatório = migrar para `pdfjs-dist` v4+/`unpdf` quando o `ts-jest` do backend for para ESM, e re-rodar `npm audit`. Registrada em `questoes-abertas.md` A-09.
+- **Não altera a sequência do roadmap.** Não é um RF novo — é a continuação do item A-02, tornada necessária pelo smoke real de 02/09. Não há próximo RF de backend; o MVP backend fica completo com o merge + os dois smokes reais (edital de 142 páginas pelo caminho texto; PDF escaneado pelo fallback).
+- Novas questões abertas: **A-08** (valor definitivo de `MIN_MEDIA_CHARS_POR_PAGINA` + editais > 128k tokens mesmo como texto — decidir se o smoke pedir).
+
+**Pendências:** aprovação de merge do usuário (TSD-022 + TSD-023 juntas); **smoke ponta-a-ponta com a `OPENAI_API_KEY` real** — o edital de 142 páginas / 13,8 MB do smoke de 02/09 processado até `PRONTA_PARA_REVISAO` pelo caminho texto (sem `warn` de fallback), sugestões não todas `NAO_SE_APLICA`, algumas com `paginaReferencia`; + 1 PDF escaneado exercitando o `warn` de fallback; registrar em checkpoint/audit. Follow-ups: migração `pdfjs-dist`/ESM + re-`npm audit` (CVE-2024-4367); decisão de versionar `backend/scripts/*` + `.claude/launch.json` (aberta do ciclo anterior).
 
 ## Tabela de sequenciamento — Frente Frontend (`frontend/`)
 
