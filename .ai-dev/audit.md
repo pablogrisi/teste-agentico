@@ -20,6 +20,39 @@ Pendências: <o que ficou em aberto>
 
 <!-- Entradas abaixo, da mais recente para a mais antiga -->
 
+## 02–03/09/2026 — Revisão do método de agentes (sessão de retrospectiva, não é ciclo de feature)
+
+Contexto: depois de fechar o MVP frontend (RF-012 e RF-016 mergeados), o usuário puxou uma
+retrospectiva sobre o fluxo `.ai-dev` — começou notando que nos primeiros RFs a User Story não
+era apresentada como parada (só passou a ser depois que ele perguntou "cadê a user story?").
+
+Diagnóstico e melhorias acordadas estão em **`.ai-dev/revisao-metodo-2026-09-03.md`** —
+resumo: o método só tem 1 portão humano por ciclo (no começo, com Story+TSD colapsadas num
+passo só); nada revisa o *plano*; divergências do protótipo são documentadas na §10 mas não
+perguntadas; o "resumo" que o usuário aprova é o orquestrador na conversa, sem template nem
+revisor; o merge não é papel de ninguém (nesta sessão foi o orquestrador direto na `main`).
+Acordado: (1) separar os dois portões pré-Dev de verdade; (2) §9 apresentada como pergunta,
+divergência do protótipo incluída; (3) **novo Portão 3 — Aceite humano** entre o Crítico e o
+Documentador, com um **roteiro de aceite (§8.1 da TSD)** que o Engenheiro escreve e o usuário
+roda na branch rodando; (4) **merge é humano** — Documentador abre o PR, não mergeia; (5)
+`implementada` só depois do aceite. Mapa de arquivos a editar no §4 da nota.
+
+Também levantado: 14 divergências app × protótipo (seta ← de voltar → breadcrumb; visor com PDF
+real vs documento desenhado; "Responsável/Iniciada em" no cabeçalho; coluna Status; "Adicionado
+por" removida; "Adicionado em" → "Iniciada em"; filtro em chips; brasão placeholder; 3 status;
+aba Técnica com badge; modal de conclusão; "Baixar relatório"; sem toasts; sem trava 1440px) —
+cada uma com etiqueta de quem decidiu (RF / minha escolha registrada / instrução do usuário /
+fundação). Registro completo no artifact "Divergências App × Protótipo"
+(https://claude.ai/code/artifact/95022502-daaa-4894-bd24-bafa492cd8d8) e no artifact
+"Bastidores do Front LicIA" (https://claude.ai/code/artifact/3b8b1bc1-075e-4be8-9b36-310daf0b9657).
+
+Estado: `main` em `03f40f8` = `origin/main`, tudo empurrado. Branch `chore/frontend-brasao-ceara`
+criada e revertida (o SVG `governodoestado.svg` que o usuário mandou **não** está no repo).
+Nenhuma mudança de código nesta sessão além dos merges de RF-012/016 já registrados abaixo.
+
+Próximo passo: aplicar as mudanças de método do §4 da nota; depois, se quiser, um ciclo de
+acabamento frontend rodando o método já revisado.
+
 ## 02/09/2026 — TSD-023: integração da IA real — entrada por texto extraído do PDF (follow-up da TSD-022, A-02, backend)
 
 Contexto: follow-up da TSD-022, empilhado na mesma branch `backend/ia-openai`. O smoke real de 02/09/2026 (TSD-022) recusou um edital digital de **142 páginas / 13,8 MB** (texto nativo, não escaneado) com `400 Your input exceeds the context window of this model` — a análise terminou em `ERRO_PROCESSAMENTO`. Editais grandes são a norma; além disso, subir o binário do PDF a cada lote multiplica o custo em tokens. A User Story do follow-up foi aprovada pelo usuário em 02/09; a TSD-023 foi aprovada e o Dev liberado. Ciclo completo dos 6 papéis. Commit `c781067`, empilhado sobre a TSD-022 (que **ainda não foi mergeada** — as duas entram juntas na `main`).
